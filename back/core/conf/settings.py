@@ -32,6 +32,15 @@ email_settings = {
     'password': os.environ.get('EMAIL_HOST_PASSWORD', None),
 }
 
+# ----------------------   DB   ----------------------
+db_data = {
+    "host": "localhost", 
+    "user": "games",
+    "password": "games",
+    "dbname": "games",
+    "port": 5433
+}
+
 # ----------------------   ERROR   ----------------------
 class MYE(Exception):
     pass

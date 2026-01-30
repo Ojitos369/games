@@ -71,14 +71,7 @@ class BaseApi(ClassBase):
             self.data[key] = value
     
     def validate_session(self):
-        cookies = self.request.cookies
-        mi_cookie = cookies.get('reapi', '')
-        auth_code = self.request.headers.get("authorization", None)
-        self.token = mi_cookie or auth_code
-        # print(f"Authorization header: {auth_code}")
-        # pln(mi_cookie)
-        if not self.token:
-            raise self.MYE("Sesion no valida")
+        pass
 
     def validar_permiso(self, usuarios_validos):
         pass
@@ -113,6 +106,24 @@ class BaseApi(ClassBase):
             self.errors(e)
         finally:
             pass
+
+
+class ConexionApi(BaseApi):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.create_conexion()
+
+
+class SessionApi(BaseApi):
+    def validate_session(self):
+        cookies = self.request.cookies
+        mi_cookie = cookies.get('gamestka', '')
+        auth_code = self.request.headers.get("authorization", None)
+        self.token = mi_cookie or auth_code
+        # print(f"Authorization header: {auth_code}")
+        # pln(mi_cookie)
+        if not self.token:
+            raise self.MYE("Sesion no valida")
 
 
 class PostApi(BaseApi):

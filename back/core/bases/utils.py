@@ -1,8 +1,21 @@
 from uuid import uuid4 as u4
-
-from core.conf.settings import MYE, ce, prod_mode
+import pandas as pd
+import datetime
+from ojitos369_postgres_db.postgres_db import ConexionPostgreSQL
+from core.conf.settings import MYE, ce, prod_mode, db_data
 
 class ClassBase:
+    def create_conexion(self):
+        self.close_conexion()
+        self.conexion = ConexionPostgreSQL(db_data, ce=ce, send_error=prod_mode, parameter_indicator=":")
+        self.conexion.raise_error = True
+
+    def close_conexion(self):
+        try:
+            self.conexion.close()
+        except:
+            pass
+
     def get_id(self, hex=False, long=None):
         id = ""
         if hex:
@@ -24,4 +37,42 @@ class ClassBase:
             ce_temp = ce
         error = Exception(msg)
         ce_temp.show_error(error, send_email=True)
-    
+
+    def d2d(self, df):
+        if not isinstance(df, (pd.DataFrame, pd.Series)):
+            return df
+        if isinstance(df, pd.DataFrame) and df.empty:
+            return []
+        clean_df = df.copy().astype(object)
+        target_replaces = {"None": None, "True": True, "False": False}
+        clean_df = clean_df.replace(target_replaces)
+        clean_df = clean_df.where(pd.notnull(clean_df), None)
+        if isinstance(df, pd.DataFrame):
+            return clean_df.to_dict(orient='records')
+        return clean_df.to_dict()
+
+    def send_me_error(self, msg):
+        if hasattr(self, 'ce'):
+            ce_temp = self.ce
+        else:
+            ce_temp = ce
+        error = Exception(msg)
+        ce_temp.show_error(error, send_email=True)
+
+    def get_date(self, fecha: dict|str|None) -> datetime.datetime|None:
+        if (not fecha) or str(fecha).lower() in ("none", "null", "undefined", "nat"):
+            return None
+        if type(fecha) == str:
+            fecha = fecha.replace("T", " ")
+            fecha = fecha.split(".")[0]
+            if len(fecha.split(":")) == 2:
+                fecha += ":00"
+            return datetime.datetime.strptime(fecha, "%Y-%m-%d %H:%M:%S")
+        date = fecha["date"]
+        if date == "None":
+            return None
+        time = fecha["time"]
+        if len(time.split(":")) == 2:
+            time += ":00"
+        fecha = f"{date} {time}"
+        return datetime.datetime.strptime(fecha, "%Y-%m-%d %H:%M:%S")
