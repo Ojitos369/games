@@ -16,3 +16,7 @@ class GetRandomLevel(ConexionApi):
             "nivel": nivel.to_dict("records")[0]
         }
 
+
+class GetTopLevel(ConexionApi):
+    def main(self):
+        top = self.data.get('top', 10)
