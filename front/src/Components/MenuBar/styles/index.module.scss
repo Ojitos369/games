@@ -11,7 +11,7 @@
     align-content: start;
     flex-wrap: wrap;
     // border-left: 1px solid #00ffff;
-    border-left: 1px solid var(--my-minor);
+    // border-left: 1px solid var(--my-minor);
     transition: all 0.5s ease-in-out;
     z-index: 1;
     position: fixed;
@@ -28,6 +28,6 @@
 
     &.hiddeBar {
         width: 0;
-        border-left: 1px solid transparent;
+        // border-left: 1px solid transparent;
     }
 }

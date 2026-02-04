@@ -1,4 +1,4 @@
-const cambiarThema = thema => {
+export const cambiarThema = thema => {
     const minor = thema === 'black' ? '#ffffff' : '#212121';
     const major = thema === 'black' ? '#212121' : '#ffffff';
     document.documentElement.style.setProperty('--my-minor', minor);
@@ -6,12 +6,12 @@ const cambiarThema = thema => {
     return 
 }
 
-const getFloatCurrency = (text) => {
+export const getFloatCurrency = (text) => {
     const value = text.replace(/[^0-9.-]+/g, '');
     return parseFloat(value);
 }
 
-const showCurrency = (value, decimals) => {
+export const showCurrency = (value, decimals) => {
     decimals = decimals || 2;
     // separe with commas
     value = parseFloat(value || 0);
@@ -48,7 +48,7 @@ const showCurrency = (value, decimals) => {
     return '$ ' + (negativo ? '-' : '') + new_string;
 }
 
-const showDate = (date, showTime) => {
+export const showDate = (date, showTime) => {
     if (!date) {
         return '';
     }
@@ -65,7 +65,7 @@ const showDate = (date, showTime) => {
     }
 }
 
-const showNumber = (value, decimals) => {
+export const showNumber = (value, decimals) => {
     decimals = decimals || 3;
     // separe with commas
     value = parseFloat(value || 0);
@@ -103,14 +103,14 @@ const showNumber = (value, decimals) => {
     return (negativo ? '-' : '') + new_string;
 }
 
-const getHoy = () => {
+export const getHoy = () => {
     let date = new Date();
     date.setHours(date.getHours() - 6);
     date = date.toISOString().split('T')[0];
     return date;
 }
 
-const selectArrowUp = props => {
+export const selectArrowUp = props => {
     const elegido = props.elegido;
     const itemHeight = props.itemHeight;
     const myLista = props.myLista || [];
@@ -149,7 +149,7 @@ const selectArrowUp = props => {
     }
 }
 
-const selectArrowDown = props => {
+export const selectArrowDown = props => {
     const elegido = props.elegido;
     const itemHeight = props.itemHeight;
     const myLista = props.myLista ||[];
@@ -185,7 +185,7 @@ const selectArrowDown = props => {
     }
 }
 
-const selectEnter = props => {
+export const selectEnter = props => {
     const myLista = props.myLista || [];
     const mode = props.mode || 'ele';
     const data = {index: 0};
@@ -193,23 +193,18 @@ const selectEnter = props => {
     props.actualizador(data);
 }
 
-const selectNull = props => {
+export const selectNull = props => {
     const mode = props.mode || 'ele';
     const data = {index: -1};
     data[mode] = null;
     props.actualizador(data);
 }
 
-
-export {
-    cambiarThema,
-    getFloatCurrency,
-    showCurrency,
-    showDate,
-    showNumber,
-    getHoy,
-    selectArrowUp,
-    selectArrowDown,
-    selectEnter,
-    selectNull,
-};
+export const pages = [
+    {name: 'Solo', menu_name: 'solo', elements: [
+        {name: 'Rush Car', page_name: 'rush_car', to: '/rush_car', menuBar: 'menuBarDefault'},
+    ]},
+    {name: 'Multi', menu_name: 'multi', elements: [
+        {name: 'Pending', page_name: 'pending', to: '/pending'},
+    ]},
+]

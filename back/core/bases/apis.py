@@ -50,7 +50,7 @@ class BaseApi(ClassBase):
                 detail = str(e)
             )
         except Exception as e:
-            error = self.ce.show_error(e, send_email=True, extra=self.extra_error)
+            error = self.ce.show_error(e, send_email=prod_mode, extra=self.extra_error)
             print_line_center(error)
             raise HTTPException(
                 status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -201,4 +201,6 @@ class WebSocketApi:
             await self.on_disconnect()
 
 
+""" 
 
+"""

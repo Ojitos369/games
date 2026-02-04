@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useStates, createState } from "../../Hooks/useStates";
 import style from './styles/index.module.scss';
-import { useEffect } from "react";
+import { pages } from "../../Core/helper";
 
 export const localStates = () => {
     const { f, s } = useStates();
@@ -12,23 +12,11 @@ export const localStates = () => {
     const isInMd = useMemo(() => s.app?.general?.isInMd, [s.app?.general?.isInMd]);
     const [sidebarOpen, setSidebarOpen] = createState(['sidebar', 'open'], false);
     const [menusAbiertos, setMenusAbiertos] = createState(['sidebar', 'menusAbiertos'], {});
+    const [menuBarMode, setMenuBarMode] = createState(['menubar', 'menuMode'], null);
 
     const elementos = useMemo(() => {
-        return [
-            {name: 'Index', menu_name: 'index', opened: menusAbiertos['index'], elements: [
-                // cargar, asignar
-                {name: 'Index', page_name: 'index', to: '/'},
-            ]},
-            {name: 'Chat', menu_name: 'chat', opened: menusAbiertos['chat'], elements: [
-                // cargar, asignar
-                {name: 'Chat', page_name: 'chat', to: '/chat/chat'},
-            ]},
-            {name: 'Test', menu_name: 'test', opened: menusAbiertos['test'], elements: [
-                // cargar, asignar
-                {name: 'Test', page_name: 'test', to: '/test/test'},
-            ]},
-        ]
-    }, [menusAbiertos]);
+        return pages.map(page => {return {...page, opened: menusAbiertos[page.menu_name]}});
+    }, [menusAbiertos, pages]);
 
     const toggleMenu = menu => {
         setMenusAbiertos({ [menu]: !menusAbiertos[menu] });
@@ -42,6 +30,7 @@ export const localStates = () => {
         sidebarOpen, setSidebarOpen,
         setMenusAbiertos,
         elementos, actualMenu, 
+        setMenuBarMode, 
     }
 }
 

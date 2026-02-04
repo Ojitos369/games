@@ -76,3 +76,4 @@ class ClassBase:
             time += ":00"
         fecha = f"{date} {time}"
         return datetime.datetime.strptime(fecha, "%Y-%m-%d %H:%M:%S")
+

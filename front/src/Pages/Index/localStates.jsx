@@ -15,14 +15,11 @@ export const localStates = props => {
     const [actualPage, setActualPage] = createState(['page', 'actual'], "");
     const hhMessage = useMemo(() => s.app?.hh?.response?.message, [s.app?.hh?.response?.message]);
     const [menuBarMode, setMenuBarMode] = createState(['menubar', 'menuMode'], null);
-    const isInMd = useMemo(() => s.app?.general?.isInMd, [s.app?.general?.isInMd]);
 
     const init = () => {
-        f.app.helloWorld();
-        setTitulo("Index");
+        setTitulo("Games");
         setActualPage("index");
-        setMenuBarMode('menuBarDefault');
-        setMenuBarOpen(isInMd);
+        setMenuBarMode(null);
     }
 
     const toggleNot = () => {

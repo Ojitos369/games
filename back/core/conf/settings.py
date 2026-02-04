@@ -45,4 +45,4 @@ db_data = {
 class MYE(Exception):
     pass
 
-ce = CE(name_project = 'Manejo Altan', email_settings = email_settings)
+ce = CE(name_project = 'Games', email_settings = email_settings)

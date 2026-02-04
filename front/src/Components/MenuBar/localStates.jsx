@@ -9,6 +9,8 @@ export const localStates = () => {
     // const menubarOpen = useMemo(() => s.menubar?.open, [s.menubar?.open]);
     const [menubarOpen, setMenuBarOpen] = createState(['menubar', 'open'], false);
     const menuMode = useMemo(() => s.menubar?.menuMode, [s.menubar?.menuMode]);
+    const isInMd = useMemo(() => s.app?.general?.isInMd, [s.app?.general?.isInMd]);
+
     const Component = useMemo(() => {
         switch (menuMode) {
             case 'menuBarDefault':
@@ -21,15 +23,18 @@ export const localStates = () => {
     return {
         style, Component,
         menubarOpen, setMenuBarOpen,
+        isInMd
     }
 }
 
 export const localEffects = () => {
-    const { Component, setMenuBarOpen } = localStates();
+    const { Component, setMenuBarOpen, isInMd } = localStates();
 
     useEffect(() => {
         if (!Component) {
             setMenuBarOpen(false);
+        } else if (!isInMd) {
+            setMenuBarOpen(false);
         }
-    }, [Component]);
+    }, [Component, isInMd]);
 }

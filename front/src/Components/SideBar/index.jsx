@@ -3,19 +3,27 @@ import { Fragment } from "react";
 import { localStates, localEffects } from "./localStates";
 
 export const SideBar = props => {
-    const { style, sidebarOpen, setSidebarOpen, toggleMenu, elementos, actualPage, isInMd } = localStates();
+    const { style, sidebarOpen, setSidebarOpen, toggleMenu, elementos, actualPage, isInMd, setMenuBarMode } = localStates();
     localEffects();
 
     return (
         <nav className={`${style.SideBarContent} ${!sidebarOpen && style.hiddeBar}`}>
             <li className={`${style.elementsList}`}>
+                <Link to="/" className={`${style.link} ${actualPage === 'index' && style.linkSelected}`} 
+                onClick={() => {
+                    setMenuBarMode(null);
+                    if (!isInMd) setSidebarOpen(false);
+                }}
+                >Games</Link>
+
                 {elementos.map((ele, index) => {
                     const show = ele.show ?? true;
                     if (!show) return null;
                     return (
                         <Fragment key={index}>
                         <button 
-                            className={`${style.link} ${ele.opened && style.linkSelected}`}
+                            className={`${style.link} $
+                            {ele.opened && style.linkSelected}`}
                             onClick={() => {
                                 toggleMenu(ele.menu_name);
                             }}
@@ -33,6 +41,7 @@ export const SideBar = props => {
                                             className={`${style.linkPage} ${style.link} ${actualPage === ele2.page_name && style.linkSelected}`}
                                             to={ele2.to}
                                             onClick={() => {
+                                                if (ele2.menuBar) setMenuBarMode(ele2.menuBar);
                                                 if (!isInMd) setSidebarOpen(false);
                                             }}
                                         >

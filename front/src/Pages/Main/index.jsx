@@ -6,7 +6,7 @@ import { localStates, localEffects } from "./localStates";
 
 
 export const Main = props => {
-    const { style, openSectionClass, pageTitle } = localStates();
+    const { style, openSectionClass } = localStates();
     localEffects();
 
     return (
@@ -18,9 +18,6 @@ export const Main = props => {
                 <SideBar />
                 <section className={`${style.sectionContainer} ${openSectionClass && style[openSectionClass]}`}>
                     <div className={`${style.contentContainer}`}>
-                        {!!pageTitle && 
-                            <h1 className={`${style.pageTitle}`}>{pageTitle}</h1>
-                        }
                         <div className={`${style.outletContainer}`}>
                             <div className={`${style.outlet}`}>
                                 <Outlet />

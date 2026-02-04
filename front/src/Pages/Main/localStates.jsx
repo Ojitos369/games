@@ -9,7 +9,6 @@ export const localStates = () => {
     // const menubarOpen = useMemo(() => s.menubar?.open, [s.menubar?.open]);
     const [menubarOpen, setMenubarOpen] = createState(['menubar', 'open'], false);
     const [isInMd, setIsInMd] = createState(['app', 'general', 'isInMd'], window.innerWidth >= 768);
-    const pageTitle = useMemo(() => s.page?.title ?? '', [s.page?.title]);
     const menuMode = useMemo(() => s.menubar?.menuMode, [s.menubar?.menuMode]);
     const [menuInit, setMenuInit] = useState(false);
 
@@ -30,7 +29,7 @@ export const localStates = () => {
     }, [sidebarOpen, menubarOpen]);
 
     return { 
-        style, openSectionClass, init, isInMd, setIsInMd, pageTitle,
+        style, openSectionClass, init, isInMd, setIsInMd, 
         startMenuMode, menuMode, menuInit, 
     }
 }
