@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ojitos Rush</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="rush.css">
+</head>
+<body class="flex flex-col items-center p-4 min-h-screen">
+
+    <!-- Global Loader -->
+    <div id="globalLoader">
+        <div class="flex flex-col items-center gap-4">
+            <div class="spinner"></div>
+            <p class="text-yellow-500 font-black tracking-widest uppercase text-xs">Cargando...</p>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div id="shareModal" class="modal-container" onclick="if(event.target === this) window.closeModal('shareModal')">
+        <div class="modal-card">
+            <!-- Header -->
+            <div class="modal-header">
+                <h3 class="modal-title">Compartir Reto</h3>
+                <p class="modal-subtitle">Desafía a tus amigos a superar este nivel.</p>
+            </div>
+            
+            <!-- Scrollable Body -->
+            <div class="modal-body-scroll">
+                <div class="space-y-6">
+                    <div>
+                        <label class="text-[10px] font-black text-neutral-500 uppercase block mb-2 tracking-widest">ID del Nivel</label>
+                        <input type="text" id="modalUUID" readonly class="input-elegant">
+                    </div>
+                </div>
+                <p id="copyStatus" class="text-center text-[10px] text-emerald-500 mt-6 font-bold opacity-0 transition-opacity">¡Copiado con éxito!</p>
+            </div>
+
+            <!-- Footer (Fixed Actions) -->
+            <div class="modal-footer">
+                <button onclick="window.copyToClip('uuid')" class="btn-action btn-secondary">Copiar ID</button>
+                <button onclick="window.copyToClip('link')" class="btn-action btn-primary">Copiar Link</button>
+                <button onclick="window.closeModal('shareModal')" class="btn-close-red">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Records Modal -->
+    <div id="userRecordsModal" class="modal-container" onclick="if(event.target === this) window.closeModal('userRecordsModal')">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">Historial de <span id="recordModalUser" class="text-yellow-400">...</span></h3>
+                <p class="modal-subtitle">Niveles conquistados por este jugador.</p>
+            </div>
+
+            <div class="modal-body-scroll">
+                <table class="w-full text-left table-elegant">
+                    <thead>
+                        <tr>
+                            <th>Nivel</th>
+                            <th class="text-center">Óptimo</th>
+                            <th class="text-center">Usuario</th>
+                            <th class="text-center">Tiempo</th>
+                            <th class="text-right">Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userRecordsBody"></tbody>
+                </table>
+            </div>
+
+            <div class="modal-footer">
+                <button onclick="window.closeModal('userRecordsModal')" class="btn-close-red">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full flex flex-col items-center mt-6 px-4 gap-12">
+        
+        <!-- PANEL IZQUIERDO -->
+        <div class="flex flex-col items-center w-full max-w-[550px]">
+            <h1 class="text-4xl font-black mb-6 text-yellow-500 italic tracking-tighter uppercase">Rush Hour</h1>
+            
+            <div class="flex gap-2 mb-8">
+                <div class="stat-card relative group cursor-pointer" onclick="window.resetLevel()">
+                    <p class="stat-label">Movs</p>
+                    <p class="stat-value text-yellow-400" id="moveDisplay">0</p>
+                    <div class="absolute inset-0 bg-yellow-500/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-xl">
+                        <span class="text-[10px] font-black uppercase text-yellow-500">Reset</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">Óptimo</p>
+                    <p class="stat-value text-blue-400" id="optimoDisplay">--</p>
+                </div>
+                <div class="stat-card relative group cursor-pointer" onclick="window.resetLevel()">
+                    <p class="stat-label">Tiempo</p>
+                    <p class="stat-value text-green-400" id="timerDisplay">00:00</p>
+                    <div class="absolute inset-0 bg-green-500/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-xl">
+                        <span class="text-[10px] font-black uppercase text-green-500">Reset</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative w-full">
+                <div id="board" class="board-container"></div>
+                <div class="exit-marker"></div>
+                
+                <div id="userOverlay" class="overlay" style="display: flex;">
+                    <div class="flex flex-col items-center bg-black/80 backdrop-blur-xl p-10 rounded-[3rem] border border-white/10 shadow-2xl">
+                        <h2 class="text-3xl font-black mb-8 text-white tracking-tighter uppercase italic">Tu Identidad</h2>
+                        <input type="text" id="userNameInput" maxlength="12" placeholder="Nickname..." class="bg-neutral-900/50 border-2 border-white/5 p-5 rounded-2xl mb-8 text-center text-3xl font-black focus:border-yellow-500/50 outline-none w-80 text-white transition-all">
+                        <button onclick="window.saveUserName()" class="bg-gradient-to-br from-yellow-400 to-yellow-600 hover:from-yellow-300 hover:to-yellow-500 text-black px-16 py-5 rounded-full font-black uppercase shadow-[0_0_30px_rgba(251,191,36,0.2)] hover:shadow-[0_0_40px_rgba(251,191,36,0.3)] transition-all transform hover:-translate-y-1">Empezar la Carrera</button>
+                    </div>
+                </div>
+
+                <div id="winOverlay" class="modal-container" onclick="if(event.target === this) window.closeModal('winOverlay')">
+                    <div class="modal-card">
+                        <div class="modal-header">
+                            <h3 class="modal-title text-green-400">¡Nivel Conquistado!</h3>
+                            <p class="modal-subtitle">Has superado el desafío con éxito.</p>
+                        </div>
+                        
+                        <div class="modal-body-scroll">
+                            <div class="grid grid-cols-3 gap-4 mb-8">
+                                <div class="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl text-center">
+                                    <p class="text-[10px] font-black text-neutral-500 uppercase mb-1">Movimientos</p>
+                                    <p class="text-2xl font-black text-yellow-500" id="winMoves">0</p>
+                                </div>
+                                <div class="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl text-center">
+                                    <p class="text-[10px] font-black text-neutral-500 uppercase mb-1">Tiempo</p>
+                                    <p class="text-2xl font-black text-green-400" id="winTime">0:00</p>
+                                </div>
+                                <div class="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl text-center">
+                                    <p class="text-[10px] font-black text-neutral-500 uppercase mb-1">Óptimo</p>
+                                    <p class="text-2xl font-black text-blue-400" id="winOptimo">0</p>
+                                </div>
+                            </div>
+                            <p id="winMsg" class="text-center font-bold text-neutral-400 italic mb-2"></p>
+                        </div>
+
+                        <div class="modal-footer flex-col sm:flex-row gap-3">
+                            <button onclick="window.fetchLevel()" class="btn-action btn-primary !flex-none w-full sm:w-auto px-10">Siguiente 🎲</button>
+                            <button onclick="window.resetLevel()" class="btn-action btn-secondary !flex-none w-full sm:w-auto px-6">Volver a jugar</button>
+                            <button onclick="window.closeModal('winOverlay')" class="btn-action !bg-neutral-800 !text-neutral-500 !flex-none w-full sm:w-auto px-6">Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex flex-col gap-3 w-full max-w-[360px]">
+                <button id="ingameResetBtn" onclick="window.resetLevel()" class="hidden w-full bg-red-500/10 border border-red-500/50 text-red-400 py-3 rounded-xl font-black text-xs uppercase hover:bg-red-500/20 transition-all animate-in fade-in slide-in-from-top-2">↺ Reiniciar Nivel</button>
+                <div class="flex gap-2">
+                    <button onclick="window.fetchLevel()" class="flex-1 bg-purple-700 hover:bg-purple-600 py-4 rounded-xl font-black text-xs uppercase shadow-lg transition-all active:scale-95">🎲 Nivel al Azar</button>
+                    <button onclick="window.openShareModal()" class="flex-1 bg-neutral-800 hover:bg-neutral-700 py-4 rounded-xl font-black border border-neutral-700 text-xs uppercase transition-all active:scale-95">🔗 Compartir</button>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="flex bg-neutral-900 p-2 rounded-xl border border-neutral-800 gap-1 items-center">
+                        <input type="number" id="levelSelector" min="1" max="60" placeholder="Dif 1-60" class="w-full bg-transparent text-white font-black outline-none text-center text-sm">
+                        <button onclick="window.goToDifficulty()" class="bg-blue-600 p-2 rounded-lg"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></button>
+                    </div>
+                    <div class="flex bg-neutral-900 p-2 rounded-xl border border-neutral-800 gap-1 items-center">
+                        <input type="text" id="uuidSelector" placeholder="Pegar ID" class="w-full bg-transparent text-white font-black outline-none text-xs px-1">
+                        <button onclick="window.goToUUID()" class="bg-emerald-600 p-2 rounded-lg"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></button>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="mt-6 text-[10px] text-neutral-600 font-bold uppercase tracking-widest">Player: <b id="displayName" class="text-blue-500">...</b> • <button onclick="window.showUserOverlay()" class="underline hover:text-white transition-colors">Cambiar</button></p>
+        </div>
+
+        <!-- PANEL DE TOPS (RESPONSIVE GRID) -->
+        <div class="w-full max-w-7xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Nivel Actual Top 10 -->
+            <div class="bg-neutral-900/50 p-6 rounded-3xl border border-neutral-800 shadow-xl backdrop-blur-md">
+                <h3 class="text-xs font-black text-yellow-500 uppercase mb-4 tracking-widest border-b border-neutral-800 pb-2">
+                    🏆 Top 10 de <span class="text-white opacity-60" id="currentLevelIdDisplay">#...</span>
+                </h3>
+                <div id="worldRecords" class="space-y-2 min-h-[200px] custom-scroll"></div>
+            </div>
+
+            <!-- Leyendas Globales -->
+            <div class="bg-neutral-900/50 p-6 rounded-3xl border border-neutral-800 shadow-xl backdrop-blur-md">
+                <h3 class="text-xs font-black text-emerald-400 uppercase mb-4 tracking-widest border-b border-neutral-800 pb-2">
+                    🔥 Leyendas Globales
+                </h3>
+                <div id="topPlayers" class="space-y-2 min-h-[200px] custom-scroll"></div>
+            </div>
+
+            <!-- Más Populares -->
+            <div class="bg-neutral-900/50 p-6 rounded-3xl border border-neutral-800 shadow-xl backdrop-blur-md">
+                <h3 class="text-xs font-black text-blue-400 uppercase mb-4 tracking-widest border-b border-neutral-800 pb-2">
+                    🔥 Más Populares
+                </h3>
+                <div id="popularLevels" class="grid grid-cols-1 gap-2"></div>
+            </div>
+
+            <!-- Últimos Jugados -->
+            <div class="bg-neutral-900/50 p-6 rounded-3xl border border-neutral-800 shadow-xl backdrop-blur-md">
+                <h3 class="text-xs font-black text-purple-400 uppercase mb-4 tracking-widest border-b border-neutral-800 pb-2">
+                    🕒 Últimos Jugados
+                </h3>
+                <div id="recentLevels" class="grid grid-cols-1 gap-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        const API = "rush_api.php";
+        const colors = { 'A': '#dc143c', 'x': '#333333', 'B': '#4682b4', 'C': '#2e8b57', 'D': '#ffa500', 'E': '#9370db', 'F': '#00ced1', 'G': '#ff69b4', 'H': '#8b4513', 'I': '#ffd700', 'J': '#228b22', 'K': '#483d8b', 'L': '#daa520', 'M': '#b22222' };
+
+        let currentUsername = localStorage.getItem('rh_user') || "";
+        let currentLevel = null, pieces = [], moveCount = 0, gameFinished = false;
+        let startX, startY, originalPos = {r:0, c:0}, isDragging = false, activePiece = null;
+        let dragInitialGridPos = {r:0, c:0}, startTime = null, timerInterval = null;
+
+        const setLoader = (show) => { document.getElementById('globalLoader').style.display = show ? 'flex' : 'none'; };
+
+        const init = () => {
+            if (currentUsername) {
+                document.getElementById('displayName').textContent = currentUsername;
+                document.getElementById('userOverlay').style.display = 'none';
+            }
+            const urlParams = new URLSearchParams(window.location.search);
+            const uuid = urlParams.get('level');
+            window.fetchLevel(uuid);
+            loadTopPlayers();
+            loadTrending();
+
+            // Modal Escape and Global Listeners
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') window.closeModal();
+            });
+        };
+
+        window.saveUserName = () => {
+            const name = document.getElementById('userNameInput').value.trim();
+            if (!name) return;
+            currentUsername = name;
+            localStorage.setItem('rh_user', name);
+            document.getElementById('displayName').textContent = name;
+            document.getElementById('userOverlay').style.display = 'none';
+            if (!currentLevel) window.fetchLevel();
+            loadTopPlayers();
+        };
+
+        window.showUserOverlay = () => document.getElementById('userOverlay').style.display = 'flex';
+
+        window.goToDifficulty = () => {
+            const diff = document.getElementById('levelSelector').value;
+            if (diff >= 1 && diff <= 60) window.fetchLevel(null, null, diff);
+        };
+
+        window.goToUUID = () => {
+            const uuid = document.getElementById('uuidSelector').value.trim();
+            if (uuid) window.fetchLevel(uuid);
+        };
+
+        window.fetchLevel = async (uuid = null, id = null, optimo = null) => {
+            document.getElementById('moveDisplay').textContent = "0";
+            document.getElementById('winOverlay').style.display = 'none';
+            document.getElementById('ingameResetBtn').classList.add('hidden');
+            setLoader(true);
+            let url = `${API}?action=get_level`;
+            if (uuid) url += `&uuid=${uuid}`;
+            if (id) url += `&id=${id}`;
+            if (optimo) url += `&optimo=${optimo}`;
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.error) { 
+                    alert(data.error); 
+                    setLoader(false);
+                    return uuid || id || optimo ? window.fetchLevel() : null; 
+                }
+                
+                currentLevel = data;
+                window.resetLevel(false); // Reset stats but don't fetch anything else
+                document.getElementById('optimoDisplay').textContent = data.optimo;
+                document.getElementById('currentLevelIdDisplay').textContent = `#${data.id}`;
+                await loadRecords();
+                if (!uuid && !id && !optimo && window.location.search) window.history.replaceState({}, '', window.location.pathname);
+            } catch (e) { console.error("Conexión perdida."); }
+            finally { setLoader(false); }
+        };
+
+        window.resetLevel = (restartTimer = true) => {
+            moveCount = 0;
+            document.getElementById('moveDisplay').textContent = "0";
+            document.getElementById('winOverlay').style.display = 'none';
+            document.getElementById('ingameResetBtn').classList.add('hidden');
+            gameFinished = false;
+            resetTimer();
+            renderGame();
+        };
+
+        const loadRecords = async () => {
+            const res = await fetch(`${API}?action=get_records&level_id=${currentLevel.id}`);
+            const data = await res.json();
+            const worldBox = document.getElementById('worldRecords');
+            
+            if (data.world.length === 0) {
+                worldBox.innerHTML = "<p class='text-[10px] opacity-20 italic text-center py-10'>Sin récords aún.</p>";
+            } else {
+                worldBox.innerHTML = data.world.map((r, i) => `
+                    <div class="flex justify-between items-center bg-white/5 p-2 rounded-xl text-[11px] border border-white/5">
+                        <span class="font-black ${i===0?'text-yellow-400':''} truncate w-24 uppercase cursor-pointer hover:underline" onclick="window.openUserRecords('${r.username}')">${i+1}. ${r.username}</span>
+                        <div class="flex gap-3 items-center">
+                            <span class="font-black text-yellow-500/80">${r.moves} <span class="text-[8px] opacity-30 uppercase">M</span></span>
+                            <span class="opacity-30 tabular-nums font-bold">${Math.floor(r.time_seconds/60)}:${(r.time_seconds%60).toString().padStart(2,'0')}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        };
+
+        const loadTopPlayers = async () => {
+            const res = await fetch(`${API}?action=get_top_players`);
+            const data = await res.json();
+            document.getElementById('topPlayers').innerHTML = data.map((p, i) => `
+                <div class="flex justify-between items-center bg-emerald-500/5 p-2 rounded-xl text-[11px] border border-emerald-500/10">
+                    <span class="font-black ${i===0?'text-emerald-400':''} truncate w-24 uppercase cursor-pointer hover:underline" onclick="window.openUserRecords('${p.username}')">${i+1}. ${p.username}</span>
+                    <span class="font-black text-emerald-500/80">${p.total} <span class="text-[8px] opacity-40">RECS</span></span>
+                </div>
+            `).join('');
+        };
+
+        const loadTrending = async () => {
+            const res = await fetch(`${API}?action=get_trending`);
+            const data = await res.json();
+            
+            const renderItem = (l, color) => `
+                <div class="group cursor-pointer flex justify-between items-center bg-${color}-500/5 hover:bg-${color}-500/10 p-3 rounded-xl transition-all border border-transparent hover:border-${color}-500/20" onclick="window.fetchLevel('${l.uuid}')">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-black text-${color}-300 uppercase">Reto #${l.id}</span>
+                        <span class="text-[8px] text-neutral-500 font-bold uppercase tracking-tighter">Dificultad Opt: ${l.optimo}</span>
+                    </div>
+                    <span class="text-[9px] font-black opacity-30 uppercase">${l.plays_count} Jugadas</span>
+                </div>
+            `;
+
+            document.getElementById('popularLevels').innerHTML = data.popular.map(l => renderItem(l, 'blue')).join('');
+            document.getElementById('recentLevels').innerHTML = data.recent.map(l => renderItem(l, 'purple')).join('');
+        };
+
+        window.openUserRecords = async (username) => {
+            setLoader(true);
+            try {
+                const res = await fetch(`${API}?action=get_user_records&username=${encodeURIComponent(username)}`);
+                const data = await res.json();
+                document.getElementById('recordModalUser').textContent = username;
+                const tbody = document.getElementById('userRecordsBody');
+                
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center opacity-30 italic">No hay records para este usuario.</td></tr>';
+                } else {
+                    // Agrupar por nivel
+                    const groups = {};
+                    data.forEach(r => {
+                        if (!groups[r.nivel_id]) groups[r.nivel_id] = [];
+                        groups[r.nivel_id].push(r);
+                    });
+
+                    // Generar HTML
+                    tbody.innerHTML = '';
+                    
+                    // Ordenar niveles por ID
+                    const levelIds = Object.keys(groups).sort((a,b) => parseInt(a) - parseInt(b));
+
+                    levelIds.forEach(lid => {
+                        const records = groups[lid];
+                        // Ordenar records: menor movs, luego menor tiempo
+                        records.sort((a,b) => {
+                            if (a.moves !== b.moves) return a.moves - b.moves;
+                            return a.time_seconds - b.time_seconds;
+                        });
+
+                        const best = records[0];
+                        const count = records.length;
+                        
+                        // Fila Principal (Mejor Record)
+                        const mainRow = document.createElement('tr');
+                        mainRow.className = "group hover:bg-white/5 transition-colors border-b border-white/5";
+                        mainRow.innerHTML = `
+                            <td class="py-3 font-black text-blue-400 cursor-pointer hover:text-blue-300 hover:underline transition-all" onclick="window.fetchLevel(null, ${lid}); window.closeModal('userRecordsModal')" title="Jugar este nivel">#${lid}</td>
+                            <td class="py-3 text-center font-bold text-neutral-400">${best.optimo}</td>
+                            <td class="py-3 text-center font-black text-yellow-500">${best.moves}</td>
+                            <td class="py-3 text-center tabular-nums text-neutral-300">
+                                ${Math.floor(best.time_seconds/60)}:${(best.time_seconds%60).toString().padStart(2,'0')}
+                            </td>
+                            <td class="py-3 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <span class="text-[9px] text-neutral-500">${best.timestamp.split(' ')[0]}</span>
+                                    ${count > 1 ? 
+                                        `<button onclick="toggleLevelRows('${lid}')" class="w-6 h-6 rounded-full bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center transition-all">
+                                            <svg id="icon-${lid}" class="w-3 h-3 text-neutral-400 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                         </button>` 
+                                    : ''}
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(mainRow);
+
+                        // Filas Secundarias (Ocultas)
+                        if (count > 1) {
+                            records.slice(1).forEach(r => {
+                                const subRow = document.createElement('tr');
+                                subRow.className = `hidden level-group-${lid} bg-black/20 border-b border-white/5`;
+                                subRow.innerHTML = `
+                                    <td class="py-2 pl-4 border-l-2 border-neutral-800 text-neutral-600 text-[10px]">Intento</td>
+                                    <td class="py-2 text-center text-[10px] text-neutral-600">-</td>
+                                    <td class="py-2 text-center text-neutral-400 text-xs">${r.moves}</td>
+                                    <td class="py-2 text-center tabular-nums text-neutral-500 text-xs">
+                                        ${Math.floor(r.time_seconds/60)}:${(r.time_seconds%60).toString().padStart(2,'0')}
+                                    </td>
+                                    <td class="py-2 text-right text-[9px] text-neutral-600 pr-10">${r.timestamp}</td>
+                                `;
+                                tbody.appendChild(subRow);
+                            });
+                        }
+                    });
+                }
+                
+                document.getElementById('userRecordsModal').style.display = 'flex';
+            } catch (e) {
+                console.error("Error al cargar records de usuario", e);
+            } finally {
+                setLoader(false);
+            }
+        };
+
+        window.toggleLevelRows = (lid) => {
+            const rows = document.querySelectorAll(`.level-group-${lid}`);
+            const icon = document.getElementById(`icon-${lid}`);
+            let isHidden = true;
+            
+            rows.forEach(r => {
+                if (r.classList.contains('hidden')) {
+                    r.classList.remove('hidden');
+                    r.classList.add('slide-in');
+                    isHidden = false;
+                } else {
+                    r.classList.add('hidden');
+                    isHidden = true;
+                }
+            });
+
+            if (icon) {
+                icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+                icon.parentElement.style.backgroundColor = isHidden ? '' : '#fbbf24';
+                icon.style.color = isHidden ? '' : '#000';
+            }
+        };
+
+        // --- MODAL & CLIPP ---
+        window.openShareModal = () => {
+            if (!currentLevel) return;
+            document.getElementById('modalUUID').value = currentLevel.uuid;
+            document.getElementById('shareModal').style.display = 'flex';
+        };
+
+        window.closeModal = (id) => { 
+            if (id) {
+                document.getElementById(id).style.display = 'none';
+            } else {
+                document.querySelectorAll('.modal-container').forEach(m => m.style.display = 'none');
+            }
+        };
+
+        window.copyToClip = (type) => {
+            let text = "";
+            if (type === 'uuid') text = currentLevel.uuid;
+            else text = `${window.location.origin}${window.location.pathname}?level=${currentLevel.uuid}`;
+            
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            const status = document.getElementById('copyStatus');
+            status.style.opacity = "1";
+            setTimeout(() => { status.style.opacity = "0"; }, 2000);
+        };
+
+        const saveWin = async () => {
+            const timeParts = document.getElementById('timerDisplay').textContent.split(':');
+            const sec = parseInt(timeParts[0])*60 + parseInt(timeParts[1]);
+            await fetch(`${API}?action=save_record`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUsername, level_id: currentLevel.id, moves: moveCount, seconds: sec })
+            });
+            loadRecords(); loadTopPlayers(); loadTrending();
+        };
+
+        // --- MOTOR ---
+        function renderGame() {
+            const b = document.getElementById('board');
+            b.innerHTML = '';
+            for (let i=0; i<36; i++) b.appendChild(document.createElement('div')).className = 'cell';
+            const str = currentLevel.layout.padEnd(36, 'o');
+            pieces = [];
+            const proc = new Set();
+            for (let i=0; i<36; i++) {
+                const char = str[i];
+                if (char === 'o' || proc.has(i)) continue;
+                const idxs = [];
+                for(let j=0; j<36; j++) if(str[j] === char) idxs.push(j);
+                idxs.forEach(idx => proc.add(idx));
+                const rs = idxs.map(idx => Math.floor(idx/6)), cs = idxs.map(idx => idx%6);
+                
+                if (char === 'x') {
+                    idxs.forEach(idx => {
+                        const p = { id: 'x', r: Math.floor(idx/6), c: idx % 6, w: 1, h: 1, color: colors['x'] };
+                        pieces.push(p); createPieceElement(p, b);
+                    });
+                    continue;
+                }
+
+                const p = {
+                    id: char, r: Math.min(...rs), c: Math.min(...cs),
+                    w: Math.max(...cs)-Math.min(...cs)+1, h: Math.max(...rs)-Math.min(...rs)+1,
+                    orientation: (Math.max(...cs)-Math.min(...cs) > 0) ? 'h' : 'v',
+                    color: colors[char] || `hsl(${char.charCodeAt(0)*35}, 60%, 45%)`
+                };
+                pieces.push(p); createPieceElement(p, b);
+            }
+        }
+
+        function createPieceElement(p, b) {
+            const el = document.createElement('div');
+            const isTarget = p.id === 'A';
+            el.className = `piece ${p.id === 'x' ? 'wall' : p.orientation + '-car'} ${isTarget ? 'target-car-style' : ''}`;
+            el.id = p.id === 'x' ? `wall-${p.r}-${p.c}` : `piece-${p.id}`;
+            el.style.width = `calc(${p.w} * (100%/6) - 10px)`;
+            el.style.height = `calc(${p.h} * (100%/6) - 10px)`;
+            el.style.left = `calc(${p.c} * (100%/6) + 9px)`;
+            el.style.top = `calc(${p.r} * (100%/6) + 9px)`;
+            
+            if (p.id === 'x') {
+                el.innerHTML = `
+                    <div class="barrier-sprite">
+                        <div class="barrier-stripes"></div>
+                        <div class="barrier-concrete">
+                            <span class="text-[8px] opacity-30 font-black">X</span>
+                        </div>
+                        <div class="barrier-stripes"></div>
+                    </div>`;
+            } else {
+                const icon = isTarget ? '<span class="absolute -top-1 -left-1 text-[12px] drop-shadow-md">👑</span>' : '';
+                el.innerHTML = `
+                    <div class="car-body" style="background:${p.color}">
+                        ${icon}
+                        <div class="window-front"></div>
+                        <span class="text-[10px] font-black opacity-30 pointer-events-none uppercase">${p.id}</span>
+                    </div>`;
+                el.onmousedown = (e) => startDrag(e, p);
+                el.ontouchstart = (e) => startDrag(e, p);
+            }
+            b.appendChild(el);
+        }
+
+        function startDrag(e, p) {
+            if (gameFinished || p.id === 'x') return;
+            e.preventDefault(); isDragging = true; activePiece = p;
+            const cx = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const cy = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+            startX = cx; startY = cy;
+            originalPos = {r: p.r, c: p.c}; dragInitialGridPos = {r: p.r, c: p.c};
+        }
+
+        function handleMove(e) {
+            if (!isDragging || !activePiece || gameFinished) return;
+            const cx = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const cy = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+            const rect = document.getElementById('board').getBoundingClientRect();
+            const dx = (cx - startX) / (rect.width/6), dy = (cy - startY) / (rect.height/6);
+            let nr = originalPos.r, nc = originalPos.c;
+            if (activePiece.orientation === 'h') nc = Math.round(originalPos.c + dx);
+            else nr = Math.round(originalPos.r + dy);
+            
+            // Limit to board
+            nc = Math.max(0, Math.min(nc, 6 - activePiece.w)); 
+            nr = Math.max(0, Math.min(nr, 6 - activePiece.h));
+
+            // Move step by step to prevent "jumping"
+            const stepR = Math.sign(nr - activePiece.r);
+            const stepC = Math.sign(nc - activePiece.c);
+            
+            let finalR = activePiece.r;
+            let finalC = activePiece.c;
+
+            while (finalR !== nr || finalC !== nc) {
+                const nextR = finalR + stepR;
+                const nextC = finalC + stepC;
+                if (canMoveTo(activePiece, nextR, nextC)) {
+                    finalR = nextR;
+                    finalC = nextC;
+                } else {
+                    break;
+                }
+            }
+
+            if (finalR !== activePiece.r || finalC !== activePiece.c) {
+                activePiece.r = finalR; activePiece.c = finalC;
+                const el = document.getElementById(`piece-${activePiece.id}`);
+                el.style.left = `calc(${activePiece.c} * (100%/6) + 9px)`;
+                el.style.top = `calc(${activePiece.r} * (100%/6) + 9px)`;
+                checkWin();
+            }
+        }
+
+        function canMoveTo(p, r, c) {
+            for (let o of pieces) {
+                if (o === p) continue;
+                if (r < o.r + o.h && r + p.h > o.r && c < o.c + o.w && c + p.w > o.c) return false;
+            }
+            return true;
+        }
+
+        function stopDrag() {
+            if (isDragging && activePiece) {
+                if (activePiece.r !== dragInitialGridPos.r || activePiece.c !== dragInitialGridPos.c) {
+                    if (!startTime) startTimer();
+                    moveCount++; 
+                    document.getElementById('moveDisplay').textContent = moveCount;
+                    if (moveCount > 0) document.getElementById('ingameResetBtn').classList.remove('hidden');
+                }
+            }
+            isDragging = false; activePiece = null;
+        }
+
+        function checkWin() {
+            const carA = pieces.find(p => p.id === 'A');
+            if (carA && carA.r === 2 && carA.c === 4) {
+                gameFinished = true; stopTimer();
+                
+                // Count the winning move immediately
+                if (isDragging) {
+                    moveCount++;
+                    document.getElementById('moveDisplay').textContent = moveCount;
+                    // Prevent double counting in stopDrag
+                    isDragging = false; 
+                    activePiece = null;
+                }
+
+                document.getElementById('piece-A').style.left = `calc(6 * (100%/6) + 10px)`;
+                saveWin();
+                
+                // Populate Modal Stats
+                document.getElementById('winMoves').textContent = moveCount;
+                document.getElementById('winTime').textContent = document.getElementById('timerDisplay').textContent;
+                document.getElementById('winOptimo').textContent = currentLevel.optimo;
+                
+                const diff = moveCount - currentLevel.optimo;
+                let msg = "";
+                if (diff === 0) msg = "¡Increíble! Has alcanzado el puntaje óptimo. 🏆";
+                else if (diff <= 3) msg = "¡Casi perfecto! Muy cerca del óptimo. ✨";
+                else msg = "¡Bien hecho! Sigue practicando para mejorar tu marca. 💪";
+                document.getElementById('winMsg').textContent = msg;
+
+                setTimeout(() => {
+                    confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 }, colors: ['#fbbf24', '#ffffff', '#3b82f6'] });
+                    document.getElementById('winOverlay').style.display = 'flex';
+                }, 300);
+            }
+        }
+
+        function startTimer() { startTime = Date.now(); timerInterval = setInterval(() => {
+            const elapsed = Math.floor((Date.now()-startTime)/1000);
+            document.getElementById('timerDisplay').textContent = `${Math.floor(elapsed/60).toString().padStart(2,'0')}:${(elapsed%60).toString().padStart(2,'0')}`;
+        }, 1000); }
+        function stopTimer() { clearInterval(timerInterval); }
+        function resetTimer() { stopTimer(); document.getElementById('timerDisplay').textContent = "00:00"; startTime = null; }
+
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', (e) => { if(isDragging) e.preventDefault(); handleMove(e); }, {passive:false});
+        window.addEventListener('mouseup', stopDrag);
+        window.addEventListener('touchend', stopDrag);
+        init();
+    </script>
+</body>
+</html>

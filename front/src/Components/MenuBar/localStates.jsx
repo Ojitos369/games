@@ -3,6 +3,7 @@ import { useStates, createState } from "../../Hooks/useStates";
 import style from './styles/index.module.scss';
 
 import { MenuBarDefault } from "../../Pages/Index/MenuBarDefault";
+import { MenuBar1 as MenuBar1SLRC } from "../../Pages/Solo/RushCar/MenuBar1";
 
 export const localStates = () => {
     const { s } = useStates();
@@ -15,6 +16,8 @@ export const localStates = () => {
         switch (menuMode) {
             case 'menuBarDefault':
                 return MenuBarDefault;
+            case 'menuBar1SLRC':
+                return MenuBar1SLRC;
             default:
                 return null;
         }

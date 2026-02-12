@@ -7,6 +7,7 @@ import { Main as MainPage } from '../Pages/Main';
 import { Index as IndexPage } from '../Pages/Index';
 import { Test as TestPage } from '../Pages/Test';
 import { Chat as ChatPage } from '../Pages/Chat';
+import { Solo as SoloPage } from '../Pages/Solo';
 
 import { Login as LoginPage } from '../Pages/Login';
 import { P404 } from '../Pages/P404';
@@ -41,6 +42,7 @@ function AppUI() {
                 <Route path="" element={ <MainPage /> } >
                     <Route path="" element={ <IndexPage /> } />
                     <Route path="chat/*" element={ <ChatPage /> } />
+                    <Route path="solo/*" element={ <SoloPage /> } />
                     <Route path="test/*" element={ <TestPage /> } />
                     <Route path="*" element={ <P404 /> } />
                     {/* -----------   /404   ----------- */}

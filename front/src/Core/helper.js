@@ -202,7 +202,7 @@ export const selectNull = props => {
 
 export const pages = [
     {name: 'Solo', menu_name: 'solo', elements: [
-        {name: 'Rush Car', page_name: 'rush_car', to: '/rush_car', menuBar: 'menuBarDefault'},
+        {name: 'Rush Car', page_name: 'solo_rushcar', to: '/solo/rushcar', menuBar: 'menuBar1SLRC'},
     ]},
     {name: 'Multi', menu_name: 'multi', elements: [
         {name: 'Pending', page_name: 'pending', to: '/pending'},
