@@ -17,6 +17,11 @@ const RushCarPage = () => {
 
     return (
         <div className={styles.rushcarPage}>
+            <div className={styles.gameHeader}>
+                <button onClick={() => window.location.href = '/'} className={styles.backBtn}>
+                    ← Volver a la Biblioteca
+                </button>
+            </div>
             <div className={styles.gameSection}>
                 <h1 className={styles.title}>🏎️ Rush Car</h1>
                 <GameStats />

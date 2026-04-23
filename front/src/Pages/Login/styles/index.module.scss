@@ -1,60 +1,197 @@
 .loginPage {
     display: grid;
     grid-template-columns: 100vw;
-    grid-template-rows: 30vh 70vh;
-    .logoPart {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: end;
-        .logo {
-            height: 80%;
-            // width: auto;
-            width: 50%;
-            border: 1px solid var(--my-minor);
-            border-radius: 10px;
-            background: gray;
-        }
+    grid-template-rows: 1fr;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a0a1a 0%, #1a1035 40%, #0d1b2a 70%, #0a0a1a 100%);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at 30% 40%, rgba(99, 51, 255, 0.08) 0%, transparent 50%),
+                    radial-gradient(circle at 70% 60%, rgba(0, 210, 255, 0.06) 0%, transparent 50%);
+        animation: bgFloat 20s ease-in-out infinite;
+        pointer-events: none;
     }
-    .formContainer {
+
+    .loginContainer {
         display: flex;
         flex-direction: column;
-        padding-top: 100px;
-        justify-content: start;
         align-items: center;
-        .inputElement {
-            padding: 15px;
-            justify-content: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            label, input {
-                width: 100%;
+        justify-content: center;
+        padding: 2rem;
+        z-index: 1;
+    }
+
+    .logoSection {
+        text-align: center;
+        margin-bottom: 2.5rem;
+
+        .brandName {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: 6px;
+            color: #ffffff;
+            text-transform: uppercase;
+            margin: 0;
+            position: relative;
+
+            .brandDot {
+                display: inline-block;
+                width: 12px;
+                height: 12px;
+                background: linear-gradient(135deg, #7c3aed, #06b6d4);
+                border-radius: 50%;
+                margin-left: 4px;
+                vertical-align: super;
+                animation: dotPulse 2s ease-in-out infinite;
             }
+        }
+
+        .brandSub {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 0.5rem;
+        }
+    }
+
+    .formCard {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        width: 100%;
+        max-width: 400px;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+        .formTitle {
+            color: #ffffff;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .formSubtitle {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+        }
+    }
+
+    .inputGroup {
+        margin-bottom: 1.5rem;
+
+        label {
+            display: block;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .inputWrapper {
+            position: relative;
+
+            .inputIcon {
+                position: absolute;
+                left: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: rgba(255, 255, 255, 0.3);
+                font-size: 1.1rem;
+                pointer-events: none;
+            }
+
             input {
-                border-radius: 7px;
-                padding: 10px;
-                color: black;
-                border-bottom: 2px solid var(--my-minor);
+                width: 100%;
+                background: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 14px 16px 14px 44px;
+                color: #ffffff;
+                font-size: 0.95rem;
+                transition: all 0.3s ease;
+                box-sizing: border-box;
+
+                &::placeholder {
+                    color: rgba(255, 255, 255, 0.25);
+                }
+
                 &:focus {
                     outline: none;
-                    border-bottom: 2px solid var(--my-success);
-                    box-shadow: -6px 7px 7px -3px var(--my-success);
-                }
-            }
-            .submit {
-                cursor: pointer;
-                background-color: #1c8f1c;
-                border: none;
-                &:hover {
-                    background-color: #29ad29;
-                }
-                &:focus {
-                    outline: none;
-                    box-shadow: none;
+                    border-color: rgba(124, 58, 237, 0.5);
+                    background: rgba(255, 255, 255, 0.08);
+                    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15),
+                                0 4px 12px rgba(0, 0, 0, 0.2);
                 }
             }
         }
     }
+
+    .submitBtn {
+        width: 100%;
+        background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        padding: 14px;
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        margin-top: 0.5rem;
+
+        &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            transition: left 0.5s;
+        }
+
+        &:hover {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+
+            &::before {
+                left: 100%;
+            }
+        }
+
+        &:active {
+            transform: translateY(0);
+        }
+    }
+}
+
+@keyframes bgFloat {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(2%, -1%) rotate(1deg); }
+    66% { transform: translate(-1%, 2%) rotate(-1deg); }
+}
+
+@keyframes dotPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.8); }
 }

@@ -201,10 +201,16 @@ export const selectNull = props => {
 }
 
 export const pages = [
-    {name: 'Solo', menu_name: 'solo', elements: [
-        {name: 'Rush Car', page_name: 'solo_rushcar', to: '/solo/rushcar', menuBar: 'menuBar1SLRC'},
+    {name: 'Biblioteca', menu_name: 'biblioteca', elements: [
+        {name: 'Biblioteca', page_name: 'biblioteca', to: '/'},
+        {name: 'Explorar', page_name: 'explorar', to: '#'},
+        {name: 'Favoritos', page_name: 'favoritos', to: '/?favs=1'},
+        {name: 'Perfil', page_name: 'perfil', to: '#'},
     ]},
-    {name: 'Multi', menu_name: 'multi', elements: [
-        {name: 'Pending', page_name: 'pending', to: '/pending'},
+    {name: 'CATEGORÍAS', menu_name: 'categorias', elements: [
+        {name: 'Todo', page_name: 'biblioteca', to: '/'},
     ]},
+    {name: 'Admin', menu_name: 'admin', admin_only: true, elements: [
+        {name: 'Catálogos', page_name: 'catalogos', to: '/admin'},
+    ]}
 ]

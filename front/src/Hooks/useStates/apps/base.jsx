@@ -11,11 +11,12 @@ const miAxios = axios.create({
     baseURL: link,
 });
 
-const pjid = "reapi";
+const pjid = "gamestka";
 
 import { app as appMod } from "./app";
 import { general as generalMod } from "./general";
 import { auth as authMod } from "./auth";
+import { catalog as catalogMod } from "./catalog";
 import { sl_rushcar as sl_rushcarMod } from "./sl_rushcar";
 
 const updates = () => {
@@ -67,14 +68,15 @@ export const useBase = props => {
 
     const general = generalMod({ ...bases, ...updatesVars });
     const app = appMod({ ...bases, ...updatesVars });
-    const auth = authMod({ ...bases, ...updatesVars, notificacion: general.notificacion });
+    const auth = authMod({ ...bases, ...updatesVars, general });
+    const catalog = catalogMod({ ...bases, ...updatesVars, general });
 
     const sl_rushcar = sl_rushcarMod({ ...bases, ...updatesVars });
 
     return {
         MySwal, miAxios,
         u0, u1, u2, u3, u4, u5, u6, u7, u8, u9,
-        app, general, auth, 
+        app, general, auth, catalog,
         sl_rushcar, 
     };
 }

@@ -46,7 +46,7 @@ COPY . $APPINSTALL
 RUN pip install -r requirements.txt
 WORKDIR $APPINSTALL
 
-# docker start reapi-py
-# docker rm -f reapi-py && docker image rm reapi-web && docker network rm reapi-net && docker compose up -d
-# docker rm -f reapi-py && docker image rm reapi-web && docker compose up -d
+# docker start games-py
+# docker rm -f games-py && docker image rm games-web && docker network rm games-net && docker compose up -d
+# docker rm -f games-py && docker image rm games-web && docker compose up -d
 

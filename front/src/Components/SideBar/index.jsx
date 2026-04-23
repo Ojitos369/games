@@ -14,7 +14,7 @@ export const SideBar = props => {
                     setMenuBarMode(null);
                     if (!isInMd) setSidebarOpen(false);
                 }}
-                >Games</Link>
+                ><span style={{ fontWeight: 900, letterSpacing: '3px' }}>VAULT</span><span style={{ display: 'inline-block', width: 6, height: 6, background: 'linear-gradient(135deg, #7c3aed, #06b6d4)', borderRadius: '50%', marginLeft: 3, verticalAlign: 'super' }}></span></Link>
 
                 {elementos.map((ele, index) => {
                     const show = ele.show ?? true;
@@ -38,7 +38,7 @@ export const SideBar = props => {
                                     return (
                                         <Link 
                                             key={index2}
-                                            className={`${style.linkPage} ${style.link} ${actualPage === ele2.page_name && style.linkSelected}`}
+                                            className={`${style.linkPage} ${style.link} ${(actualPage === ele2.page_name && !window.location.search.includes('cat=')) || (ele2.isCategory && window.location.search === `?cat=${ele2.id}`) ? style.linkSelected : ''}`}
                                             to={ele2.to}
                                             onClick={() => {
                                                 if (ele2.menuBar) setMenuBarMode(ele2.menuBar);

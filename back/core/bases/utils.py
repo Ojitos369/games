@@ -12,6 +12,7 @@ class ClassBase:
 
     def close_conexion(self):
         try:
+            self.conexion.commit()
             self.conexion.close()
         except:
             pass

@@ -3,7 +3,7 @@ from pathlib import Path
 import setproctitle
 from ojitos369.errors import CatchErrors as CE
 
-setproctitle.setproctitle('reapi-py')
+setproctitle.setproctitle('games-py')
 
 # ----------------------   BASE   ----------------------
 BASE_DIR = Path(__file__).resolve().parent.parent.parent

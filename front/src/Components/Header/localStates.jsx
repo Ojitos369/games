@@ -9,7 +9,7 @@ export const localStates = () => {
     const actualPage = useMemo(() => s.page?.actual || '', [s.page?.actual]);
     const { prod_mode, dev_mode } = useMemo(() => s.app?.modes ?? {}, [s.app?.modes]);
     const userMenu = useMemo(() => s.modals?.user?.menu, [s.modals?.user?.menu]);
-    const username = useMemo(() => s.usuario?.data?.usuario, [s.usuario?.data?.usuario]);
+    const username = useMemo(() => s.usuario?.data?.username, [s.usuario?.data?.username]);
     const isInMd = useMemo(() => s.app?.general?.isInMd, [s.app?.general?.isInMd]);
     const [menubarOpen, setMenubarOpen] = createState(['menubar', 'open'], false);
     const showIconMenu = useMemo(() => s.menubar?.menuMode, [s.menubar?.menuMode]);

@@ -1,5 +1,5 @@
 export const auth = props => {
-    const { miAxios, pjid, s, u1, u2, urs } = props
+    const { miAxios, pjid, s, u1, u2, urs, general } = props
 
     const login = (usuario, passwd) => {
         if (s.loadings?.auth?.login) return;
@@ -10,14 +10,13 @@ export const auth = props => {
         }
         miAxios.post(url, data)
         .then(response => {
-            console.log(response.data);
             const { user, token } = response.data;
             u2("auth", "form", "usuario", "");
             u2("auth", "form", "passwd", "");
             u1("auth", "logged", true);
             u1("usuario", "data", user);
 
-            // set cookie unqvs for 12 hr
+            // set cookie for 12 hr
             const date = new Date();
                                 // ms  *  s  *  m  *  h
             const miliseconds = 1000 * 60 * 60 * 12;
@@ -29,7 +28,7 @@ export const auth = props => {
 
         }).catch(error => {
             console.log(error);
-            const message = error.response.data.detail || "error";
+            const message = error?.response?.data?.detail || "error";
             general.notificacion({
                 message,
                 title: "Error",
@@ -49,7 +48,7 @@ export const auth = props => {
         miAxios.get(end)
         .then(res => {
             const { user, token } = res.data;
-            // set cookie unqvs for 5 hr
+            // set cookie for 5 hr
             const date = new Date();
                                 // ms  *  s  *  m  *  h
             const miliseconds = 1000 * 60 * 60 * 5;
@@ -62,14 +61,14 @@ export const auth = props => {
             u1("usuario", "data", user);
         })
         .catch(err => {
-            auth.closeSession();
+            closeSession();
         }).finally(() => {
             u2("loadings", "auth", "validateLogin", false);
         });
     }
 
     const closeSession = () => {
-        if (s.users?.logged) {
+        if (s.auth?.logged) {
             const end = 'auth/close_session';
             miAxios.get(end)
             .then(res => {
@@ -77,7 +76,7 @@ export const auth = props => {
             });
         }
         urs();
-        document.cookie = pjid + "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/";
+        document.cookie = pjid + "tka=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/";
     }
 
     return {

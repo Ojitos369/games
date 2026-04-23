@@ -1,8 +1,8 @@
 services:
-    reapi-web:
+    games-web:
         build: .
         command: ["/usr/bin/supervisord"]
-        container_name: reapi-py
+        container_name: games-py
         restart: unless-stopped
         env_file:
             - .env
@@ -11,8 +11,8 @@ services:
         ports:
             - "8368:8000"
         networks:
-            - reapi-net
+            - games-net
 
 networks:
-    reapi-net:
+    games-net:
         driver: bridge

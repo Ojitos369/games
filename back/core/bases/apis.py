@@ -105,7 +105,7 @@ class BaseApi(ClassBase):
         except Exception as e:
             self.errors(e)
         finally:
-            pass
+            self.close_conexion()
 
 
 class ConexionApi(BaseApi):

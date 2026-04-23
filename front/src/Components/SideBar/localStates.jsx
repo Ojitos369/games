@@ -14,9 +14,30 @@ export const localStates = () => {
     const [menusAbiertos, setMenusAbiertos] = createState(['sidebar', 'menusAbiertos'], {});
     const [menuBarMode, setMenuBarMode] = createState(['menubar', 'menuMode'], null);
 
+    const isAdmin = useMemo(() => s.usuario?.data?.is_admin, [s.usuario?.data?.is_admin]);
+
+    const categorias = useMemo(() => s.catalog?.categorias || [], [s.catalog?.categorias]);
+
     const elementos = useMemo(() => {
-        return pages.map(page => {return {...page, opened: menusAbiertos[page.menu_name]}});
-    }, [menusAbiertos, pages]);
+        return pages
+            .filter(page => !page.admin_only || isAdmin)
+            .map(page => {
+                let p = {...page, opened: menusAbiertos[page.menu_name]};
+                if (p.menu_name === 'categorias') {
+                    p.elements = [
+                        ...p.elements,
+                        ...categorias.map(cat => ({
+                            name: cat.nombre,
+                            page_name: `cat_${cat.id}`,
+                            to: `/?cat=${cat.id}`,
+                            isCategory: true,
+                            id: cat.id
+                        }))
+                    ];
+                }
+                return p;
+            });
+    }, [menusAbiertos, pages, isAdmin, categorias]);
 
     const toggleMenu = menu => {
         setMenusAbiertos({ [menu]: !menusAbiertos[menu] });
