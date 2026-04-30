@@ -6,12 +6,22 @@ export const Board = () => {
         styles, level, pieces, setPieces, moveCount, setMoveCount,
         gameFinished, setGameFinished, loading,
         dragRef, boardRef, piecesRef,
-        startTimer, canMoveTo,
+        startTimer, canMoveTo, parseLayout, resetTimer,
         openWinModal, saveWin, getElapsedSeconds,
         showUserOverlay, setShowUserOverlay, currentUsername, saveUserName,
     } = localStates();
 
     const usernameInputRef = useRef(null);
+
+    // --- INIT PIECES when level changes ---
+    useEffect(() => {
+        if (level?.layout) {
+            setMoveCount(0);
+            setGameFinished(false);
+            resetTimer();
+            setPieces(parseLayout(level.layout));
+        }
+    }, [level?.id]);
 
     // --- CHECK WIN ---
     const checkWin = useCallback((updatedPieces, currentMoveCount) => {
@@ -120,12 +130,12 @@ export const Board = () => {
                     startTimer();
                     timerStartedRef.current = true;
                 }
-                setMoveCount(prev => prev + 1);
+                setMoveCount(moveCount + 1);
             }
         }
         drag.isDragging = false;
         drag.activePiece = null;
-    }, [dragRef, startTimer, setMoveCount]);
+    }, [dragRef, startTimer, setMoveCount, moveCount]);
 
     const timerStartedRef = useRef(false);
 

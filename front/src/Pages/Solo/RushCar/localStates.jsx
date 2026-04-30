@@ -25,17 +25,20 @@ export const localStates = () => {
     const userRecordsData = useMemo(() => s.solo?.rushcar?.userRecords?.data ?? [], [s.solo?.rushcar?.userRecords?.data]);
     const userRecordsUsername = useMemo(() => s.solo?.rushcar?.userRecords?.username ?? '', [s.solo?.rushcar?.userRecords?.username]);
 
-    // Game engine state (local, not Redux — performance critical)
+    // Game engine state — shared via Redux so all components see the same values
     const [pieces, setPieces] = useState([]);
-    const [moveCount, setMoveCount] = useState(0);
-    const [gameFinished, setGameFinished] = useState(false);
-    const [timerDisplay, setTimerDisplay] = useState("00:00");
-    const [showUserOverlay, setShowUserOverlay] = useState(false);
-    const [copyStatusVisible, setCopyStatusVisible] = useState(false);
+    const [moveCount, setMoveCount] = createState(['solo', 'rushcar', 'engine', 'moveCount'], 0);
+    const [gameFinished, setGameFinished] = createState(['solo', 'rushcar', 'engine', 'gameFinished'], false);
+    const [timerDisplay, setTimerDisplay] = createState(['solo', 'rushcar', 'engine', 'timerDisplay'], "00:00");
+    const [showUserOverlay, setShowUserOverlay] = createState(['solo', 'rushcar', 'engine', 'showUserOverlay'], false);
+    const [copyStatusVisible, setCopyStatusVisible] = createState(['solo', 'rushcar', 'engine', 'copyStatusVisible'], false);
     const [expandedLevels, setExpandedLevels] = useState({});
 
-    // Username from localStorage
-    const [currentUsername, setCurrentUsername] = useState(() => localStorage.getItem('rh_user') || '');
+    // Username from localStorage, shared via Redux
+    const [currentUsername, setCurrentUsername] = createState(
+        ['solo', 'rushcar', 'engine', 'currentUsername'],
+        localStorage.getItem('rh_user') || ''
+    );
 
     // Refs for drag state (performance: no re-renders)
     const dragRef = useRef({
