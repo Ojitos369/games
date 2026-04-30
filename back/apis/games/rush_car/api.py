@@ -145,7 +145,7 @@ class GetUserRecords(ConexionApi):
 
         query = """
         SELECT r.level_id as nivel_id, l.optimo, r.moves, r.time_seconds,
-               TO_CHAR(r.timestamp, 'YYYY-MM-DD HH24:MI:SS') as timestamp
+               CAST(r.timestamp AS TEXT) as timestamp
         FROM rush_hour_jugadas r
         JOIN usuarios u ON r.user_id = u.id
         JOIN rush_hour_levels l ON r.level_id = l.id

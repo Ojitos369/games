@@ -1162,6 +1162,85 @@
 }
 
 /* ======================== RESPONSIVE ======================== */
+
+/* Mobile: < 640px */
+@media only screen and (max-width: 639px) {
+    .rushcarPage {
+        padding: 0.5rem;
+        gap: 1rem;
+    }
+
+    .gameHeader {
+        padding: 0;
+    }
+
+    .title {
+        font-size: 1.4rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .gameSection {
+        max-width: 100%;
+    }
+
+    .statsBar {
+        gap: 0.35rem;
+        margin-bottom: 1rem;
+    }
+
+    .statCard {
+        min-width: 75px;
+        padding: 8px 10px;
+
+        .statValue {
+            font-size: 1rem;
+        }
+    }
+
+    .boardWrapper {
+        max-width: 100%;
+    }
+
+    .controlsSection {
+        max-width: 100%;
+    }
+
+    .searchRow {
+        grid-template-columns: 1fr;
+    }
+
+    .mainButtons {
+        flex-direction: column;
+    }
+
+    .topPanelsSection {
+        grid-template-columns: 1fr;
+    }
+
+    .winStats {
+        gap: 0.5rem;
+    }
+
+    .winStatItem {
+        padding: 0.75rem 0.5rem;
+
+        .winStatValue {
+            font-size: 1.2rem;
+        }
+    }
+
+    .winActions {
+        flex-direction: column;
+    }
+
+    .btnWinPrimary,
+    .btnWinSecondary,
+    .btnWinClose {
+        min-width: unset;
+        width: 100%;
+    }
+}
+
 @include sm {
     .topPanelsSection {
         grid-template-columns: repeat(2, minmax(200px, 1fr));

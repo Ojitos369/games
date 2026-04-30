@@ -33,11 +33,13 @@ export const localStates = () => {
     const [showUserOverlay, setShowUserOverlay] = createState(['solo', 'rushcar', 'engine', 'showUserOverlay'], false);
     const [copyStatusVisible, setCopyStatusVisible] = createState(['solo', 'rushcar', 'engine', 'copyStatusVisible'], false);
     const [expandedLevels, setExpandedLevels] = useState({});
+    const [resetTick, setResetTick] = createState(['solo', 'rushcar', 'engine', 'resetTick'], 0);
 
-    // Username from localStorage, shared via Redux
+    // Session user takes priority; fallback to localStorage guest
+    const sessionUsername = useMemo(() => s.usuario?.data?.username ?? '', [s.usuario?.data?.username]);
     const [currentUsername, setCurrentUsername] = createState(
         ['solo', 'rushcar', 'engine', 'currentUsername'],
-        localStorage.getItem('rh_user') || ''
+        sessionUsername || localStorage.getItem('rh_user') || ''
     );
 
     // Refs for drag state (performance: no re-renders)
@@ -139,11 +141,8 @@ export const localStates = () => {
     const resetLevel = useCallback(() => {
         setMoveCount(0);
         setGameFinished(false);
-        resetTimer();
-        if (level?.layout) {
-            setPieces(parseLayout(level.layout));
-        }
-    }, [level, resetTimer, parseLayout]);
+        setResetTick(resetTick + 1);
+    }, [resetTick, setMoveCount, setGameFinished, setResetTick]);
 
     const fetchLevel = useCallback((params = {}) => {
         f.sl_rushcar.getLevel(params);
@@ -151,14 +150,15 @@ export const localStates = () => {
 
     // --- SAVE WIN ---
     const saveWin = useCallback((moves, seconds) => {
-        if (!currentUsername || !level) return;
+        const activeUser = sessionUsername || currentUsername;
+        if (!activeUser || !level) return;
         f.sl_rushcar.saveRecord({
-            username: currentUsername,
+            username: activeUser,
             level_id: level.id,
             moves,
             seconds
         });
-    }, [currentUsername, level, f.sl_rushcar]);
+    }, [sessionUsername, currentUsername, level, f.sl_rushcar]);
 
     // --- USERNAME ---
     const saveUserName = useCallback((name) => {
@@ -254,10 +254,10 @@ export const localStates = () => {
         f.sl_rushcar.getTopPlayers();
         f.sl_rushcar.getTrending();
 
-        if (!currentUsername) {
+        if (!sessionUsername && !localStorage.getItem('rh_user')) {
             setShowUserOverlay(true);
         }
-    }, []);
+    }, [sessionUsername]);
 
     return {
         styles,
@@ -278,6 +278,7 @@ export const localStates = () => {
         openWinModal, closeWinModal,
         openShareModal, closeShareModal,
         openUserRecordsModal, closeUserRecordsModal,
+        resetTick,
         // Drag refs
         dragRef, timerRef, boardRef, piecesRef,
         // Engine

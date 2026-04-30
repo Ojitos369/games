@@ -6,8 +6,9 @@ export const Board = () => {
         styles, level, pieces, setPieces, moveCount, setMoveCount,
         gameFinished, setGameFinished, loading,
         dragRef, boardRef, piecesRef,
-        startTimer, canMoveTo, parseLayout, resetTimer,
+        startTimer, stopTimer, canMoveTo, parseLayout, resetTimer,
         openWinModal, saveWin, getElapsedSeconds,
+        resetTick,
         showUserOverlay, setShowUserOverlay, currentUsername, saveUserName,
     } = localStates();
 
@@ -46,13 +47,14 @@ export const Board = () => {
 
             // Guardar y mostrar win
             const seconds = getElapsedSeconds();
+            stopTimer();
             saveWin(finalMoves, seconds);
 
             setTimeout(() => {
                 openWinModal();
             }, 300);
         }
-    }, [setGameFinished, setMoveCount, dragRef, setPieces, getElapsedSeconds, saveWin, openWinModal]);
+    }, [setGameFinished, setMoveCount, dragRef, setPieces, getElapsedSeconds, stopTimer, saveWin, openWinModal]);
 
     // --- DRAG HANDLERS ---
     const handlePointerDown = useCallback((e, piece) => {
@@ -143,6 +145,15 @@ export const Board = () => {
     useEffect(() => {
         timerStartedRef.current = false;
     }, [level?.id]);
+
+    // Replay: WinOverlay increments resetTick → Board resets its own pieces + timer
+    useEffect(() => {
+        if (resetTick > 0 && level?.layout) {
+            resetTimer();
+            setPieces(parseLayout(level.layout));
+            timerStartedRef.current = false;
+        }
+    }, [resetTick]);
 
     // Global event listeners
     useEffect(() => {
