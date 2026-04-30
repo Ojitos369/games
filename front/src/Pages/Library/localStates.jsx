@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useStates } from "../../Hooks/useStates";
 import style from './styles/index.module.scss';
 
-const API_BASE = 'http://localhost:8369';
+const API_BASE = 'http://localhost:8372';
 
 export const localStates = () => {
     const { s, f } = useStates();

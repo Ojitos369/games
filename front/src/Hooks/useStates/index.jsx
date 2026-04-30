@@ -11,14 +11,15 @@ const useStates = props => {
 
     return { ls, s, f, lf };
 }
-
 const createState = (elements, init) => {
     const { s, f } = useStates();
-    let state = `s.` + elements.join('?.');
+    const varSName = Object.keys({s})[0]
+    const varFName = Object.keys({f})[0]
+    let state = `${varSName}.` + elements.join('?.');
     const ele = useMemo(() => eval(state) ?? init, [eval(state)]);
     const updater = value => {
         value = JSON.stringify(value);
-        let update = `f.u${elements.length - 1}('${elements.join("','")}',${value});`;
+        let update = `${varFName}.u${elements.length - 1}('${elements.join("','")}',${value});`;
         eval(update);
     }
     return [ele, updater]

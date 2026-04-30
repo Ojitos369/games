@@ -30,6 +30,6 @@ Content
 
 
 ## Pruebas App
-- El front esta corriendo en 5173, corre el back en 8369
+- El front esta corriendo en 5173, corre el back en 8372
 - Usuario prueba: test
 - Contraseña prueba: test
