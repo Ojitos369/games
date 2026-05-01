@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react';
-import { Route, Routes, Navigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef } from 'react';
+import { Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { cambiarThema } from '../Core/helper';
 import { Theme } from '../Components/Theme';
 
@@ -10,6 +10,8 @@ import { Chat as ChatPage } from '../Pages/Chat';
 import { RushCar as RushCarPage } from '../Pages/Solo/RushCar';
 import { Library as LibraryPage } from '../Pages/Library';
 import { CatalogAdmin as CatalogAdminPage } from '../Pages/CatalogAdmin';
+import { Adivina as AdivinaPage } from '../Pages/Adivina';
+import { AdivinaSala as AdivinaSalaPage } from '../Pages/Adivina/Sala';
 
 import { Login as LoginPage } from '../Pages/Login';
 import { P404 } from '../Pages/P404';
@@ -23,9 +25,11 @@ import { GeneralNotification } from '../Components/Modals/general/GeneralNotific
 
 function AppUI() {
     const { ls, s, f } = useStates();
+    const location = useLocation();
     const logged = useMemo(() => s.auth?.logged, [s.auth?.logged]);
     const isAdmin = useMemo(() => s.usuario?.data?.is_admin, [s.usuario?.data?.is_admin]);
     const validateDone = useMemo(() => s.loadings?.auth?.validateLogin === false, [s.loadings?.auth?.validateLogin]);
+    const validatedRef = useRef(false);
 
     useEffect(() => {
         cambiarThema(ls?.theme);
@@ -36,8 +40,11 @@ function AppUI() {
     }, []);
 
     useEffect(() => {
-        f.auth.validateLogin();
-    }, [location.href]);
+        if (!validatedRef.current || s.auth?.logged) {
+            validatedRef.current = true;
+            f.auth.validateLogin();
+        }
+    }, [location.pathname]);
 
     // Show login if not logged in (mandatory)
     if (!logged) {
@@ -60,10 +67,12 @@ function AppUI() {
                     {isAdmin && (
                         <Route path="admin/*" element={ <CatalogAdminPage /> } />
                     )}
+                    <Route path="adivina/*" element={ <AdivinaPage /> } />
                     <Route path="*" element={ <P404 /> } />
                     {/* -----------   /404   ----------- */}
                 </Route>
                 <Route path="rushcar/*" element={ <RushCarPage /> } />
+                <Route path="adivina/sala/:codigo" element={ <AdivinaSalaPage /> } />
             </Routes>
 
             {!!s.modals?.general?.notification &&

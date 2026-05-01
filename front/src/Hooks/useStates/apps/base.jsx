@@ -18,6 +18,7 @@ import { general as generalMod } from "./general";
 import { auth as authMod } from "./auth";
 import { catalog as catalogMod } from "./catalog";
 import { sl_rushcar as sl_rushcarMod } from "./sl_rushcar";
+import { adivina as adivinaMod } from "./adivina";
 
 const updates = () => {
     const ls = useSelector(state => state.fs.ls);
@@ -72,11 +73,12 @@ export const useBase = props => {
     const catalog = catalogMod({ ...bases, ...updatesVars, general });
 
     const sl_rushcar = sl_rushcarMod({ ...bases, ...updatesVars });
+    const adivina = adivinaMod({ ...bases, ...updatesVars, general });
 
     return {
         MySwal, miAxios,
         u0, u1, u2, u3, u4, u5, u6, u7, u8, u9,
         app, general, auth, catalog,
-        sl_rushcar, 
+        sl_rushcar, adivina,
     };
 }

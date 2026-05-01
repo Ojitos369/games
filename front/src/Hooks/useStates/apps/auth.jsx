@@ -61,7 +61,10 @@ export const auth = props => {
             u1("usuario", "data", user);
         })
         .catch(err => {
-            closeSession();
+            // 400 de sesión inválida es comportamiento normal (sin cookie o expirada)
+            // no mostramos error al usuario, solo limpiamos estado
+            urs();
+            document.cookie = pjid + "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/";
         }).finally(() => {
             u2("loadings", "auth", "validateLogin", false);
         });
@@ -76,7 +79,7 @@ export const auth = props => {
             });
         }
         urs();
-        document.cookie = pjid + "tka=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/";
+        document.cookie = pjid + "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/";
     }
 
     return {

@@ -1,0 +1,319 @@
+.lobbyPage {
+    padding: 1.5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.lobbyHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.lobbyTitle {
+    font-size: clamp(1.4rem, 3vw, 2.2rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--my-primary), #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+}
+
+.lobbySubtitle {
+    margin: 0.3rem 0 0;
+    opacity: 0.7;
+    font-size: 0.9rem;
+}
+
+.joinSection {
+    background: color-mix(in srgb, var(--my-minor) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--my-minor) 15%, transparent);
+    border-radius: 12px;
+    padding: 1.2rem;
+}
+
+.joinBox {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.joinIcon {
+    font-size: 1.4rem;
+}
+
+.joinInput {
+    flex: 1;
+    min-width: 180px;
+    background: color-mix(in srgb, var(--my-minor) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--my-minor) 20%, transparent);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    color: var(--my-minor);
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+
+    &:focus {
+        outline: none;
+        border-color: var(--my-primary);
+    }
+}
+
+.salasSection {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.salasHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    h2 { margin: 0; font-size: 1.1rem; opacity: 0.9; }
+}
+
+.salasGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.salaCard {
+    background: color-mix(in srgb, var(--my-minor) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--my-minor) 15%, transparent);
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: border-color 0.2s, transform 0.15s;
+
+    &:hover {
+        border-color: var(--my-primary);
+        transform: translateY(-2px);
+    }
+}
+
+.salaCardHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.salaName {
+    font-weight: 700;
+    font-size: 1rem;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.salaEstado {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.estadoEsperando { background: color-mix(in srgb, var(--my-success) 20%, transparent); color: var(--my-success); }
+.estadoVotando { background: color-mix(in srgb, var(--my-yellow) 20%, transparent); color: var(--my-yellow); }
+.estadoJugando { background: color-mix(in srgb, var(--my-primary) 20%, transparent); color: var(--my-primary); }
+.estadoTerminado { background: color-mix(in srgb, var(--my-secondary) 20%, transparent); color: var(--my-secondary); }
+
+.salaCardBody {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.salaInfo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.salaCodigo, .salaJugadores, .salaCreador {
+    background: color-mix(in srgb, var(--my-minor) 8%, transparent);
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 3rem 1rem;
+    opacity: 0.5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.emptyIcon { font-size: 3rem; }
+
+.loadingState {
+    text-align: center;
+    padding: 2rem;
+    opacity: 0.6;
+}
+
+/* Buttons */
+.btnPrimary {
+    background: var(--my-primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+    &:hover { opacity: 0.85; }
+}
+
+.btnSecondary {
+    background: color-mix(in srgb, var(--my-minor) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--my-minor) 20%, transparent);
+    color: var(--my-minor);
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+    &:hover { background: color-mix(in srgb, var(--my-minor) 18%, transparent); }
+}
+
+.btnJoin {
+    background: var(--my-success);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.4rem 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+    &:hover { opacity: 0.85; }
+}
+
+.btnIcon {
+    background: none;
+    border: 1px solid color-mix(in srgb, var(--my-minor) 20%, transparent);
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: var(--my-minor);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    &:hover { background: color-mix(in srgb, var(--my-minor) 12%, transparent); }
+}
+
+.btnClose {
+    background: none;
+    border: none;
+    color: var(--my-minor);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    opacity: 0.7;
+    &:hover { opacity: 1; }
+}
+
+/* Modal */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal {
+    background: var(--my-major);
+    border: 1px solid color-mix(in srgb, var(--my-minor) 20%, transparent);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--my-minor) 15%, transparent);
+    h3 { margin: 0; font-size: 1.1rem; }
+}
+
+.modalBody {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.modalFooter {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid color-mix(in srgb, var(--my-minor) 15%, transparent);
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    label { font-size: 0.85rem; opacity: 0.8; font-weight: 600; }
+}
+
+.input {
+    background: color-mix(in srgb, var(--my-minor) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--my-minor) 20%, transparent);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    color: var(--my-minor);
+    font-size: 0.95rem;
+    &:focus { outline: none; border-color: var(--my-primary); }
+}
+
+.slider {
+    width: 100%;
+    accent-color: var(--my-primary);
+    cursor: pointer;
+}
+
+.sliderLabels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    opacity: 0.6;
+}

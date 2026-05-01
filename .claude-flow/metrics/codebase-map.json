@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-05-01T17:26:15.455Z",
+  "projectRoot": "/home/ojitos369/Documents/progra/games",
+  "structure": {
+    "hasPackageJson": false,
+    "hasTsConfig": false,
+    "hasClaudeConfig": true,
+    "hasClaudeFlow": true
+  },
+  "scannedAt": 1777656375455
+}
