@@ -367,5 +367,128 @@ class ToggleFavorito(SessionApi):
             self.conexion.ejecutar(query, {'id': fav_id, 'usuario_id': usuario_id, 'juego_id': juego_id})
             self.response = {"message": "Añadido a favoritos", "favorito": True}
 
+
+class GetJuego(ConexionApi):
+    def validate_session(self):
+        cookies = self.request.cookies
+        mi_cookie = cookies.get('gamestka', '')
+        auth_code = self.request.headers.get("authorization", None)
+        self.token = mi_cookie or auth_code
+
+    def main(self):
+        juego_id = self.data.get('juego_id', '')
+        if not juego_id:
+            raise self.MYE("ID del juego requerido")
+
+        usuario_id = None
+        if self.token:
+            query = """
+                SELECT u.id FROM sessiones s
+                JOIN usuarios u ON u.id = s.usuario_id
+                WHERE s.token = :token
+                ORDER BY s.created_at DESC LIMIT 1
+            """
+            result = self.conexion.consulta_asociativa(query, {'token': self.token})
+            users = self.d2d(result)
+            if users:
+                usuario_id = users[0]['id']
+
+        query = """
+            SELECT j.id, j.nombre, j.descripcion, j.jugadores_min, j.jugadores_max,
+                   j.url, j.calificacion, j.destacado, j.etiqueta,
+                   COALESCE(
+                       json_agg(DISTINCT jsonb_build_object('id', c.id, 'nombre', c.nombre))
+                       FILTER (WHERE c.id IS NOT NULL), '[]'
+                   ) as categorias,
+                   COALESCE(
+                       json_agg(DISTINCT jsonb_build_object(
+                           'id', ji.id, 'nombre', ji.nombre, 'tipo', ji.tipo,
+                           'es_portada', ji.es_portada, 'orden', ji.orden
+                       ))
+                       FILTER (WHERE ji.id IS NOT NULL), '[]'
+                   ) as imagenes,
+                   EXISTS(SELECT 1 FROM usuarios_favoritos uf WHERE uf.juego_id = j.id AND uf.usuario_id = :usuario_id) as es_favorito,
+                   (SELECT jsonb_build_object('calificacion', jcal.calificacion, 'comentario', jcal.comentario)
+                    FROM juegos_calificaciones jcal WHERE jcal.juego_id = j.id AND jcal.usuario_id = :usuario_id) as mi_calificacion
+            FROM juegos j
+            LEFT JOIN juegos_categorias jc ON jc.juego_id = j.id
+            LEFT JOIN categorias c ON c.id = jc.categoria_id
+            LEFT JOIN juegos_imagenes ji ON ji.juego_id = j.id
+            WHERE j.id = :id
+            GROUP BY j.id
+        """
+        result = self.conexion.consulta_asociativa(query, {'id': juego_id, 'usuario_id': usuario_id})
+        data = self.d2d(result)
+
+        if not data:
+            raise self.MYE("Juego no encontrado")
+
+        juego = data[0]
+        # Add image URLs
+        for img in juego.get('imagenes', []):
+            if img and img.get('nombre'):
+                img['url'] = f"/media/images/games/{juego['id']}/{img['nombre']}"
+
+        # Get all comments
+        query = """
+            SELECT jc.calificacion, jc.comentario, jc.created_at, u.username
+            FROM juegos_calificaciones jc
+            JOIN usuarios u ON u.id = jc.usuario_id
+            WHERE jc.juego_id = :juego_id
+            ORDER BY jc.created_at DESC
+        """
+        result = self.conexion.consulta_asociativa(query, {'juego_id': juego_id})
+        juego['comentarios'] = self.d2d(result)
+
+        self.response = {"juego": juego}
+
+
+class PostCalificacion(SessionApi):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.create_conexion()
+
+    def main(self):
+        # Get usuario_id
+        query = """
+            SELECT u.id FROM sessiones s
+            JOIN usuarios u ON u.id = s.usuario_id
+            WHERE s.token = :token
+            ORDER BY s.created_at DESC LIMIT 1
+        """
+        result = self.conexion.consulta_asociativa(query, {'token': self.token})
+        users = self.d2d(result)
+        if not users:
+            raise self.MYE("No autorizado")
+        usuario_id = users[0]['id']
+
+        juego_id = self.data.get('juego_id', '')
+        calificacion = self.data.get('calificacion')
+        comentario = self.data.get('comentario', '')
+
+        if not juego_id or calificacion is None:
+            raise self.MYE("juego_id y calificacion son requeridos")
+
+        try:
+            calificacion = int(calificacion)
+            if calificacion < 1 or calificacion > 10:
+                raise ValueError()
+        except ValueError:
+            raise self.MYE("La calificación debe ser un número entre 1 y 10")
+
+        # Upsert rating
+        query = """
+            INSERT INTO juegos_calificaciones (id, juego_id, usuario_id, calificacion, comentario)
+            VALUES (:id, :juego_id, :usuario_id, :calificacion, :comentario)
+            ON CONFLICT (juego_id, usuario_id) DO UPDATE
+            SET calificacion = EXCLUDED.calificacion, comentario = EXCLUDED.comentario, created_at = CURRENT_TIMESTAMP
+        """
+        self.conexion.ejecutar(query, {
+            'id': self.get_id(), 'juego_id': juego_id, 'usuario_id': usuario_id,
+            'calificacion': calificacion, 'comentario': comentario
+        })
+
+        self.response = {"message": "Calificación guardada"}
+
 """ 
 """

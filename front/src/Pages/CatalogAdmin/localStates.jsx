@@ -2,7 +2,9 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { useStates } from "../../Hooks/useStates";
 import style from './styles/index.module.scss';
 
-const API_BASE = 'http://localhost:8372';
+const host = window.location.hostname;
+const protocol = window.location.protocol;
+const API_BASE = `${protocol}//${host}:8372`;
 
 export const localStates = () => {
     const { s, f } = useStates();

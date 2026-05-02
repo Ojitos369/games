@@ -5,7 +5,9 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 
 const MySwal = withReactContent(Swal);
-const link = 'http://localhost:8372/api/';
+const host = window.location.hostname;
+const protocol = window.location.protocol;
+const link = `${protocol}//${host}:8372/api/`;
 axios.defaults.withCredentials = true;
 const miAxios = axios.create({
     baseURL: link,

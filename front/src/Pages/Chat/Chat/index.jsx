@@ -17,7 +17,9 @@ export const Chat = () => {
     useEffect(() => {
         if (!isConnected) return;
 
-        const wsUrl = `ws://localhost:8372/api/ws/${group}?clientId=${clientId.current}`;
+        const host = window.location.hostname;
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const wsUrl = `${protocol}://${host}:8372/api/ws/${group}?clientId=${clientId.current}`;
         socket.current = new WebSocket(wsUrl);
 
         console.log('Intentando conectar al WebSocket...');

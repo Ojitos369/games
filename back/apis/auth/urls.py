@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 from .api import (
-    Login, ValidateLogin, CloseSession
+    Login, ValidateLogin, CloseSession, Register
 )
 
 router = APIRouter()
@@ -8,6 +8,11 @@ router = APIRouter()
 @router.post("/login")
 async def login(request: Request):
     r = await Login(request=request).run()
+    return r
+
+@router.post("/register")
+async def register(request: Request):
+    r = await Register(request=request).run()
     return r
 
 @router.get("/validate_login")

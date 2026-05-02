@@ -1,5 +1,66 @@
 from core.bases.apis import BaseApi, ConexionApi, SessionApi, pln
-from core.utils.security import check_password
+from core.utils.security import check_password, make_password
+
+class Register(ConexionApi):
+    def main(self):
+        self.show_me()
+        usuario = self.data.get('usuario', '').strip()
+        passwd = self.data.get('passwd', '')
+
+        if not usuario or not passwd:
+            raise self.MYE("Usuario y contraseña son requeridos")
+
+        if len(usuario) < 3:
+            raise self.MYE("El usuario debe tener al menos 3 caracteres")
+        
+        if len(passwd) < 4:
+            raise self.MYE("La contraseña debe tener al menos 4 caracteres")
+
+        # Check if user exists
+        query = "SELECT id FROM usuarios WHERE username = :usuario"
+        result = self.conexion.consulta_asociativa(query, {'usuario': usuario})
+        if self.d2d(result):
+            raise self.MYE("El nombre de usuario ya está en uso")
+
+        # Create user
+        hashed = make_password(passwd)
+        user_id = self.get_id()
+        query = """
+            INSERT INTO usuarios (id, username, passwd)
+            VALUES (:id, :usuario, :hashed)
+        """
+        self.conexion.ejecutar(query, {
+            'id': user_id,
+            'usuario': usuario,
+            'hashed': hashed
+        })
+
+        # Auto-login
+        token = self.get_id()
+        session_id = self.get_id()
+        query = """
+            INSERT INTO sessiones (id, usuario_id, token)
+            VALUES (:id, :usuario_id, :token)
+        """
+        self.conexion.ejecutar(query, {
+            'id': session_id,
+            'usuario_id': user_id,
+            'token': token
+        })
+
+        self.response = {
+            "message": "Usuario registrado exitosamente",
+            "user": {
+                "id": user_id,
+                "username": usuario,
+                "is_admin": usuario == 'test',
+            },
+            "token": token
+        }
+
+    def validate_session(self):
+        pass
+
 
 class Login(ConexionApi):
     def main(self):

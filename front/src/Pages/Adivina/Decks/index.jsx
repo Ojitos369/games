@@ -11,13 +11,17 @@ export const Decks = () => {
         tarjetaTagFilter, setTarjetaTagFilter,
         toggleDeckTarjeta, openCreate, openEdit,
         handleSave, handleDelete,
+        navigate,
     } = localStates();
     localEffects();
 
     return (
         <div className={`${style.decksPage}`}>
             <div className={`${style.pageHeader}`}>
-                <h1 className={`${style.pageTitle}`}>Mis Decks</h1>
+                <div className={style.headerTitle}>
+                    <button className={style.btnBack} onClick={() => navigate('/adivina')}>← Volver</button>
+                    <h1 className={`${style.pageTitle}`}>Mis Decks</h1>
+                </div>
                 <button className={`${style.btnPrimary}`} onClick={openCreate}>+ Nuevo Deck</button>
             </div>
 
@@ -130,11 +134,24 @@ export const Decks = () => {
                                                 onChange={() => toggleDeckTarjeta(t.id)}
                                                 style={{ display: 'none' }}
                                             />
-                                            <span className={`${style.checkmark}`}>{form.tarjeta_ids.includes(t.id) ? '✓' : ''}</span>
-                                            <span>{t.nombre}</span>
-                                            {t.tags?.slice(0, 2).map(tg => (
-                                                <span key={tg.id} className={`${style.miniTag}`}>{tg.nombre}</span>
-                                            ))}
+                                            <div className={`${style.tarjetaPickerImgBox}`}>
+                                                {t.imagen ? (
+                                                    <img src={`${window.location.protocol}//${window.location.hostname}:8372/media/images/adivina/${t.id}/${t.imagen}`} alt="" className={`${style.miniTarjetaImg}`} />
+                                                ) : (
+                                                    <div className={`${style.miniTarjetaPlaceholder}`}>🎭</div>
+                                                )}
+                                            </div>
+                                            <div className={`${style.tarjetaPickerInfo}`}>
+                                                <div className={`${style.tarjetaPickerName}`}>
+                                                    <span className={`${style.checkmark}`}>{form.tarjeta_ids.includes(t.id) ? '✓ ' : ''}</span>
+                                                    {t.nombre}
+                                                </div>
+                                                <div className={`${style.tarjetaPickerTags}`}>
+                                                    {t.tags?.slice(0, 2).map(tg => (
+                                                        <span key={tg.id} className={`${style.miniTag}`}>{tg.nombre}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </label>
                                     ))}
                                     {filteredTarjetas.length === 0 && (

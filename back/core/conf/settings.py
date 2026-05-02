@@ -15,7 +15,7 @@ dev_mode = True if str(os.environ.get('RUN_DEV_MODE', False)).title() == 'True' 
 origins = [
     "http://localhost:5173",
 ]
-allow_origin_regex = r"https?://.*(localhost)+.*(:[0-9]+)?"
+allow_origin_regex = r"https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|172\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+).*(:[0-9]+)?"
 allow_origins = origins
 allow_credentials = True
 allow_methods = ["*"]

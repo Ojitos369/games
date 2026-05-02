@@ -65,3 +65,9 @@ CREATE TABLE adivina_partidas (
     ganador_id VARCHAR(36) REFERENCES usuarios(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ------ cambios de victorias por sala -----
+ALTER TABLE adivina_salas_jugadores ADD COLUMN victorias INTEGER DEFAULT 0;
+
+-- ------ cambios de adivina -----
+

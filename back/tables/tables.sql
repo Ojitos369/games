@@ -115,3 +115,63 @@ CREATE TABLE juegos_imagenes (
     orden INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE usuarios_favoritos (
+    id VARCHAR(36) DEFAULT uuid_generate_v4() UNIQUE NOT NULL PRIMARY KEY,
+    usuario_id VARCHAR(36) REFERENCES usuarios(id) ON DELETE CASCADE,
+    juego_id VARCHAR(36) REFERENCES juegos(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(usuario_id, juego_id)
+);
+
+-- ------ cambios de menu de juegos -----
+ALTER TABLE juegos ADD COLUMN en_menu BOOLEAN DEFAULT FALSE;
+
+-- Insertar o actualizar juegos para el menú
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM juegos WHERE nombre = 'Adivina el Personaje') THEN
+        INSERT INTO juegos (id, nombre, descripcion, jugadores_min, jugadores_max, url, calificacion, destacado, etiqueta, en_menu)
+        VALUES (uuid_generate_v4(), 'Adivina el Personaje', 'Juego multijugador de adivinar personajes.', 2, 20, '/adivina', 9.0, TRUE, 'NUEVO', TRUE);
+    ELSE
+        UPDATE juegos SET en_menu = TRUE, url = '/adivina' WHERE nombre = 'Adivina el Personaje';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM juegos WHERE nombre = 'Rush Car') THEN
+        INSERT INTO juegos (id, nombre, descripcion, jugadores_min, jugadores_max, url, calificacion, destacado, etiqueta, en_menu)
+        VALUES (uuid_generate_v4(), 'Rush Car', 'Puzzle de deslizar autos para salir del tráfico.', 1, 1, '/solo/rush-car', 8.5, FALSE, 'POPULAR', TRUE);
+    ELSE
+        UPDATE juegos SET en_menu = TRUE, url = '/solo/rush-car' WHERE nombre = 'Rush Car';
+    END IF;
+END $$;
+
+
+-- ------ cambios de calificacion de juegos -----
+CREATE TABLE juegos_calificaciones (
+    id VARCHAR(36) DEFAULT uuid_generate_v4() UNIQUE NOT NULL PRIMARY KEY,
+    juego_id VARCHAR(36) REFERENCES juegos(id) ON DELETE CASCADE,
+    usuario_id VARCHAR(36) REFERENCES usuarios(id) ON DELETE CASCADE,
+    calificacion INTEGER CHECK (calificacion >= 1 AND calificacion <= 10),
+    comentario TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(juego_id, usuario_id)
+);
+
+-- Funcion para actualizar la calificacion promedio del juego
+CREATE OR REPLACE FUNCTION update_juego_calificacion()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE juegos
+    SET calificacion = (
+        SELECT COALESCE(AVG(calificacion), 0)
+        FROM juegos_calificaciones
+        WHERE juego_id = COALESCE(NEW.juego_id, OLD.juego_id)
+    )
+    WHERE id = COALESCE(NEW.juego_id, OLD.juego_id);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_juego_calificacion
+AFTER INSERT OR UPDATE OR DELETE ON juegos_calificaciones
+FOR EACH ROW EXECUTE FUNCTION update_juego_calificacion();

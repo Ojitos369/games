@@ -3,7 +3,8 @@ from fastapi import APIRouter, Request, UploadFile, File, Form
 from .api import (
     ListJuegos, CreateJuego, UpdateJuego, DeleteJuego,
     ListCategorias, CreateCategoria, UpdateCategoria, DeleteCategoria,
-    UploadImagen, DeleteImagen, ToggleFavorito
+    UploadImagen, DeleteImagen, ToggleFavorito,
+    GetJuego, PostCalificacion
 )
 from core.conf.settings import MEDIA_DIR
 
@@ -15,6 +16,11 @@ router = APIRouter()
 @router.get("/juegos")
 async def list_juegos(request: Request):
     r = await ListJuegos(request=request).run()
+    return r
+
+@router.get("/juego")
+async def get_juego(request: Request):
+    r = await GetJuego(request=request).run()
     return r
 
 @router.post("/juegos")
@@ -35,6 +41,11 @@ async def delete_juego(request: Request):
 @router.post("/favoritos")
 async def toggle_favorito(request: Request):
     r = await ToggleFavorito(request=request).run()
+    return r
+
+@router.post("/calificacion")
+async def post_calificacion(request: Request):
+    r = await PostCalificacion(request=request).run()
     return r
 
 

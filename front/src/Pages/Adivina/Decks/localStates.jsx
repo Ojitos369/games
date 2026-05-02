@@ -1,9 +1,11 @@
 import { useMemo, useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStates, createState } from '../../../Hooks/useStates';
 import style from './styles/index.module.scss';
 
 export const localStates = () => {
     const { s, f } = useStates();
+    const navigate = useNavigate();
 
     const [, setTitulo] = createState(['page', 'title'], '');
     const [, setActualPage] = createState(['page', 'actual'], '');
@@ -94,7 +96,6 @@ export const localStates = () => {
         f.adivina.getTarjetas();
         f.adivina.getTags();
     }, []);
-
     return {
         style, decks, loadingDecks,
         tags, filteredTarjetas,
@@ -104,9 +105,10 @@ export const localStates = () => {
         tarjetaSearch, setTarjetaSearch,
         tarjetaTagFilter, setTarjetaTagFilter,
         toggleDeckTarjeta, openCreate, openEdit,
-        handleSave, handleDelete, init,
-    };
-};
+        handleSave, handleDelete,
+        navigate,
+    }
+}
 
 export const localEffects = () => {
     const { init } = localStates();

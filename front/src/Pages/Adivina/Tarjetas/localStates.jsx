@@ -1,11 +1,15 @@
 import { useMemo, useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStates, createState } from '../../../Hooks/useStates';
 import style from './styles/index.module.scss';
 
-const API_BASE = 'http://localhost:8372';
+const host = window.location.hostname;
+const protocol = window.location.protocol;
+const API_BASE = `${protocol}//${host}:8372`;
 
 export const localStates = () => {
     const { s, f } = useStates();
+    const navigate = useNavigate();
 
     const [, setTitulo] = createState(['page', 'title'], '');
     const [, setActualPage] = createState(['page', 'actual'], '');
@@ -113,25 +117,23 @@ export const localStates = () => {
         f.adivina.getTarjetas();
         f.adivina.getTags();
     }, []);
-
     return {
         style, tarjetas, tags, loadingTarjetas,
-        isAdmin, currentUserId,
+        isAdmin,
         searchQ, setSearchQ,
         selectedTags, toggleTag,
         showModal, setShowModal,
         editTarget,
         form, setForm,
-        imageFile, imagePreview,
+        imagePreview,
         newTagName, setNewTagName,
         getImageUrl, canEdit,
         toggleFormTag,
         openCreate, openEdit, handleImageChange,
         handleSave, handleDelete, handleCreateTag, handleSearch,
-        init,
-        f,
-    };
-};
+        navigate,
+    }
+}
 
 export const localEffects = () => {
     const { init } = localStates();

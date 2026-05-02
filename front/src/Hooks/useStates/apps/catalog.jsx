@@ -225,10 +225,36 @@ export const catalog = props => {
         });
     }
 
+    const getJuego = (data) => {
+        return miAxios.get("catalog/juego", { params: data })
+        .then(res => res.data)
+        .catch(err => {
+            console.log(err);
+            return null;
+        });
+    }
+
+    const postCalificacion = (data, callback) => {
+        if (s.loadings?.catalog?.postCalificacion) return;
+        u2("loadings", "catalog", "postCalificacion", true);
+        return miAxios.post("catalog/calificacion", data)
+        .then(res => {
+            if (callback) callback(res.data);
+            return res.data;
+        })
+        .catch(err => {
+            const message = err?.response?.data?.detail || "Error al guardar calificación";
+            general.notificacion({ message, title: "Error", mode: "danger" });
+        }).finally(() => {
+            u2("loadings", "catalog", "postCalificacion", false);
+        });
+    }
+
     return {
         getJuegos, getCategorias,
         createJuego, updateJuego, deleteJuego,
         createCategoria, updateCategoria, deleteCategoria,
-        uploadImage, deleteImagen, toggleFavorito
+        uploadImage, deleteImagen, toggleFavorito,
+        getJuego, postCalificacion
     }
 }

@@ -82,7 +82,49 @@ export const auth = props => {
         document.cookie = pjid + "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/";
     }
 
+    const register = (usuario, passwd) => {
+        if (s.loadings?.auth?.register) return;
+        u2("loadings", "auth", "register", true);
+        const url = "auth/register"
+        const data = {
+            usuario, passwd
+        }
+        miAxios.post(url, data)
+        .then(response => {
+            const { user, token } = response.data;
+            u2("auth", "form", "usuario", "");
+            u2("auth", "form", "passwd", "");
+            u1("auth", "logged", true);
+            u1("usuario", "data", user);
+
+            // set cookie for 12 hr
+            const date = new Date();
+            const miliseconds = 1000 * 60 * 60 * 12;
+            date.setTime(date.getTime() + (miliseconds));
+            const dateExpired = date.toUTCString();
+            const expires = 'expires=' + dateExpired
+            const miCookie = pjid + "=" + token + ";" + expires + ";path=/";
+            document.cookie = miCookie;
+
+            general.notificacion({
+                message: "¡Bienvenido! Tu cuenta ha sido creada.",
+                title: "Registro exitoso",
+                mode: "success"
+            })
+        }).catch(error => {
+            console.log(error);
+            const message = error?.response?.data?.detail || "error";
+            general.notificacion({
+                message,
+                title: "Error",
+                mode: "danger"
+            })
+        }).finally(() => {
+            u2("loadings", "auth", "register", false);
+        })
+    }
+
     return {
-        login, validateLogin, closeSession
+        login, register, validateLogin, closeSession
     }
 }

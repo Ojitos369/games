@@ -31,6 +31,34 @@
     font-size: 0.9rem;
 }
 
+.lobbyOptions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.btnOption {
+    background: color-mix(in srgb, var(--my-minor) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--my-minor) 20%, transparent);
+    color: var(--my-minor);
+    padding: 0.5rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+
+    &:hover {
+        background: color-mix(in srgb, var(--my-minor) 15%, transparent);
+        border-color: var(--my-primary);
+        color: var(--my-primary);
+    }
+}
+
 .joinSection {
     background: color-mix(in srgb, var(--my-minor) 5%, transparent);
     border: 1px solid color-mix(in srgb, var(--my-minor) 15%, transparent);
@@ -316,4 +344,45 @@
     justify-content: space-between;
     font-size: 0.75rem;
     opacity: 0.6;
+}
+
+.visibilidadRow {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btnVisibilidad {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--my-minor) 20%, transparent);
+    background: color-mix(in srgb, var(--my-minor) 8%, transparent);
+    color: var(--my-minor);
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+
+    &:hover {
+        background: color-mix(in srgb, var(--my-minor) 15%, transparent);
+        border-color: color-mix(in srgb, var(--my-minor) 30%, transparent);
+    }
+}
+
+.btnVisibilidadActive {
+    background: color-mix(in srgb, var(--my-primary) 15%, transparent);
+    border-color: var(--my-primary);
+    color: var(--my-primary);
+    box-shadow: 0 0 15px color-mix(in srgb, var(--my-primary) 20%, transparent);
+}
+
+.hint {
+    margin: 0.4rem 0 0;
+    font-size: 0.75rem;
+    opacity: 0.6;
+    font-style: italic;
 }

@@ -6,6 +6,7 @@ const myStates = () => {
     const { s, f } = useStates();
     const usuario = useMemo(() => s.auth?.form?.usuario ?? '', [s.auth?.form?.usuario]);
     const passwd = useMemo(() => s.auth?.form?.passwd ?? '', [s.auth?.form?.passwd]);
+    const [isRegister, setIsRegister] = useState(false);
 
     const updateUsuario = (e) => {
         const value = e.target.value;
@@ -16,18 +17,22 @@ const myStates = () => {
         f.u2("auth", "form", "passwd", value);
     };
 
-    const login = e => {
+    const handleSubmit = e => {
         if (!!e) e.preventDefault();
-        f.auth.login(usuario, passwd);
+        if (isRegister) {
+            f.auth.register(usuario, passwd);
+        } else {
+            f.auth.login(usuario, passwd);
+        }
     }
 
     return {
-        usuario, passwd, updateUsuario, updatePasswd, login
+        usuario, passwd, updateUsuario, updatePasswd, handleSubmit, isRegister, setIsRegister
     }
 }
 
 export const Login = () => {
-    const { usuario, passwd, updateUsuario, updatePasswd, login } = myStates();
+    const { usuario, passwd, updateUsuario, updatePasswd, handleSubmit, isRegister, setIsRegister } = myStates();
     return (
         <div className={`${style.loginPage}`}>
             <div className={`${style.loginContainer}`}>
@@ -37,9 +42,11 @@ export const Login = () => {
                     </h1>
                     <p className={`${style.brandSub}`}>Biblioteca de juegos</p>
                 </div>
-                <form className={`${style.formCard}`} onSubmit={login}>
-                    <h2 className={`${style.formTitle}`}>Bienvenido</h2>
-                    <p className={`${style.formSubtitle}`}>Inicia sesión para continuar</p>
+                <form className={`${style.formCard}`} onSubmit={handleSubmit}>
+                    <h2 className={`${style.formTitle}`}>{isRegister ? 'Crear cuenta' : 'Bienvenido'}</h2>
+                    <p className={`${style.formSubtitle}`}>
+                        {isRegister ? 'Completa tus datos para registrarte' : 'Inicia sesión para continuar'}
+                    </p>
                     <div className={`${style.inputGroup}`}>
                         <label>Usuario</label>
                         <div className={`${style.inputWrapper}`}>
@@ -51,6 +58,7 @@ export const Login = () => {
                                 value={usuario}
                                 onChange={updateUsuario}
                                 autoComplete="username"
+                                required
                             />
                         </div>
                     </div>
@@ -64,13 +72,21 @@ export const Login = () => {
                                 placeholder='Tu contraseña'
                                 value={passwd}
                                 onChange={updatePasswd}
-                                autoComplete="current-password"
+                                autoComplete="new-password"
+                                required
                             />
                         </div>
                     </div>
                     <button type="submit" className={`${style.submitBtn}`} id="login-submit">
-                        Ingresar
+                        {isRegister ? 'Registrarse' : 'Ingresar'}
                     </button>
+                    <div className={`${style.toggleAuth}`}>
+                        {isRegister ? (
+                            <p>¿Ya tienes cuenta? <button type="button" onClick={() => setIsRegister(false)}>Inicia sesión</button></p>
+                        ) : (
+                            <p>¿No tienes cuenta? <button type="button" onClick={() => setIsRegister(true)}>Regístrate</button></p>
+                        )}
+                    </div>
                 </form>
             </div>
         </div>

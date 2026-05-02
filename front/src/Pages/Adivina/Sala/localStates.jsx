@@ -3,8 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useStates, createState } from '../../../Hooks/useStates';
 import style from './styles/index.module.scss';
 
-const WS_BASE = 'ws://localhost:8372/api/games/adivina/ws';
-const API_BASE = 'http://localhost:8372';
+const host = window.location.hostname;
+const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+const httpProtocol = window.location.protocol;
+const WS_BASE = `${protocol}://${host}:8372/api/games/adivina/ws`;
+const API_BASE = `${httpProtocol}//${host}:8372`;
 
 function getCookie(name) {
     const value = `; ${document.cookie}`;
@@ -45,9 +48,15 @@ export const localStates = () => {
     const [chatMessages, setChatMessages] = useState([]);
     const [chatInput, setChatInput] = useState('');
     const [voiceEnabled, setVoiceEnabled] = useState(false);
+    const [hearingEnabled, setHearingEnabled] = useState(true);
     const [voiceStates, setVoiceStates] = useState({});
 
-    const [selectMode, setSelectMode] = useState('host');
+    const [talkingStates, setTalkingStates] = useState({});
+    const audioContexts = useRef({});
+    const analysers = useRef({});
+    const animationFrames = useRef({});
+
+    const selectMode = useMemo(() => gameState?.seleccion?.modo || 'host', [gameState?.seleccion?.modo]);
     const [selectedTarjetas, setSelectedTarjetas] = useState([]);
     const [voteSelections, setVoteSelections] = useState([]);
 
@@ -127,6 +136,8 @@ export const localStates = () => {
                     const audio = document.getElementById(`audio-${from}`);
                     if (audio && event.streams[0]) {
                         audio.srcObject = event.streams[0];
+                        audio.muted = !hearingEnabledRef.current;
+                        setupAudioAnalysis(from, event.streams[0]);
                     }
                 };
                 if (localStream.current) {
@@ -157,6 +168,47 @@ export const localStates = () => {
             }
         }
     }).current;
+
+    const hearingEnabledRef = useRef(true);
+    useEffect(() => { hearingEnabledRef.current = hearingEnabled; }, [hearingEnabled]);
+
+    const setupAudioAnalysis = useCallback((userId, stream) => {
+        // Cleanup existing
+        if (animationFrames.current[userId]) cancelAnimationFrame(animationFrames.current[userId]);
+        if (audioContexts.current[userId]) audioContexts.current[userId].close();
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+
+        audioContexts.current[userId] = audioContext;
+        analysers.current[userId] = analyser;
+
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        const checkTalking = () => {
+            analyser.getByteFrequencyData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
+            const average = sum / bufferLength;
+            
+            setTalkingStates(prev => ({ ...prev, [userId]: average > 10 }));
+            animationFrames.current[userId] = requestAnimationFrame(checkTalking);
+        };
+        checkTalking();
+    }, []);
+
+    useEffect(() => {
+        // Apply hearing to all audio elements
+        gameState?.jugadores && Object.keys(gameState.jugadores).forEach(uid => {
+            if (uid === userId) return;
+            const audio = document.getElementById(`audio-${uid}`);
+            if (audio) audio.muted = !hearingEnabled;
+        });
+    }, [hearingEnabled, gameState?.jugadores, userId]);
 
     // Message handler — usa refs para valores dinámicos
     const handleMessage = useRef((msg) => {
@@ -200,6 +252,12 @@ export const localStates = () => {
                 break;
             case 'game_started':
                 setChatMessages(prev => [...prev, { system: true, text: '¡El juego ha comenzado!' }]);
+                setShowAdivinar(false);
+                setGuessResult(null);
+                setGameOverData(null);
+                break;
+            case 'game_restarted':
+                setChatMessages(prev => [...prev, { system: true, text: 'El anfitrión ha reiniciado la sala.' }]);
                 setShowAdivinar(false);
                 setGuessResult(null);
                 setGameOverData(null);
@@ -321,6 +379,9 @@ export const localStates = () => {
         localStream.current?.getTracks().forEach(t => t.stop());
         Object.values(peerConnections.current).forEach(pc => pc.close());
         peerConnections.current = {};
+
+        Object.values(animationFrames.current).forEach(frame => cancelAnimationFrame(frame));
+        Object.values(audioContexts.current).forEach(ctx => ctx.close());
     }).current;
 
     // Init effect — runs ONLY ONCE per codigo change
@@ -408,10 +469,15 @@ export const localStates = () => {
     const handleVoteCast = useRef(() => sendWs({ type: 'vote_cast', tarjeta_ids: voteSelectionsRef.current })).current;
     const handleCloseVote = useRef(() => sendWs({ type: 'close_vote' })).current;
     const handleStartGame = useRef(() => sendWs({ type: 'start_game' })).current;
+    const handleRestartGame = useRef(() => sendWs({ type: 'restart_game' })).current;
     const handleAdvanceTurn = useRef(() => sendWs({ type: 'advance_turn' })).current;
     const handleKick = useRef((targetId) => {
         if (!confirm('¿Expulsar a este jugador?')) return;
         sendWs({ type: 'kick_player', user_id: targetId });
+    }).current;
+
+    const handleToggleDiscard = useRef((tarjetaId) => {
+        sendWs({ type: 'toggle_discard', tarjeta_id: tarjetaId });
     }).current;
 
     const handlePregunta = useRef(() => {
@@ -471,7 +537,8 @@ export const localStates = () => {
     return {
         style, codigo, connected, gameState, chatMessages, chatInput, setChatInput,
         voiceEnabled, voiceStates, toggleVoice,
-        selectMode, setSelectMode, selectedTarjetas, setSelectedTarjetas,
+        hearingEnabled, setHearingEnabled, talkingStates,
+        selectMode, selectedTarjetas, setSelectedTarjetas,
         voteSelections, toggleVoteSelection,
         preguntaTexto, setPreguntaTexto, preguntaTarget, setPreguntaTarget,
         respuestaValue, setRespuestaValue,
@@ -481,8 +548,9 @@ export const localStates = () => {
         isHost, myPlayer, activePlayers, isMyTurn, userId,
         tarjetas, decks, tags, isAdmin,
         sendChat, setSeleccionModo, handleSetTarjetas,
-        handleOpenVote, handleVoteCast, handleCloseVote, handleStartGame,
+        handleOpenVote, handleVoteCast, handleCloseVote, handleStartGame, handleRestartGame,
         handlePregunta, handleRespuesta, handleAdivinar, handleAdvanceTurn, handleKick,
+        handleToggleDiscard,
         navigate, loadTarjetas, getImageUrl, applyDeck,
     };
 };

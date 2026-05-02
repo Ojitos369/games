@@ -34,7 +34,7 @@ export const Library = () => {
                             ))}
                         </div>
                         {destacado.url && (
-                            <Link to={destacado.url} className={`${style.heroBtn}`}>
+                            <Link to={`/game/${destacado.id}`} className={`${style.heroBtn}`}>
                                 ▶ Ver más
                             </Link>
                         )}
@@ -118,7 +118,7 @@ const GameCard = ({ juego, index, style, getPortada, getStars, getRatingClass, g
     };
 
     return (
-        <Link to={juego.url || '#'} className={`${style.gameCard}`} style={{ textDecoration: 'none' }}>
+        <Link to={`/game/${juego.id}`} className={`${style.gameCard}`} style={{ textDecoration: 'none' }}>
             {/* Badges */}
             <div className={`${style.cardBadges}`}>
                 <div className={`${style.badgeLeft}`}>

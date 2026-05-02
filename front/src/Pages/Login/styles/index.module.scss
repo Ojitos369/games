@@ -183,6 +183,33 @@
             transform: translateY(0);
         }
     }
+
+    .toggleAuth {
+        margin-top: 1.5rem;
+        text-align: center;
+        
+        p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85rem;
+            margin: 0;
+            
+            button {
+                background: none;
+                border: none;
+                color: #7c3aed;
+                font-weight: 700;
+                cursor: pointer;
+                padding: 0 4px;
+                font-size: inherit;
+                transition: color 0.2s;
+                
+                &:hover {
+                    color: #8b5cf6;
+                    text-decoration: underline;
+                }
+            }
+        }
+    }
 }
 
 @keyframes bgFloat {

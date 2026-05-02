@@ -20,6 +20,7 @@ export const localStates = props => {
         setTitulo("Games");
         setActualPage("index");
         setMenuBarMode(null);
+        f.catalog.getJuegos();
     }
 
     const toggleNot = () => {
@@ -46,12 +47,30 @@ export const localStates = props => {
         f.auth.closeSession();
     }
 
+    const juegosMenu = useMemo(() => {
+        return (s.catalog?.juegos || [])
+            .filter(j => j.en_menu)
+            .map(j => ({
+                name: j.nombre,
+                action: () => {
+                    const url = j.url || '/';
+                    if (url.startsWith('http')) {
+                        window.location.href = url;
+                    } else {
+                        // Use HashRouter navigation via window.location for simplicity or f.u
+                        window.location.hash = `#${url}`;
+                    }
+                }
+            }));
+    }, [s.catalog?.juegos]);
+
     const elementos = useMemo(() => {
         return [
+            ...juegosMenu,
             {name: `Theme: ${actualTheme}`, action: changeTheme},
             {name: `Cerrar Sesion`, action: closeSession},
         ]
-    }, [actualTheme, changeTheme]);
+    }, [actualTheme, changeTheme, juegosMenu]);
 
     return {
         init, toggleNot, 

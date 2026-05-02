@@ -15,13 +15,17 @@ export const Tarjetas = () => {
         toggleFormTag,
         openCreate, openEdit, handleImageChange,
         handleSave, handleDelete, handleCreateTag, handleSearch,
+        navigate,
     } = localStates();
     localEffects();
 
     return (
         <div className={`${style.tarjetasPage}`}>
             <div className={`${style.pageHeader}`}>
-                <h1 className={`${style.pageTitle}`}>Catálogo de Tarjetas</h1>
+                <div className={style.headerTitle}>
+                    <button className={style.btnBack} onClick={() => navigate('/adivina')}>← Volver</button>
+                    <h1 className={`${style.pageTitle}`}>Catálogo de Tarjetas</h1>
+                </div>
                 <button className={`${style.btnPrimary}`} onClick={openCreate}>
                     + Nueva Tarjeta
                 </button>

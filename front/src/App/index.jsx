@@ -9,6 +9,7 @@ import { Test as TestPage } from '../Pages/Test';
 import { Chat as ChatPage } from '../Pages/Chat';
 import { RushCar as RushCarPage } from '../Pages/Solo/RushCar';
 import { Library as LibraryPage } from '../Pages/Library';
+import { GameDetail as GameDetailPage } from '../Pages/GameDetail';
 import { CatalogAdmin as CatalogAdminPage } from '../Pages/CatalogAdmin';
 import { Adivina as AdivinaPage } from '../Pages/Adivina';
 import { AdivinaSala as AdivinaSalaPage } from '../Pages/Adivina/Sala';
@@ -62,6 +63,7 @@ function AppUI() {
             <Routes>
                 <Route path="" element={ <MainPage /> } >
                     <Route path="" element={ <LibraryPage /> } />
+                    <Route path="game/:id" element={ <GameDetailPage /> } />
                     <Route path="chat/*" element={ <ChatPage /> } />
                     <Route path="test/*" element={ <TestPage /> } />
                     {isAdmin && (

@@ -14,7 +14,7 @@ export const SideBar = props => {
                     setMenuBarMode(null);
                     if (!isInMd) setSidebarOpen(false);
                 }}
-                ><span style={{ fontWeight: 900, letterSpacing: '3px' }}>VAULT</span><span style={{ display: 'inline-block', width: 6, height: 6, background: 'linear-gradient(135deg, #7c3aed, #06b6d4)', borderRadius: '50%', marginLeft: 3, verticalAlign: 'super' }}></span></Link>
+                ><span style={{ fontWeight: 900, letterSpacing: '3px' }}>GAMES</span><span style={{ display: 'inline-block', width: 6, height: 6, background: 'linear-gradient(135deg, #7c3aed, #06b6d4)', borderRadius: '50%', marginLeft: 3, verticalAlign: 'super' }}></span></Link>
 
                 {elementos.map((ele, index) => {
                     const show = ele.show ?? true;

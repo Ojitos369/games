@@ -1,0 +1,241 @@
+.gameDetailPage {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    color: var(--my-minor);
+
+    .header {
+        margin-bottom: 2rem;
+        .backBtn {
+            background: none;
+            border: none;
+            color: var(--my-minor);
+            cursor: pointer;
+            font-size: 1.1rem;
+            opacity: 0.8;
+            &:hover { opacity: 1; }
+        }
+    }
+
+    .content {
+        display: flex;
+        flex-direction: column;
+        gap: 3rem;
+    }
+
+    .mainInfo {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 2.5rem;
+
+        @media (max-width: 768px) {
+            grid-template-columns: 1fr;
+        }
+
+        .imageSection {
+            .portada {
+                width: 100%;
+                aspect-ratio: 3/4;
+                object-fit: cover;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            }
+            .placeholder {
+                width: 100%;
+                aspect-ratio: 3/4;
+                background: linear-gradient(135deg, #333, #111);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 5rem;
+                font-weight: 900;
+                border-radius: 12px;
+            }
+        }
+
+        .detailsSection {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+
+            .titleRow {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                .title {
+                    font-size: 2.5rem;
+                    margin: 0;
+                    background: linear-gradient(to right, #fff, #aaa);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                }
+                .favBtn {
+                    background: none;
+                    border: none;
+                    font-size: 1.8rem;
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                    &:hover { transform: scale(1.2); }
+                }
+            }
+
+            .metaRow {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                font-size: 1.1rem;
+                .stars { color: #f1c40f; }
+                .ratingText { font-weight: bold; }
+                .players { opacity: 0.7; }
+            }
+
+            .categories {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                .categoryBadge {
+                    background: rgba(255,255,255,0.1);
+                    padding: 0.3rem 0.8rem;
+                    border-radius: 20px;
+                    font-size: 0.9rem;
+                }
+            }
+
+            .description {
+                font-size: 1.1rem;
+                line-height: 1.6;
+                opacity: 0.9;
+                white-space: pre-wrap;
+            }
+
+            .actions {
+                margin-top: 1rem;
+                .playBtn {
+                    display: inline-block;
+                    padding: 1rem 2.5rem;
+                    background: linear-gradient(135deg, #7c3aed, #06b6d4);
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 30px;
+                    font-weight: 900;
+                    font-size: 1.2rem;
+                    transition: all 0.3s;
+                    box-shadow: 0 5px 15px rgba(124, 58, 237, 0.4);
+                    &:hover {
+                        transform: translateY(-3px);
+                        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.6);
+                    }
+                }
+            }
+        }
+    }
+
+    .secondarySection {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+
+        @media (max-width: 992px) {
+            grid-template-columns: 1fr;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #7c3aed;
+            padding-left: 1rem;
+        }
+
+        .ratingForm {
+            background: rgba(255,255,255,0.05);
+            padding: 2rem;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+
+            .starInput {
+                display: flex;
+                align-items: center;
+                gap: 0.3rem;
+                .starBtn {
+                    background: none;
+                    border: none;
+                    color: rgba(255,255,255,0.2);
+                    font-size: 1.8rem;
+                    cursor: pointer;
+                    transition: color 0.2s;
+                    &.active { color: #f1c40f; }
+                    &:hover { transform: scale(1.1); }
+                }
+                .ratingVal {
+                    margin-left: 1rem;
+                    font-weight: bold;
+                    font-size: 1.2rem;
+                }
+            }
+
+            .commentInput {
+                background: rgba(0,0,0,0.3);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 8px;
+                padding: 1rem;
+                color: white;
+                min-height: 120px;
+                resize: vertical;
+                &:focus { outline: 1px solid #7c3aed; }
+            }
+
+            .submitBtn {
+                padding: 0.8rem;
+                background: #7c3aed;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-weight: bold;
+                cursor: pointer;
+                &:disabled { opacity: 0.5; cursor: not-allowed; }
+            }
+        }
+
+        .commentsList {
+            .commentCard {
+                background: rgba(255,255,255,0.03);
+                padding: 1.5rem;
+                border-radius: 10px;
+                margin-bottom: 1rem;
+
+                .commentHeader {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 0.8rem;
+                    flex-wrap: wrap;
+                    gap: 0.5rem;
+                    .commentUser { font-weight: bold; color: #06b6d4; }
+                    .commentStars { color: #f1c40f; }
+                    .commentDate { font-size: 0.85rem; opacity: 0.5; }
+                }
+                .commentText {
+                    margin: 0;
+                    line-height: 1.5;
+                    opacity: 0.8;
+                }
+            }
+            .noComments {
+                text-align: center;
+                padding: 3rem;
+                opacity: 0.5;
+                font-style: italic;
+            }
+        }
+    }
+
+    .loading, .error {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 400px;
+        font-size: 1.5rem;
+    }
+}

@@ -210,11 +210,6 @@ export const pages = [
     {name: 'CATEGORÍAS', menu_name: 'categorias', elements: [
         {name: 'Todo', page_name: 'biblioteca', to: '/'},
     ]},
-    {name: 'Adivina', menu_name: 'adivina', elements: [
-        {name: 'Salas', page_name: 'adivina', to: '/adivina'},
-        {name: 'Tarjetas', page_name: 'adivina_tarjetas', to: '/adivina/tarjetas'},
-        {name: 'Decks', page_name: 'adivina_decks', to: '/adivina/decks'},
-    ]},
     {name: 'Admin', menu_name: 'admin', admin_only: true, elements: [
         {name: 'Catálogos', page_name: 'catalogos', to: '/admin'},
     ]}

@@ -15,6 +15,24 @@
     flex-wrap: wrap;
 }
 
+.headerTitle {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btnBack {
+    background: color-mix(in srgb, var(--my-minor) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--my-minor) 20%, transparent);
+    color: var(--my-minor);
+    border-radius: 8px;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.2s;
+    &:hover { background: color-mix(in srgb, var(--my-minor) 18%, transparent); }
+}
+
 .pageTitle {
     margin: 0;
     font-size: clamp(1.3rem, 2.5vw, 2rem);

@@ -18,6 +18,7 @@ export const AdivinaSala = () => {
     const {
         style, codigo, connected, gameState, chatMessages, chatInput, setChatInput,
         voiceEnabled, voiceStates, toggleVoice,
+        hearingEnabled, setHearingEnabled, talkingStates,
         selectMode, selectedTarjetas, setSelectedTarjetas,
         voteSelections, toggleVoteSelection,
         preguntaTexto, setPreguntaTexto, preguntaTarget, setPreguntaTarget,
@@ -28,8 +29,9 @@ export const AdivinaSala = () => {
         isHost, myPlayer, activePlayers, isMyTurn, userId,
         tarjetas, decks, tags,
         sendChat, setSeleccionModo, handleSetTarjetas,
-        handleOpenVote, handleVoteCast, handleCloseVote, handleStartGame,
+        handleOpenVote, handleVoteCast, handleCloseVote, handleStartGame, handleRestartGame,
         handlePregunta, handleRespuesta, handleAdivinar, handleAdvanceTurn, handleKick,
+        handleToggleDiscard,
         navigate, getImageUrl, applyDeck,
     } = ls;
 
@@ -84,20 +86,25 @@ export const AdivinaSala = () => {
                     </div>
                 </div>
                 <div className={`${style.salaHeaderRight}`}>
-                    {gameState?.visibilidad === 'privada' && (
-                        <button
-                            className={`${style.btnInvite}`}
-                            onClick={() => {
-                                const url = `${window.location.origin}/#/adivina/sala/${codigo}`;
-                                navigator.clipboard.writeText(url).then(() => {
-                                    alert('Link de invitación copiado al portapapeles');
-                                });
-                            }}
-                            title="Copiar link de invitación"
-                        >
-                            🔗 Compartir
-                        </button>
-                    )}
+                    <button
+                        className={`${style.btnInvite}`}
+                        onClick={() => {
+                            const url = `${window.location.origin}/#/adivina/sala/${codigo}`;
+                            navigator.clipboard.writeText(url).then(() => {
+                                alert('Link de invitación copiado al portapapeles');
+                            });
+                        }}
+                        title="Copiar link de invitación"
+                    >
+                        🔗 Compartir
+                    </button>
+                    <button
+                        className={`${style.btnHearing} ${!hearingEnabled ? style.btnHearingOff : ''}`}
+                        onClick={() => setHearingEnabled(!hearingEnabled)}
+                        title={hearingEnabled ? 'Desactivar audio entrante' : 'Activar audio entrante'}
+                    >
+                        {hearingEnabled ? '🔊' : '🔇'}
+                    </button>
                     <button
                         className={`${style.btnVoice} ${voiceEnabled ? style.btnVoiceOn : ''}`}
                         onClick={toggleVoice}
@@ -115,15 +122,16 @@ export const AdivinaSala = () => {
                     <h3 className={`${style.panelTitle}`}>Jugadores</h3>
                     <div className={`${style.playersList}`}>
                         {jugadoresList.map(j => (
-                            <div key={j.user_id} className={`${style.playerItem} ${j.eliminado ? style.playerEliminado : ''} ${j.user_id === gameState?.turno_actual ? style.playerTurno : ''}`}>
+                            <div key={j.user_id} className={`${style.playerItem} ${j.eliminado ? style.playerEliminado : ''} ${j.user_id === gameState?.turno_actual ? style.playerTurno : ''} ${talkingStates[j.user_id] ? style.playerTalking : ''}`}>
                                 <div className={`${style.playerAvatar}`}>
                                     {j.user_id === gameState?.creador_id ? '👑' : '👤'}
                                 </div>
                                 <div className={`${style.playerInfo}`}>
                                     <span className={`${style.playerName}`}>{j.username}</span>
+                                    {j.victorias > 0 && <span className={`${style.playerWins}`}>🏆 {j.victorias}</span>}
                                     {j.eliminado && <span className={`${style.playerBadge}`}>Eliminado</span>}
                                     {j.user_id === gameState?.turno_actual && <span className={`${style.playerBadgeTurno}`}>Turno</span>}
-                                    {voiceStates[j.user_id] && <span className={`${style.playerBadgeVoice}`}>🎙️</span>}
+                                    {voiceStates[j.user_id] && <span className={`${style.playerBadgeVoice} ${talkingStates[j.user_id] ? style.voiceTalking : ''}`}>🎙️</span>}
                                 </div>
                                 {isHost && gameState?.estado === 'esperando' && j.user_id !== userId && (
                                     <button className={`${style.btnKick}`} onClick={() => handleKick(j.user_id)} title="Expulsar">✕</button>
@@ -147,33 +155,16 @@ export const AdivinaSala = () => {
                         <EsperandoView
                             style={style}
                             isHost={isHost}
-                            selectMode={selectMode}
-                            setSeleccionModo={setSeleccionModo}
                             tarjetas={tarjetas}
                             decks={decks}
                             tags={tags}
                             selectedTarjetas={selectedTarjetas}
                             setSelectedTarjetas={setSelectedTarjetas}
                             handleSetTarjetas={handleSetTarjetas}
-                            handleOpenVote={handleOpenVote}
                             handleStartGame={handleStartGame}
                             jugadoresCount={jugadoresList.length}
                             getImageUrl={getImageUrl}
                             applyDeck={applyDeck}
-                        />
-                    )}
-
-                    {/* VOTANDO */}
-                    {gameState?.estado === 'votando' && (
-                        <VotandoView
-                            style={style}
-                            tarjetas={gameState?.seleccion?.tarjetas_disponibles || []}
-                            voteSelections={voteSelections}
-                            toggleVoteSelection={toggleVoteSelection}
-                            handleVoteCast={handleVoteCast}
-                            isHost={isHost}
-                            handleCloseVote={handleCloseVote}
-                            getImageUrl={getImageUrl}
                         />
                     )}
 
@@ -198,6 +189,7 @@ export const AdivinaSala = () => {
                             setShowAdivinar={setShowAdivinar}
                             setAdivinarTarget={setAdivinarTarget}
                             handleAdvanceTurn={handleAdvanceTurn}
+                            handleToggleDiscard={handleToggleDiscard}
                             isHost={isHost}
                             getImageUrl={getImageUrl}
                         />
@@ -210,6 +202,8 @@ export const AdivinaSala = () => {
                             gameOverData={gameOverData}
                             gameState={gameState}
                             isHost={isHost}
+                            handleRestartGame={handleRestartGame}
+                            navigate={navigate}
                         />
                     )}
                 </div>
@@ -256,38 +250,39 @@ export const AdivinaSala = () => {
                         <div className={`${style.modalBody}`}>
                             <div className={`${style.formGroup}`}>
                                 <label>Jugador objetivo</label>
-                                <select
-                                    className={`${style.select}`}
-                                    value={adivinarTarget}
-                                    onChange={e => setAdivinarTarget(e.target.value)}
-                                >
-                                    <option value="">Selecciona...</option>
-                                    {jugadoresList.filter(j => j.user_id !== userId && !j.eliminado).map(j => (
-                                        <option key={j.user_id} value={j.user_id}>{j.username}</option>
-                                    ))}
-                                </select>
+                                <div className={`${style.targetDisplay}`}>
+                                    {gameState?.jugador_objetivo ? (
+                                        <strong>{gameState.jugadores?.[gameState.jugador_objetivo]?.username}</strong>
+                                    ) : (
+                                        'Nadie'
+                                    )}
+                                </div>
                             </div>
-                            <p className={`${style.modalHint}`}>Haz clic en la tarjeta que crees que tiene {adivinarTarget ? (jugadoresList.find(j => j.user_id === adivinarTarget)?.username || '') : 'el jugador'}:</p>
+                            <p className={`${style.modalHint}`}>Haz clic en la tarjeta que crees que tiene el jugador objetivo:</p>
                             <div className={`${style.tarjetasGridSmall}`}>
-                                {(gameState?.seleccion?.tarjetas_disponibles || []).map(t => (
-                                    <div
-                                        key={t.id}
-                                        className={`${style.tarjetaPickItem} ${adivinarNombre === t.nombre ? style.tarjetaPickActive : ''}`}
-                                        onClick={() => setAdivinarNombre(t.nombre)}
-                                    >
-                                        {t.imagen_url ? (
-                                            <img src={getImageUrl(t.imagen_url)} alt="" className={`${style.tarjetaPickImg}`} />
-                                        ) : (
-                                            <div className={`${style.tarjetaPickPlaceholder}`}>🎭</div>
-                                        )}
-                                        <span className={`${style.tarjetaPickName}`}>{t.nombre}</span>
-                                    </div>
-                                ))}
+                                {(gameState?.seleccion?.tarjetas_disponibles || []).map(t => {
+                                    const isDiscarded = (myPlayer?.discards || []).includes(t.id);
+                                    return (
+                                        <div
+                                            key={t.id}
+                                            className={`${style.tarjetaPickItem} ${adivinarNombre === t.nombre ? style.tarjetaPickActive : ''} ${isDiscarded ? style.tarjetaDiscarded : ''}`}
+                                            onClick={() => !isDiscarded && setAdivinarNombre(t.nombre)}
+                                        >
+                                            {t.imagen_url ? (
+                                                <img src={getImageUrl(t.imagen_url)} alt="" className={`${style.tarjetaPickImg}`} />
+                                            ) : (
+                                                <div className={`${style.tarjetaPickPlaceholder}`}>🎭</div>
+                                            )}
+                                            <span className={`${style.tarjetaPickName}`}>{t.nombre}</span>
+                                            {isDiscarded && <div className={`${style.discardOverlay}`}>❌</div>}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                         <div className={`${style.modalFooter}`}>
                             <button className={`${style.btnSecondary}`} onClick={() => setShowAdivinar(false)}>Cancelar</button>
-                            <button className={`${style.btnPrimary}`} onClick={handleAdivinar} disabled={!adivinarTarget || !adivinarNombre}>Adivinar</button>
+                            <button className={`${style.btnPrimary}`} onClick={handleAdivinar} disabled={!adivinarNombre}>Adivinar</button>
                         </div>
                     </div>
                 </div>
@@ -341,7 +336,7 @@ export const AdivinaSala = () => {
                         <div className={`${style.modalFooter}`}>
                             <button className={`${style.btnSecondary}`} onClick={() => navigate('/adivina')}>Volver al Lobby</button>
                             {isHost && (
-                                <button className={`${style.btnPrimary}`} onClick={() => window.location.reload()}>Nueva Partida</button>
+                                <button className={`${style.btnPrimary}`} onClick={handleRestartGame}>Reiniciar Partida</button>
                             )}
                         </div>
                     </div>
@@ -353,7 +348,7 @@ export const AdivinaSala = () => {
 
 // ─── Sub-views ───────────────────────────────────────────────────────────────
 
-function EsperandoView({ style, isHost, selectMode, setSeleccionModo, tarjetas, decks, tags, selectedTarjetas, setSelectedTarjetas, handleSetTarjetas, handleOpenVote, handleStartGame, jugadoresCount, getImageUrl, applyDeck }) {
+function EsperandoView({ style, isHost, tarjetas, decks, tags, selectedTarjetas, setSelectedTarjetas, handleSetTarjetas, handleStartGame, jugadoresCount, getImageUrl, applyDeck }) {
     const [deckFilter, setDeckFilter] = useState('');
     const [tagFilter, setTagFilter] = useState('');
     const [searchFilter, setSearchFilter] = useState('');
@@ -390,106 +385,57 @@ function EsperandoView({ style, isHost, selectMode, setSeleccionModo, tarjetas, 
 
             {isHost ? (
                 <>
-                    <div className={`${style.seleccionModoRow}`}>
-                        <button
-                            className={`${style.btnModo} ${selectMode === 'host' ? style.btnModoActive : ''}`}
-                            onClick={() => setSeleccionModo('host')}
-                        >
-                            Yo elijo
-                        </button>
-                        <button
-                            className={`${style.btnModo} ${selectMode === 'votacion' ? style.btnModoActive : ''}`}
-                            onClick={() => setSeleccionModo('votacion')}
-                        >
-                            Votación
-                        </button>
+                    <div className={`${style.filterRow}`}>
+                        <input
+                            type="text"
+                            placeholder="Buscar personaje..."
+                            value={searchFilter}
+                            onChange={e => setSearchFilter(e.target.value)}
+                            className={`${style.input}`}
+                        />
+                        <select className={`${style.select}`} value={tagFilter} onChange={e => setTagFilter(e.target.value)}>
+                            <option value="">Todos los tags</option>
+                            {tags.map(tg => (
+                                <option key={tg.id} value={tg.id}>{tg.nombre}</option>
+                            ))}
+                        </select>
+                        <select className={`${style.select}`} value={deckFilter} onChange={e => { setDeckFilter(e.target.value); applyDeck(e.target.value); }}>
+                            <option value="">Elegir deck...</option>
+                            {decks.map(d => (
+                                <option key={d.id} value={d.id}>{d.nombre} ({d.tarjetas_count})</option>
+                            ))}
+                        </select>
                     </div>
-
-                    {selectMode === 'host' && (
-                        <>
-                            <div className={`${style.filterRow}`}>
-                                <input
-                                    type="text"
-                                    placeholder="Buscar personaje..."
-                                    value={searchFilter}
-                                    onChange={e => setSearchFilter(e.target.value)}
-                                    className={`${style.input}`}
-                                />
-                                <select className={`${style.select}`} value={tagFilter} onChange={e => setTagFilter(e.target.value)}>
-                                    <option value="">Todos los tags</option>
-                                    {tags.map(tg => (
-                                        <option key={tg.id} value={tg.id}>{tg.nombre}</option>
-                                    ))}
-                                </select>
-                                <select className={`${style.select}`} value={deckFilter} onChange={e => { setDeckFilter(e.target.value); applyDeck(e.target.value); }}>
-                                    <option value="">Elegir deck...</option>
-                                    {decks.map(d => (
-                                        <option key={d.id} value={d.id}>{d.nombre} ({d.tarjetas_count})</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className={`${style.filterRow}`}>
-                                <button className={`${style.btnSecondary}`} onClick={selectAll}>Seleccionar visibles</button>
-                                <button className={`${style.btnSecondary}`} onClick={deselectAll}>Deseleccionar</button>
-                            </div>
-                            <div className={`${style.seleccionInfo}`}>
-                                <strong>{selectedTarjetas.length}</strong> tarjetas seleccionadas (mínimo {Math.max(jugadoresCount, 2)})
-                            </div>
-                            <div className={`${style.tarjetasGridSmall}`}>
-                                {filtered.map(t => (
-                                    <div
-                                        key={t.id}
-                                        className={`${style.tarjetaPickItem} ${selectedTarjetas.includes(t.id) ? style.tarjetaPickActive : ''}`}
-                                        onClick={() => toggleTarjeta(t.id)}
-                                    >
-                                        {t.imagen_url ? (
-                                            <img src={getImageUrl(t.imagen_url)} alt="" className={`${style.tarjetaPickImg}`} />
-                                        ) : (
-                                            <div className={`${style.tarjetaPickPlaceholder}`}>🎭</div>
-                                        )}
-                                        <span className={`${style.tarjetaPickName}`}>{t.nombre}</span>
-                                    </div>
-                                ))}
-                            </div>
-                            <button
-                                className={`${style.btnPrimary} ${style.btnStart}`}
-                                onClick={handleStartGame}
-                                disabled={selectedTarjetas.length < Math.max(jugadoresCount, 2)}
+                    <div className={`${style.filterRow}`}>
+                        <button className={`${style.btnSecondary}`} onClick={selectAll}>Seleccionar visibles</button>
+                        <button className={`${style.btnSecondary}`} onClick={deselectAll}>Deseleccionar</button>
+                    </div>
+                    <div className={`${style.seleccionInfo}`}>
+                        <strong>{selectedTarjetas.length}</strong> tarjetas seleccionadas (mínimo {Math.max(jugadoresCount, 2)})
+                    </div>
+                    <div className={`${style.tarjetasGridSmall}`}>
+                        {filtered.map(t => (
+                            <div
+                                key={t.id}
+                                className={`${style.tarjetaPickItem} ${selectedTarjetas.includes(t.id) ? style.tarjetaPickActive : ''}`}
+                                onClick={() => toggleTarjeta(t.id)}
                             >
-                                Iniciar Partida
-                            </button>
-                        </>
-                    )}
-
-                    {selectMode === 'votacion' && (
-                        <>
-                            <p className={`${style.phaseDesc}`}>Abre la votación para que todos elijan las tarjetas. Después ciérrala para iniciar.</p>
-                            <div className={`${style.filterRow}`}>
-                                <input
-                                    type="text"
-                                    placeholder="Buscar personaje..."
-                                    value={searchFilter}
-                                    onChange={e => setSearchFilter(e.target.value)}
-                                    className={`${style.input}`}
-                                />
+                                {t.imagen_url ? (
+                                    <img src={getImageUrl(t.imagen_url)} alt="" className={`${style.tarjetaPickImg}`} />
+                                ) : (
+                                    <div className={`${style.tarjetaPickPlaceholder}`}>🎭</div>
+                                )}
+                                <span className={`${style.tarjetaPickName}`}>{t.nombre}</span>
                             </div>
-                            <div className={`${style.tarjetasGridSmall}`}>
-                                {filtered.map(t => (
-                                    <div key={t.id} className={`${style.tarjetaPickItem}`}>
-                                        {t.imagen_url ? (
-                                            <img src={getImageUrl(t.imagen_url)} alt="" className={`${style.tarjetaPickImg}`} />
-                                        ) : (
-                                            <div className={`${style.tarjetaPickPlaceholder}`}>🎭</div>
-                                        )}
-                                        <span className={`${style.tarjetaPickName}`}>{t.nombre}</span>
-                                    </div>
-                                ))}
-                            </div>
-                            <button className={`${style.btnPrimary} ${style.btnStart}`} onClick={() => handleOpenVote(filtered.map(t => t.id))}>
-                                Abrir Votación
-                            </button>
-                        </>
-                    )}
+                        ))}
+                    </div>
+                    <button
+                        className={`${style.btnPrimary} ${style.btnStart}`}
+                        onClick={handleStartGame}
+                        disabled={selectedTarjetas.length < Math.max(jugadoresCount, 2)}
+                    >
+                        Iniciar Partida
+                    </button>
                 </>
             ) : (
                 <div className={`${style.waitingHost}`}>
@@ -501,7 +447,9 @@ function EsperandoView({ style, isHost, selectMode, setSeleccionModo, tarjetas, 
     );
 }
 
-function VotandoView({ style, tarjetas, voteSelections, toggleVoteSelection, handleVoteCast, isHost, handleCloseVote, getImageUrl }) {
+function VotandoView({ style, tarjetas, voteSelections, toggleVoteSelection, handleVoteCast, isHost, handleCloseVote, getImageUrl, gameState }) {
+    const votosCount = gameState?.seleccion?.votos_count || {};
+
     return (
         <div className={`${style.phaseBox}`}>
             <h2 className={`${style.phaseTitle}`}>🗳️ Votación en curso</h2>
@@ -522,6 +470,9 @@ function VotandoView({ style, tarjetas, voteSelections, toggleVoteSelection, han
                             <div className={`${style.tarjetaPickPlaceholder}`}>🎭</div>
                         )}
                         <span className={`${style.tarjetaPickName}`}>{t.nombre}</span>
+                        {votosCount[t.id] > 0 && (
+                            <div className={`${style.voteBadge}`}>{votosCount[t.id]}</div>
+                        )}
                     </div>
                 ))}
             </div>
@@ -535,11 +486,38 @@ function VotandoView({ style, tarjetas, voteSelections, toggleVoteSelection, han
     );
 }
 
-function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresList, preguntaTexto, setPreguntaTexto, preguntaTarget, setPreguntaTarget, preguntaActiva, meTocaResponder, respuestaValue, handlePregunta, handleRespuesta, setShowAdivinar, setAdivinarTarget, handleAdvanceTurn, isHost, getImageUrl }) {
+function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresList, preguntaTexto, setPreguntaTexto, preguntaTarget, setPreguntaTarget, preguntaActiva, meTocaResponder, respuestaValue, handlePregunta, handleRespuesta, setShowAdivinar, setAdivinarTarget, handleAdvanceTurn, handleToggleDiscard, isHost, getImageUrl }) {
     const myTarjeta = myPlayer?.tarjeta;
+    const myDiscards = myPlayer?.discards || [];
+    const tarjetasDisponibles = gameState?.seleccion?.tarjetas_disponibles || [];
+    
+    const targetId = gameState?.jugador_objetivo;
+    const targetName = gameState?.jugadores?.[targetId]?.username || '???';
+    const guesserId = gameState?.turno_actual;
+    const guesserName = gameState?.jugadores?.[guesserId]?.username || '???';
+
+    const meTocaPreguntar = isMyTurn;
+
+    // Set automatic target for UI consistency
+    useEffect(() => {
+        if (targetId) setPreguntaTarget(targetId);
+    }, [targetId, setPreguntaTarget]);
 
     return (
         <div className={`${style.phaseBox}`}>
+            {/* Turn Pairing Header */}
+            <div className={`${style.turnPairing}`}>
+                <div className={`${style.turnRole}`}>
+                    <span className={`${style.roleLabel}`}>Pregunta:</span>
+                    <span className={`${style.roleName} ${guesserId === userId ? style.roleMe : ''}`}>{guesserName}</span>
+                </div>
+                <div className={`${style.turnArrow}`}>➔</div>
+                <div className={`${style.turnRole}`}>
+                    <span className={`${style.roleLabel}`}>Adivina a:</span>
+                    <span className={`${style.roleName} ${targetId === userId ? style.roleMe : ''}`}>{targetName}</span>
+                </div>
+            </div>
+
             {/* Mi tarjeta secreta */}
             <div className={`${style.myTarjetaBox}`}>
                 <span className={`${style.myTarjetaLabel}`}>Tu personaje secreto:</span>
@@ -558,38 +536,36 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
             </div>
 
             {/* Turno / Acciones */}
-            {isMyTurn && !preguntaActiva && (
+            {meTocaPreguntar && (
                 <div className={`${style.turnoActions}`}>
-                    <h3 className={`${style.turnoTitle}`}>🎯 Es tu turno</h3>
+                    <h3 className={`${style.turnoTitle}`}>🎯 Es tu turno de preguntar a {targetName}</h3>
                     <div className={`${style.actionRow}`}>
-                        <div className={`${style.formGroup}`}>
-                            <label>Preguntar a:</label>
-                            <select
-                                className={`${style.select}`}
-                                value={preguntaTarget}
-                                onChange={e => setPreguntaTarget(e.target.value)}
-                            >
-                                <option value="">Selecciona jugador...</option>
-                                {jugadoresList.filter(j => j.user_id !== userId && !j.eliminado).map(j => (
-                                    <option key={j.user_id} value={j.user_id}>{j.username}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className={`${style.formGroup} ${style.flexGrow}`}>
-                            <label>Tu pregunta (Sí/No/Quizás):</label>
-                            <input
-                                type="text"
-                                className={`${style.input}`}
-                                value={preguntaTexto}
-                                onChange={e => setPreguntaTexto(e.target.value)}
-                                placeholder="Ej: ¿Tu personaje es hombre?"
-                                onKeyDown={e => e.key === 'Enter' && handlePregunta()}
-                            />
-                        </div>
-                        <button className={`${style.btnPrimary}`} onClick={handlePregunta}>Preguntar</button>
+                        {!preguntaActiva ? (
+                            <>
+                                <div className={`${style.formGroup} ${style.flexGrow}`}>
+                                    <label>Tu pregunta (Sí/No/Quizás):</label>
+                                    <input
+                                        type="text"
+                                        className={`${style.input}`}
+                                        value={preguntaTexto}
+                                        onChange={e => setPreguntaTexto(e.target.value)}
+                                        placeholder="Ej: ¿Tu personaje es hombre?"
+                                        onKeyDown={e => e.key === 'Enter' && handlePregunta()}
+                                    />
+                                </div>
+                                <button className={`${style.btnPrimary}`} onClick={handlePregunta} disabled={!preguntaTexto.trim()}>Preguntar</button>
+                            </>
+                        ) : (
+                            <div className={`${style.formGroup} ${style.flexGrow}`}>
+                                <p className={`${style.turnFinishingHint}`}>Espera a que {targetName} responda por chat o voz, luego finaliza tu turno.</p>
+                                <button className={`${style.btnPrimary} ${style.btnFinishTurn}`} onClick={handleAdvanceTurn}>
+                                    Finalizar Turno ✓
+                                </button>
+                            </div>
+                        )}
                         <button
                             className={`${style.btnSecondary}`}
-                            onClick={() => { setAdivinarTarget(''); setShowAdivinar(true); }}
+                            onClick={() => { setAdivinarTarget(targetId); setShowAdivinar(true); }}
                         >
                             🤔 Adivinar
                         </button>
@@ -599,28 +575,37 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
 
             {/* Pregunta activa */}
             {preguntaActiva && (
-                <div className={`${style.preguntaBox} ${meTocaResponder ? style.preguntaBoxActive : ''}`}>
+                <div className={`${style.preguntaBox}`}>
                     <div className={`${style.preguntaHeader}`}>
                         <span className={`${style.preguntaDe}`}>{preguntaActiva.de_nombre}</span>
                         <span className={`${style.preguntaArrow}`}>→</span>
                         <span className={`${style.preguntaPara}`}>{preguntaActiva.para_nombre}</span>
                     </div>
                     <div className={`${style.preguntaTexto}`}>"{preguntaActiva.texto}"</div>
-                    {meTocaResponder ? (
+                    
+                    {meTocaResponder && (preguntaActiva.respuesta === 'pendiente' || !preguntaActiva.respuesta) && (
                         <div className={`${style.respuestaButtons}`}>
-                            <button className={`${style.btnRespuestaSi}`} onClick={() => handleRespuesta('si')}>Sí</button>
-                            <button className={`${style.btnRespuestaNo}`} onClick={() => handleRespuesta('no')}>No</button>
-                            <button className={`${style.btnRespuestaQuizas}`} onClick={() => handleRespuesta('quizas')}>Quizás</button>
+                            <button className={`${style.btnRespuestaSi}`} onClick={() => handleRespuesta('si')}>SÍ</button>
+                            <button className={`${style.btnRespuestaNo}`} onClick={() => handleRespuesta('no')}>NO</button>
+                            <button className={`${style.btnRespuestaQuizas}`} onClick={() => handleRespuesta('quizas')}>QUIZÁS</button>
+                        </div>
+                    )}
+                    
+                    {preguntaActiva.respuesta && preguntaActiva.respuesta !== 'pendiente' ? (
+                        <div className={`${style.preguntaRespuesta}`}>
+                            Respuesta: <strong>{preguntaActiva.respuesta.toUpperCase()}</strong>
                         </div>
                     ) : (
-                        <div className={`${style.respuestaWaiting}`}>Esperando respuesta...</div>
+                        <div className={`${style.respuestaWaiting}`}>
+                            {meTocaResponder ? 'Selecciona una respuesta arriba' : `Esperando respuesta de ${preguntaActiva.para_nombre}...`}
+                        </div>
                     )}
                 </div>
             )}
 
-            {!isMyTurn && !preguntaActiva && (
+            {!meTocaPreguntar && !preguntaActiva && (
                 <div className={`${style.waitingTurn}`}>
-                    Esperando turno de <strong>{gameState?.jugadores?.[gameState?.turno_actual]?.username}</strong>
+                    Esperando que <strong>{guesserName}</strong> le pregunte a <strong>{targetName}</strong>
                 </div>
             )}
 
@@ -629,17 +614,42 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
                 <div className={`${style.historialBox}`}>
                     <h4 className={`${style.historialTitle}`}>📜 Historial</h4>
                     <div className={`${style.historialList}`}>
-                        {gameState.historial.slice(-10).map((h, i) => (
+                        {gameState.historial.slice(-5).map((h, i) => (
                             <div key={i} className={`${style.historialItem}`}>
                                 {h.tipo === 'adivino' ? (
                                     <span>
-                                        {h.correcto ? '✅' : '❌'} {h.de} adivinó a {h.para}: {h.personaje}
+                                        {h.correcto ? '✅' : '❌'} {h.de_nombre || h.de} intentó adivinar a {h.para_nombre || h.para}: <strong>{h.personaje}</strong>
                                     </span>
                                 ) : (
                                     <span>
                                         <strong>{h.de_nombre}</strong> → <strong>{h.para_nombre}</strong>: "{h.texto}" → <strong>{h.respuesta?.toUpperCase()}</strong>
                                     </span>
                                 )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Personajes en juego (Catálogo para descartar) */}
+            {!meTocaResponder && (
+                <div className={`${style.catalogBox}`}>
+                    <h4 className={`${style.catalogTitle}`}>🎭 Personajes de {targetName} (clic para descartar)</h4>
+                    <div className={`${style.tarjetasGridSmall}`}>
+                        {tarjetasDisponibles.map(t => (
+                            <div
+                                key={t.id}
+                                className={`${style.tarjetaPickItem} ${myDiscards.includes(t.id) ? style.tarjetaDiscarded : ''}`}
+                                onClick={() => handleToggleDiscard(t.id)}
+                                title={myDiscards.includes(t.id) ? 'Desmarcar' : 'Descartar'}
+                            >
+                                {t.imagen_url ? (
+                                    <img src={getImageUrl(t.imagen_url)} alt="" className={`${style.tarjetaPickImg}`} />
+                                ) : (
+                                    <div className={`${style.tarjetaPickPlaceholder}`}>🎭</div>
+                                )}
+                                <span className={`${style.tarjetaPickName}`}>{t.nombre}</span>
+                                {myDiscards.includes(t.id) && <div className={`${style.discardOverlay}`}>❌</div>}
                             </div>
                         ))}
                     </div>
@@ -655,12 +665,32 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
     );
 }
 
-function TerminadoView({ style, gameOverData, gameState, isHost }) {
+function TerminadoView({ style, gameOverData, gameState, isHost, handleRestartGame, navigate }) {
+    const winnerName = gameState?.jugadores?.[gameState?.ganador]?.username || gameOverData?.ganador_username || 'Alguien';
+
     return (
-        <div className={`${style.phaseBox}`}>
-            <h2 className={`${style.phaseTitle}`}>🏁 Partida terminada</h2>
-            <div className={`${style.waitingHost}`}>
-                <p>Revisa los resultados en el modal. ¡Gracias por jugar!</p>
+        <div className={`${style.phaseBox} ${style.phaseTerminado}`}>
+            <h2 className={`${style.phaseTitle}`}>🏆 ¡Tenemos un ganador!</h2>
+            <div className={`${style.winnerBigBox}`}>
+                <div className={`${style.winnerCrown}`}>👑</div>
+                <div className={`${style.winnerName}`}>{winnerName}</div>
+                <div className={`${style.winnerLabel}`}>¡Ha ganado la partida!</div>
+            </div>
+            
+            <div className={`${style.terminadoActions}`}>
+                <button className={`${style.btnSecondary}`} onClick={() => navigate('/adivina')}>
+                    🏠 Volver al Lobby
+                </button>
+                {isHost && (
+                    <>
+                        <button className={`${style.btnPrimary}`} onClick={handleRestartGame}>
+                            🔄 Volver a jugar
+                        </button>
+                        <button className={`${style.btnSecondary}`} onClick={handleRestartGame}>
+                            🗂️ Cambiar baraja
+                        </button>
+                    </>
+                )}
             </div>
         </div>
     );
