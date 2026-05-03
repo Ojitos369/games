@@ -8,8 +8,12 @@ export const UserPart = () => {
                 <span style={{
                     color: 'rgba(255,255,255,0.5)',
                     fontSize: '0.8rem',
-                    marginRight: '0.8rem'
-                }}>{username}</span>
+                    marginRight: '0.8rem',
+                    maxWidth: '80px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                }} title={username}>{username}</span>
             )}
             <button
                 onClick={closeSession}
