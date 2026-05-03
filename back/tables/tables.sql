@@ -130,11 +130,11 @@ ALTER TABLE juegos ADD COLUMN en_menu BOOLEAN DEFAULT FALSE;
 -- Insertar o actualizar juegos para el menú
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM juegos WHERE nombre = 'Adivina el Personaje') THEN
+    IF NOT EXISTS (SELECT 1 FROM juegos WHERE nombre = 'Adivina la Tarjeta') THEN
         INSERT INTO juegos (id, nombre, descripcion, jugadores_min, jugadores_max, url, calificacion, destacado, etiqueta, en_menu)
-        VALUES (uuid_generate_v4(), 'Adivina el Personaje', 'Juego multijugador de adivinar personajes.', 2, 20, '/adivina', 9.0, TRUE, 'NUEVO', TRUE);
+        VALUES (uuid_generate_v4(), 'Adivina la Tarjeta', 'Juego multijugador de adivinar personajes.', 2, 20, '/adivina', 9.0, TRUE, 'NUEVO', TRUE);
     ELSE
-        UPDATE juegos SET en_menu = TRUE, url = '/adivina' WHERE nombre = 'Adivina el Personaje';
+        UPDATE juegos SET en_menu = TRUE, url = '/adivina' WHERE nombre = 'Adivina la Tarjeta';
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM juegos WHERE nombre = 'Rush Car') THEN

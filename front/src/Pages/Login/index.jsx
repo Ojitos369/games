@@ -38,7 +38,7 @@ export const Login = () => {
             <div className={`${style.loginContainer}`}>
                 <div className={`${style.logoSection}`}>
                     <h1 className={`${style.brandName}`}>
-                        VAULT<span className={`${style.brandDot}`}></span>
+                        GAMES<span className={`${style.brandDot}`}></span>
                     </h1>
                     <p className={`${style.brandSub}`}>Biblioteca de juegos</p>
                 </div>

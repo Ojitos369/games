@@ -1,5 +1,5 @@
 -- postgresql
--- Adivina el Personaje - Schema
+-- Adivina la Tarjeta - Schema
 
 CREATE TABLE adivina_tags (
     id VARCHAR(36) DEFAULT uuid_generate_v4() UNIQUE NOT NULL PRIMARY KEY,

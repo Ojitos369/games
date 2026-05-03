@@ -18,7 +18,7 @@ export const localStates = () => {
     const [createForm, setCreateForm] = useState({ nombre: '', max_jugadores: 8, visibilidad: 'publica' });
 
     const init = useCallback(() => {
-        setTitulo('Adivina el Personaje');
+        setTitulo('Adivina la Tarjeta');
         setActualPage('adivina');
         f.adivina.getSalas();
     }, []);
