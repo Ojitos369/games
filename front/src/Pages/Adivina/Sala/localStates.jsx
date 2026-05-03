@@ -72,6 +72,7 @@ export const localStates = () => {
     const [adivinarNombre, setAdivinarNombre] = useState('');
     const [guessResult, setGuessResult] = useState(null);
     const [gameOverData, setGameOverData] = useState(null);
+    const [waitingForHost, setWaitingForHost] = useState(false);
 
     const [showImageModal, setShowImageModal] = useState(false);
     const [previewTarget, setPreviewTarget] = useState(null);
@@ -304,12 +305,14 @@ export const localStates = () => {
                 setShowAdivinar(false);
                 setGuessResult(null);
                 setGameOverData(null);
+                setWaitingForHost(false);
                 break;
             case 'game_restarted':
                 setChatMessages(prev => [...prev, { system: true, text: 'El anfitrión ha reiniciado la sala.' }]);
                 setShowAdivinar(false);
                 setGuessResult(null);
                 setGameOverData(null);
+                setWaitingForHost(false);
                 break;
             case 'pregunta':
                 setChatMessages(prev => [...prev, {
@@ -604,7 +607,7 @@ export const localStates = () => {
             hearingEnabled, talkingStates, selectMode, selectedTarjetas,
             voteSelections, preguntaTexto, preguntaTarget, respuestaValue,
             showAdivinar, adivinarTarget, adivinarNombre, guessResult,
-            gameOverData, showImageModal, previewTarget, isHost, myPlayer,
+            gameOverData, waitingForHost, showImageModal, previewTarget, isHost, myPlayer,
             activePlayers, isMyTurn, isEspectador, espectadores, userId,
             tarjetas, decks, tags, isAdmin, tiempoTurno, countdown, codigo,
             jugadoresList: Object.values(gameState?.jugadores || {}),
@@ -613,7 +616,7 @@ export const localStates = () => {
             setChatInput, toggleVoice, setHearingEnabled, setSelectedTarjetas,
             toggleVoteSelection, setPreguntaTexto, setPreguntaTarget, setRespuestaValue,
             setShowAdivinar, setAdivinarTarget, setAdivinarNombre, setGuessResult,
-            setGameOverData, setShowImageModal, openPreview, handleSetTiempoTurno,
+            setGameOverData, setWaitingForHost, setShowImageModal, openPreview, handleSetTiempoTurno,
             sendChat, setSeleccionModo, handleSetTarjetas, handleOpenVote, handleVoteCast,
             handleCloseVote, handleStartGame, handleRestartGame, handlePregunta,
             handleRespuesta, handleAdivinar, handleAdvanceTurn, handleKick,
@@ -624,7 +627,7 @@ export const localStates = () => {
         hearingEnabled, talkingStates, selectMode, selectedTarjetas,
         voteSelections, preguntaTexto, preguntaTarget, respuestaValue,
         showAdivinar, adivinarTarget, adivinarNombre, guessResult,
-        gameOverData, showImageModal, previewTarget, isHost, myPlayer,
+        gameOverData, waitingForHost, showImageModal, previewTarget, isHost, myPlayer,
         activePlayers, isMyTurn, isEspectador, espectadores, userId,
         tarjetas, decks, tags, isAdmin, tiempoTurno, countdown, codigo
     ]);
@@ -640,6 +643,7 @@ export const localStates = () => {
         showAdivinar, setShowAdivinar, adivinarTarget, setAdivinarTarget,
         adivinarNombre, setAdivinarNombre, guessResult, setGuessResult,
         gameOverData, setGameOverData,
+        waitingForHost, setWaitingForHost,
         showImageModal, setShowImageModal,
         previewTarget, openPreview,
         isHost, myPlayer, activePlayers, isMyTurn, isEspectador, espectadores, userId,

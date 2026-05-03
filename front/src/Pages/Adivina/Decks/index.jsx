@@ -3,8 +3,9 @@ import { ImageModal } from '../Components/ImageModal';
 
 export const Decks = () => {
     const {
-        style, decks, loadingDecks,
-        tags, filteredTarjetas,
+        style, decks, decksPublicos, loadingDecks, loadingPublicos,
+        tags, filteredTarjetas, allTarjetas,
+        activeTab, switchTab,
         expandedDeck, deckTarjetas, toggleExpand,
         showModal, setShowModal, editTarget,
         showImageModal, setShowImageModal,
@@ -12,8 +13,10 @@ export const Decks = () => {
         form, setForm,
         tarjetaSearch, setTarjetaSearch,
         tarjetaTagFilter, setTarjetaTagFilter,
-        toggleDeckTarjeta, openCreate, openEdit,
+        toggleDeckTarjeta, moveTarjetaUp, moveTarjetaDown, sortTarjetas,
+        openCreate, openEdit,
         handleSave, handleDelete,
+        handleTogglePublico, handleDesvincular, handleCopiar, handleImportar,
         navigate,
     } = localStates();
     localEffects();
@@ -32,72 +35,171 @@ export const Decks = () => {
         return `${API_BASE}/media/images/adivina/${t.id}/${t.imagen}`;
     };
 
+    const renderDeckExpanded = (deck) => (
+        expandedDeck === deck.id && (
+            <div className={`${style.deckExpanded}`}>
+                {deckTarjetas[deck.id] ? (
+                    deckTarjetas[deck.id].length === 0 ? (
+                        <p className={`${style.emptyExpanded}`}>Este deck está vacío.</p>
+                    ) : (
+                        <div className={`${style.deckTarjetasGrid}`}>
+                            {deckTarjetas[deck.id].map(t => (
+                                <div key={t.id} className={`${style.miniTarjeta}`}>
+                                    <div className={style.miniTarjetaContent}>
+                                        <span>{t.nombre}</span>
+                                        <div className={style.miniTarjetaTags}>
+                                            {t.tags?.map(tg => (
+                                                <span key={tg.id} className={`${style.miniTag}`}>{tg.nombre}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <button className={style.btnMiniPreview} onClick={() => openPreview(t)}>👁️</button>
+                                </div>
+                            ))}
+                        </div>
+                    )
+                ) : (
+                    <p className={`${style.emptyExpanded}`}>Cargando...</p>
+                )}
+            </div>
+        )
+    );
+
     return (
         <div className={`${style.decksPage}`}>
             <div className={`${style.pageHeader}`}>
                 <div className={style.headerTitle}>
                     <button className={style.btnBack} onClick={() => navigate('/adivina')}>← Volver</button>
-                    <h1 className={`${style.pageTitle}`}>Mis Decks</h1>
+                    <h1 className={`${style.pageTitle}`}>Decks</h1>
                 </div>
-                <button className={`${style.btnPrimary}`} onClick={openCreate}>+ Nuevo Deck</button>
+                {activeTab === 'mis' && (
+                    <button className={`${style.btnPrimary}`} onClick={openCreate}>+ Nuevo Deck</button>
+                )}
             </div>
 
-            {loadingDecks ? (
-                <div className={`${style.loadingState}`}>Cargando decks...</div>
-            ) : decks.length === 0 ? (
-                <div className={`${style.emptyState}`}>
-                    <div className={`${style.emptyIcon}`}>🗂️</div>
-                    <p>No tienes decks. ¡Crea uno para organizar tus tarjetas favoritas!</p>
-                </div>
-            ) : (
-                <div className={`${style.decksList}`}>
-                    {decks.map(deck => (
-                        <div key={deck.id} className={`${style.deckItem}`}>
-                            <div className={`${style.deckRow}`} onClick={() => toggleExpand(deck)}>
-                                <div className={`${style.deckMain}`}>
-                                    <span className={`${style.deckArrow} ${expandedDeck === deck.id ? style.deckArrowOpen : ''}`}>▶</span>
-                                    <div>
-                                        <div className={`${style.deckName}`}>{deck.nombre}</div>
-                                        {deck.descripcion && <div className={`${style.deckDesc}`}>{deck.descripcion}</div>}
+            <div className={`${style.tabs}`}>
+                <button
+                    className={`${style.tab} ${activeTab === 'mis' ? style.tabActive : ''}`}
+                    onClick={() => switchTab('mis')}
+                >
+                    Mis Decks
+                </button>
+                <button
+                    className={`${style.tab} ${activeTab === 'explorar' ? style.tabActive : ''}`}
+                    onClick={() => switchTab('explorar')}
+                >
+                    Explorar
+                </button>
+            </div>
+
+            {activeTab === 'mis' && (
+                loadingDecks ? (
+                    <div className={`${style.loadingState}`}>Cargando decks...</div>
+                ) : decks.length === 0 ? (
+                    <div className={`${style.emptyState}`}>
+                        <div className={`${style.emptyIcon}`}>🗂️</div>
+                        <p>No tienes decks. ¡Crea uno o explora decks públicos!</p>
+                    </div>
+                ) : (
+                    <div className={`${style.decksList}`}>
+                        {decks.map(deck => (
+                            <div key={deck.is_owner ? deck.id : deck.import_id} className={`${style.deckItem} ${deck.linked ? style.deckLinked : ''}`}>
+                                <div className={`${style.deckRow}`} onClick={() => toggleExpand(deck)}>
+                                    <div className={`${style.deckMain}`}>
+                                        <span className={`${style.deckArrow} ${expandedDeck === deck.id ? style.deckArrowOpen : ''}`}>▶</span>
+                                        <div>
+                                            <div className={`${style.deckName}`}>
+                                                {deck.nombre}
+                                                {deck.linked && (
+                                                    <span className={`${style.linkedBadge}`} title="Deck vinculado — se actualiza con el original">
+                                                        🔗 {deck.creador_username}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {deck.descripcion && <div className={`${style.deckDesc}`}>{deck.descripcion}</div>}
+                                        </div>
+                                    </div>
+                                    <div className={`${style.deckMeta}`}>
+                                        <span className={`${style.deckCount}`}>🃏 {deck.tarjetas_count} tarjetas</span>
+                                        {deck.is_owner ? (
+                                            <>
+                                                <button
+                                                    className={`${style.btnIcon32} ${deck.publico ? style.btnPublic : ''}`}
+                                                    onClick={e => { e.stopPropagation(); handleTogglePublico(deck); }}
+                                                    title={deck.publico ? 'Público — clic para privatizar' : 'Privado — clic para publicar'}
+                                                >
+                                                    {deck.publico ? '🌐' : '🔒'}
+                                                </button>
+                                                <button className={`${style.btnEdit}`} onClick={e => { e.stopPropagation(); openEdit(deck); }}>✏️</button>
+                                                <button className={`${style.btnDel}`} onClick={e => { e.stopPropagation(); handleDelete(deck.id); }}>🗑️</button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    className={`${style.btnCopy}`}
+                                                    onClick={e => { e.stopPropagation(); handleCopiar(deck.id); }}
+                                                    title="Copiar como propio (sin vínculo)"
+                                                >
+                                                    📋
+                                                </button>
+                                                <button
+                                                    className={`${style.btnDel}`}
+                                                    onClick={e => { e.stopPropagation(); handleDesvincular(deck.id); }}
+                                                    title="Desvincular deck"
+                                                >
+                                                    ✂️
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
-                                <div className={`${style.deckMeta}`}>
-                                    <span className={`${style.deckCount}`}>🃏 {deck.tarjetas_count} tarjetas</span>
-                                    <button className={`${style.btnEdit}`} onClick={e => { e.stopPropagation(); openEdit(deck); }}>✏️</button>
-                                    <button className={`${style.btnDel}`} onClick={e => { e.stopPropagation(); handleDelete(deck.id); }}>🗑️</button>
-                                </div>
+                                {renderDeckExpanded(deck)}
                             </div>
+                        ))}
+                    </div>
+                )
+            )}
 
-                            {expandedDeck === deck.id && (
-                                <div className={`${style.deckExpanded}`}>
-                                    {deckTarjetas[deck.id] ? (
-                                        deckTarjetas[deck.id].length === 0 ? (
-                                            <p className={`${style.emptyExpanded}`}>Este deck está vacío.</p>
+            {activeTab === 'explorar' && (
+                loadingPublicos ? (
+                    <div className={`${style.loadingState}`}>Cargando decks públicos...</div>
+                ) : decksPublicos.length === 0 ? (
+                    <div className={`${style.emptyState}`}>
+                        <div className={`${style.emptyIcon}`}>🌐</div>
+                        <p>No hay decks públicos disponibles aún.</p>
+                    </div>
+                ) : (
+                    <div className={`${style.decksList}`}>
+                        {decksPublicos.map(deck => (
+                            <div key={deck.id} className={`${style.deckItem}`}>
+                                <div className={`${style.deckRow}`} onClick={() => toggleExpand(deck)}>
+                                    <div className={`${style.deckMain}`}>
+                                        <span className={`${style.deckArrow} ${expandedDeck === deck.id ? style.deckArrowOpen : ''}`}>▶</span>
+                                        <div>
+                                            <div className={`${style.deckName}`}>{deck.nombre}</div>
+                                            <div className={`${style.deckAuthor}`}>por {deck.creador_username}</div>
+                                            {deck.descripcion && <div className={`${style.deckDesc}`}>{deck.descripcion}</div>}
+                                        </div>
+                                    </div>
+                                    <div className={`${style.deckMeta}`}>
+                                        <span className={`${style.deckCount}`}>🃏 {deck.tarjetas_count} tarjetas</span>
+                                        {deck.ya_importado ? (
+                                            <span className={`${style.importadoBadge}`}>✓ Importado</span>
                                         ) : (
-                                            <div className={`${style.deckTarjetasGrid}`}>
-                                                {deckTarjetas[deck.id].map(t => (
-                                                    <div key={t.id} className={`${style.miniTarjeta}`}>
-                                                        <div className={style.miniTarjetaContent}>
-                                                            <span>{t.nombre}</span>
-                                                            <div className={style.miniTarjetaTags}>
-                                                                {t.tags?.map(tg => (
-                                                                    <span key={tg.id} className={`${style.miniTag}`}>{tg.nombre}</span>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                        <button className={style.btnMiniPreview} onClick={() => openPreview(t)}>👁️</button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )
-                                    ) : (
-                                        <p className={`${style.emptyExpanded}`}>Cargando...</p>
-                                    )}
+                                            <button
+                                                className={`${style.btnImport}`}
+                                                onClick={e => { e.stopPropagation(); handleImportar(deck.id); }}
+                                            >
+                                                + Importar
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
+                                {renderDeckExpanded(deck)}
+                            </div>
+                        ))}
+                    </div>
+                )
             )}
 
             {showModal && (
@@ -129,7 +231,46 @@ export const Decks = () => {
                                 />
                             </div>
                             <div className={`${style.formGroup}`}>
-                                <label>Tarjetas seleccionadas: <strong>{form.tarjeta_ids.length}</strong></label>
+                                <label>Tarjetas seleccionadas en orden: <strong>{form.tarjeta_ids.length}</strong></label>
+                                {form.tarjeta_ids.length > 0 && (
+                                    <div className={`${style.orderingControls}`}>
+                                        <button className={`${style.btnSecondary}`} onClick={() => sortTarjetas('name_asc')}>Por Nombre</button>
+                                        <button className={`${style.btnSecondary}`} onClick={() => sortTarjetas('tag')}>Por Categoría</button>
+                                        <button className={`${style.btnSecondary}`} onClick={() => sortTarjetas('random')}>Aleatorio</button>
+                                    </div>
+                                )}
+                                <div className={`${style.selectedTarjetasGrid}`}>
+                                    {form.tarjeta_ids.map((id, index) => {
+                                        const t = filteredTarjetas.find(x => x.id === id) || allTarjetas?.find(x => x.id === id);
+                                        if (!t) return null;
+                                        return (
+                                            <div key={t.id} className={`${style.selectedTarjetaItem}`}>
+                                                <div className={`${style.orderButtons}`}>
+                                                    <button className={`${style.btnIcon}`} onClick={() => moveTarjetaUp(index)} disabled={index === 0}>▲</button>
+                                                    <span className={`${style.orderIndex}`}>{index + 1}</span>
+                                                    <button className={`${style.btnIcon}`} onClick={() => moveTarjetaDown(index)} disabled={index === form.tarjeta_ids.length - 1}>▼</button>
+                                                </div>
+                                                <div className={`${style.selectedTarjetaImgBox}`}>
+                                                    {t.imagen ? (
+                                                        <img src={getImageUrl(t)} alt="" className={`${style.miniTarjetaImg}`} />
+                                                    ) : (
+                                                        <div className={`${style.miniTarjetaPlaceholder}`}>🎭</div>
+                                                    )}
+                                                </div>
+                                                <div className={`${style.tarjetaPickerInfo}`}>
+                                                    <div className={`${style.tarjetaPickerName}`}>{t.nombre}</div>
+                                                    <button className={`${style.btnDelSelected}`} onClick={() => toggleDeckTarjeta(t.id)}>Quitar</button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {form.tarjeta_ids.length === 0 && (
+                                        <p style={{ padding: '0.5rem', opacity: 0.6, fontSize: '0.85rem' }}>Aún no hay tarjetas en el deck.</p>
+                                    )}
+                                </div>
+                            </div>
+                            <div className={`${style.formGroup}`}>
+                                <label>Buscar y agregar tarjetas</label>
                                 <div className={`${style.tarjetaPickerFilters}`}>
                                     <input
                                         type="text"
@@ -206,4 +347,3 @@ export const Decks = () => {
         </div>
     );
 };
-

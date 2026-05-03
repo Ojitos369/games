@@ -71,3 +71,16 @@ ALTER TABLE adivina_salas_jugadores ADD COLUMN victorias INTEGER DEFAULT 0;
 
 -- ------ cambios de adivina -----
 UPDATE adivina_tags SET nombre = UPPER(nombre);
+-- ------ cambios de adivina -----
+ALTER TABLE adivina_decks_tarjetas ADD COLUMN orden INTEGER DEFAULT 0;
+
+-- ------ cambios de deck sharing -----
+ALTER TABLE adivina_decks ADD COLUMN IF NOT EXISTS publico BOOLEAN DEFAULT FALSE;
+
+CREATE TABLE IF NOT EXISTS adivina_decks_importados (
+    id VARCHAR(36) DEFAULT uuid_generate_v4() UNIQUE NOT NULL PRIMARY KEY,
+    deck_id VARCHAR(36) NOT NULL REFERENCES adivina_decks(id) ON DELETE CASCADE,
+    usuario_id VARCHAR(36) NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(deck_id, usuario_id)
+);

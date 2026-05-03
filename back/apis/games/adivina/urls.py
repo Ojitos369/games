@@ -3,6 +3,7 @@ from .api import (
     ListTags, CreateTag, DeleteTag,
     ListTarjetas, CreateTarjeta, UpdateTarjeta, DeleteTarjeta, UploadTarjetaImagen,
     ListDecks, CreateDeck, UpdateDeck, DeleteDeck, GetDeckTarjetas,
+    PublicarDeck, DecksPublicos, ImportarDeck, DesvincularDeck, CopiarDeck,
     ListSalas, CreateSala, GetSala,
 )
 from .socket_api import AdivinaSocketApi
@@ -65,9 +66,29 @@ async def update_deck(request: Request):
 async def delete_deck(request: Request):
     return await DeleteDeck(request=request).run()
 
+@router.get("/decks/publicos")
+async def decks_publicos(request: Request):
+    return await DecksPublicos(request=request).run()
+
 @router.get("/decks/{deck_id}/tarjetas")
 async def get_deck_tarjetas(request: Request, deck_id: str):
     return await GetDeckTarjetas(request=request, deck_id=deck_id).run()
+
+@router.patch("/decks/publicar")
+async def publicar_deck(request: Request):
+    return await PublicarDeck(request=request).run()
+
+@router.post("/decks/importar")
+async def importar_deck(request: Request):
+    return await ImportarDeck(request=request).run()
+
+@router.delete("/decks/importar")
+async def desvincular_deck(request: Request):
+    return await DesvincularDeck(request=request).run()
+
+@router.post("/decks/copiar")
+async def copiar_deck(request: Request):
+    return await CopiarDeck(request=request).run()
 
 # ── Salas ─────────────────────────────────────────────────────────────────────
 

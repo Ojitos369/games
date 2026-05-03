@@ -11,10 +11,13 @@ export const localStates = () => {
     const [, setActualPage] = createState(['page', 'actual'], '');
 
     const decks = useMemo(() => s.adivina?.decks || [], [s.adivina?.decks]);
+    const decksPublicos = useMemo(() => s.adivina?.decksPublicos || [], [s.adivina?.decksPublicos]);
     const allTarjetas = useMemo(() => s.adivina?.tarjetas || [], [s.adivina?.tarjetas]);
     const tags = useMemo(() => s.adivina?.tags || [], [s.adivina?.tags]);
     const loadingDecks = useMemo(() => s.loadings?.adivina?.decks || false, [s.loadings?.adivina?.decks]);
+    const loadingPublicos = useMemo(() => s.loadings?.adivina?.decksPublicos || false, [s.loadings?.adivina?.decksPublicos]);
 
+    const [activeTab, setActiveTab] = useState('mis');
     const [expandedDeck, setExpandedDeck] = useState(null);
     const [deckTarjetas, setDeckTarjetas] = useState({});
     const [showModal, setShowModal] = useState(false);
@@ -51,6 +54,42 @@ export const localStates = () => {
         }));
     }, []);
 
+    const moveTarjetaUp = useCallback((index) => {
+        setForm(prev => {
+            if (index === 0) return prev;
+            const newIds = [...prev.tarjeta_ids];
+            [newIds[index - 1], newIds[index]] = [newIds[index], newIds[index - 1]];
+            return { ...prev, tarjeta_ids: newIds };
+        });
+    }, []);
+
+    const moveTarjetaDown = useCallback((index) => {
+        setForm(prev => {
+            if (index === prev.tarjeta_ids.length - 1) return prev;
+            const newIds = [...prev.tarjeta_ids];
+            [newIds[index + 1], newIds[index]] = [newIds[index], newIds[index + 1]];
+            return { ...prev, tarjeta_ids: newIds };
+        });
+    }, []);
+
+    const sortTarjetas = useCallback((type) => {
+        setForm(prev => {
+            const mapped = prev.tarjeta_ids.map(id => allTarjetas.find(t => t.id === id)).filter(Boolean);
+            if (type === 'name_asc') {
+                mapped.sort((a, b) => a.nombre.localeCompare(b.nombre));
+            } else if (type === 'tag') {
+                mapped.sort((a, b) => {
+                    const tagA = a.tags?.[0]?.nombre || '';
+                    const tagB = b.tags?.[0]?.nombre || '';
+                    return tagA.localeCompare(tagB) || a.nombre.localeCompare(b.nombre);
+                });
+            } else if (type === 'random') {
+                mapped.sort(() => Math.random() - 0.5);
+            }
+            return { ...prev, tarjeta_ids: mapped.map(t => t.id) };
+        });
+    }, [allTarjetas]);
+
     const openCreate = useCallback(() => {
         setEditTarget(null);
         setForm({ nombre: '', descripcion: '', tarjeta_ids: [] });
@@ -83,6 +122,24 @@ export const localStates = () => {
         f.adivina.deleteDeck(deck_id);
     }, [f.adivina]);
 
+    const handleTogglePublico = useCallback((deck) => {
+        f.adivina.publicarDeck(deck.id, !deck.publico);
+    }, [f.adivina]);
+
+    const handleDesvincular = useCallback((deck_id) => {
+        if (!confirm('¿Desvincular este deck? Perderás acceso a sus actualizaciones.')) return;
+        f.adivina.desvincularDeck(deck_id);
+    }, [f.adivina]);
+
+    const handleCopiar = useCallback((deck_id) => {
+        if (!confirm('¿Copiar este deck como propio? Tendrás una copia independiente que no se actualiza cuando el original cambia.')) return;
+        f.adivina.copiarDeck(deck_id);
+    }, [f.adivina]);
+
+    const handleImportar = useCallback((deck_id) => {
+        f.adivina.importarDeck(deck_id);
+    }, [f.adivina]);
+
     const toggleExpand = useCallback((deck) => {
         if (expandedDeck === deck.id) {
             setExpandedDeck(null);
@@ -96,6 +153,13 @@ export const localStates = () => {
         }
     }, [expandedDeck, deckTarjetas, f.adivina]);
 
+    const switchTab = useCallback((tab) => {
+        setActiveTab(tab);
+        if (tab === 'explorar') {
+            f.adivina.getDecksPublicos();
+        }
+    }, [f.adivina]);
+
     const init = useCallback(() => {
         setTitulo('Decks');
         setActualPage('adivina_decks');
@@ -103,9 +167,11 @@ export const localStates = () => {
         f.adivina.getTarjetas();
         f.adivina.getTags();
     }, []);
+
     return {
-        style, decks, loadingDecks,
-        tags, filteredTarjetas,
+        style, decks, decksPublicos, loadingDecks, loadingPublicos,
+        tags, filteredTarjetas, allTarjetas,
+        activeTab, switchTab,
         expandedDeck, deckTarjetas, toggleExpand,
         showModal, setShowModal, editTarget,
         showImageModal, setShowImageModal,
@@ -113,8 +179,10 @@ export const localStates = () => {
         form, setForm,
         tarjetaSearch, setTarjetaSearch,
         tarjetaTagFilter, setTarjetaTagFilter,
-        toggleDeckTarjeta, openCreate, openEdit,
+        toggleDeckTarjeta, moveTarjetaUp, moveTarjetaDown, sortTarjetas,
+        openCreate, openEdit,
         handleSave, handleDelete,
+        handleTogglePublico, handleDesvincular, handleCopiar, handleImportar,
         navigate, init,
     }
 }

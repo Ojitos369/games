@@ -19,7 +19,7 @@ export const MenuBarAdivinaSala = () => {
     const { setChatInput, sendChat } = actions;
 
     return (
-        <div className={`${style.chatPanel}`} style={{ border: 'none', height: '100%', maxWidth: '300px' }}>
+        <div className={`${style.chatPanel} ${style.chatPanelInBar}`} style={{ height: '100%' }}>
             <h3 className={`${style.panelTitle}`}>Chat</h3>
             <div className={`${style.chatMessages}`}>
                 {chatMessages.map((msg, i) => (

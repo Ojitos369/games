@@ -1,12 +1,10 @@
 .salaPage {
     width: 100%;
-    height: 100dvh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     background: var(--my-major);
     color: var(--my-minor);
-    overflow: hidden;
-    overscroll-behavior-y: none;
 }
 
 /* ─── Header ──────────────────────────────────────────────────────────────── */
@@ -42,7 +40,10 @@
     cursor: pointer;
     font-size: 0.85rem;
     transition: background 0.2s;
-    &:hover { background: color-mix(in srgb, var(--my-minor) 18%, transparent); }
+
+    &:hover {
+        background: color-mix(in srgb, var(--my-minor) 18%, transparent);
+    }
 }
 
 .salaTitle {
@@ -67,19 +68,42 @@
     text-transform: uppercase;
 }
 
-.estadoEsperando { background: color-mix(in srgb, var(--my-success) 20%, transparent); color: var(--my-success); }
-.estadoVotando { background: color-mix(in srgb, var(--my-yellow) 20%, transparent); color: var(--my-yellow); }
-.estadoJugando { background: color-mix(in srgb, var(--my-primary) 20%, transparent); color: var(--my-primary); }
-.estadoTerminado { background: color-mix(in srgb, var(--my-secondary) 20%, transparent); color: var(--my-secondary); }
+.estadoEsperando {
+    background: color-mix(in srgb, var(--my-success) 20%, transparent);
+    color: var(--my-success);
+}
 
-.salaPlayers { opacity: 0.7; }
+.estadoVotando {
+    background: color-mix(in srgb, var(--my-yellow) 20%, transparent);
+    color: var(--my-yellow);
+}
+
+.estadoJugando {
+    background: color-mix(in srgb, var(--my-primary) 20%, transparent);
+    color: var(--my-primary);
+}
+
+.estadoTerminado {
+    background: color-mix(in srgb, var(--my-secondary) 20%, transparent);
+    color: var(--my-secondary);
+}
+
+.salaPlayers {
+    opacity: 0.7;
+}
 
 .salaConn {
     font-size: 0.75rem;
     font-weight: 600;
 }
-.connOk { color: var(--my-success); }
-.connBad { color: var(--my-danger); }
+
+.connOk {
+    color: var(--my-success);
+}
+
+.connBad {
+    color: var(--my-danger);
+}
 
 .btnVoice {
     background: color-mix(in srgb, var(--my-minor) 10%, transparent);
@@ -94,6 +118,7 @@
     justify-content: center;
     transition: all 0.2s;
 }
+
 .btnVoiceOn {
     background: var(--my-danger);
     border-color: var(--my-danger);
@@ -114,24 +139,48 @@
     justify-content: center;
     transition: all 0.2s;
 }
+
 .btnHearingOff {
     background: color-mix(in srgb, var(--my-minor) 5%, transparent);
     opacity: 0.6;
 }
 
 @keyframes talkingGlow {
-    0%, 100% { box-shadow: 0 0 0px var(--my-success); }
-    50% { box-shadow: 0 0 10px var(--my-success); }
+
+    0%,
+    100% {
+        box-shadow: 0 0 0px var(--my-success);
+    }
+
+    50% {
+        box-shadow: 0 0 10px var(--my-success);
+    }
 }
 
 @keyframes voiceTalkingPulse {
-    0%, 100% { transform: scale(1); color: var(--my-success); }
-    50% { transform: scale(1.3); color: color-mix(in srgb, var(--my-success) 60%, white); }
+
+    0%,
+    100% {
+        transform: scale(1);
+        color: var(--my-success);
+    }
+
+    50% {
+        transform: scale(1.3);
+        color: color-mix(in srgb, var(--my-success) 60%, white);
+    }
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
 }
 
 /* ─── Body Layout ─────────────────────────────────────────────────────────── */
@@ -139,8 +188,6 @@
     display: flex;
     flex-direction: column;
     flex: 1;
-    overflow: hidden;
-    overscroll-behavior-y: none;
 }
 
 /* ─── Players Panel ───────────────────────────────────────────────────────── */
@@ -161,7 +208,7 @@
         overflow-y: hidden;
         padding: 0.5rem;
         align-items: center;
-        
+
         .panelTitle {
             display: none;
         }
@@ -203,20 +250,26 @@
         max-width: 150px;
     }
 }
+
 .playerTurno {
     border-color: var(--my-primary);
     background: color-mix(in srgb, var(--my-primary) 10%, transparent);
 }
+
 .playerTalking {
     border-color: var(--my-success);
     animation: talkingGlow 1.5s infinite;
 }
+
 .playerEliminado {
     opacity: 0.4;
     text-decoration: line-through;
 }
 
-.playerAvatar { font-size: 1.1rem; }
+.playerAvatar {
+    font-size: 1.1rem;
+}
+
 .playerInfo {
     display: flex;
     flex-direction: column;
@@ -224,6 +277,7 @@
     flex: 1;
     min-width: 0;
 }
+
 .playerName {
     font-size: 0.85rem;
     font-weight: 600;
@@ -231,6 +285,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
 .playerBadge {
     font-size: 0.65rem;
     background: var(--my-secondary);
@@ -239,6 +294,7 @@
     border-radius: 10px;
     width: fit-content;
 }
+
 .playerBadgeTurno {
     font-size: 0.65rem;
     background: var(--my-primary);
@@ -247,9 +303,11 @@
     border-radius: 10px;
     width: fit-content;
 }
+
 .playerBadgeVoice {
     font-size: 0.65rem;
 }
+
 .voiceTalking {
     animation: voiceTalkingPulse 1s infinite;
 }
@@ -261,7 +319,10 @@
     cursor: pointer;
     font-size: 0.8rem;
     opacity: 0.6;
-    &:hover { opacity: 1; }
+
+    &:hover {
+        opacity: 1;
+    }
 }
 
 .turnoBox {
@@ -275,8 +336,16 @@
         display: none;
     }
 }
-.turnoLabel { font-size: 0.75rem; opacity: 0.7; }
-.turnoName { font-weight: 800; font-size: 1rem; }
+
+.turnoLabel {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+.turnoName {
+    font-weight: 800;
+    font-size: 1rem;
+}
 
 /* ─── Spectator & Disconnected ───────────────────────────────────────────── */
 .spectatorSection {
@@ -326,8 +395,7 @@
 
 /* ─── Center Panel ────────────────────────────────────────────────────────── */
 .centerPanel {
-    padding: 1rem 1.25rem;
-    overflow-y: auto;
+    padding: 1rem 1.25rem 6rem 1.25rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -359,14 +427,24 @@
     align-items: center;
     gap: 0.75rem;
 }
-.spinner { font-size: 2rem; animation: spin 1.5s linear infinite; }
-@keyframes spin { 100% { transform: rotate(360deg); } }
+
+.spinner {
+    font-size: 2rem;
+    animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
 
 /* Selección modo */
 .seleccionModoRow {
     display: flex;
     gap: 0.5rem;
 }
+
 .btnModo {
     flex: 1;
     padding: 0.5rem 1rem;
@@ -378,6 +456,7 @@
     font-weight: 600;
     transition: all 0.2s;
 }
+
 /* Timer */
 .timerContainer {
     width: 100%;
@@ -413,8 +492,13 @@
 }
 
 @keyframes pulseDanger {
-    0% { opacity: 1; }
-    100% { opacity: 0.5; }
+    0% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.5;
+    }
 }
 
 .btnModoActive {
@@ -430,6 +514,7 @@
     flex-wrap: wrap;
     align-items: center;
 }
+
 .seleccionInfo {
     font-size: 0.85rem;
     opacity: 0.8;
@@ -457,6 +542,7 @@
     white-space: nowrap;
     opacity: 0.7;
     transition: all 0.2s;
+
     &:hover {
         opacity: 1;
         background: color-mix(in srgb, var(--my-minor) 10%, transparent);
@@ -480,8 +566,6 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 0.6rem;
-    max-height: 320px;
-    overflow-y: auto;
     padding: 0.5rem;
     border: 1px solid color-mix(in srgb, var(--my-minor) 12%, transparent);
     border-radius: 10px;
@@ -511,7 +595,11 @@
     z-index: 5;
     opacity: 0.6;
     transition: all 0.2s;
-    &:hover { opacity: 1; border-color: var(--my-primary); }
+
+    &:hover {
+        opacity: 1;
+        border-color: var(--my-primary);
+    }
 }
 
 
@@ -526,8 +614,12 @@
     border: 2px solid transparent;
     background: color-mix(in srgb, var(--my-minor) 6%, transparent);
     transition: all 0.15s;
-    &:hover { border-color: var(--my-primary); }
+
+    &:hover {
+        border-color: var(--my-primary);
+    }
 }
+
 .tarjetaPickActive {
     border-color: var(--my-success);
     background: color-mix(in srgb, var(--my-success) 15%, transparent);
@@ -539,6 +631,7 @@
     object-fit: cover;
     border-radius: 6px;
 }
+
 .tarjetaPickPlaceholder {
     width: 100%;
     aspect-ratio: 3/2;
@@ -549,6 +642,7 @@
     background: color-mix(in srgb, var(--my-minor) 10%, transparent);
     border-radius: 6px;
 }
+
 .tarjetaPickName {
     font-size: 0.75rem;
     font-weight: 600;
@@ -562,7 +656,7 @@
 .discardOverlay {
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -596,23 +690,27 @@
     border-radius: 12px;
     border: 1px solid color-mix(in srgb, var(--my-primary) 25%, transparent);
 }
+
 .myTarjetaLabel {
     font-size: 0.8rem;
     opacity: 0.7;
     font-weight: 600;
 }
+
 .myTarjetaCard {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.3rem;
 }
+
 .myTarjetaImg {
     width: 120px;
     height: 80px;
     object-fit: cover;
     border-radius: 8px;
 }
+
 .myTarjetaPlaceholder {
     width: 120px;
     height: 80px;
@@ -623,11 +721,16 @@
     background: color-mix(in srgb, var(--my-minor) 10%, transparent);
     border-radius: 8px;
 }
+
 .myTarjetaName {
     font-weight: 800;
     font-size: 1.1rem;
 }
-.myTarjetaUnknown { font-size: 1.5rem; opacity: 0.5; }
+
+.myTarjetaUnknown {
+    font-size: 1.5rem;
+    opacity: 0.5;
+}
 
 .turnoActions {
     display: flex;
@@ -638,7 +741,11 @@
     border-radius: 12px;
     border: 1px solid color-mix(in srgb, var(--my-success) 25%, transparent);
 }
-.turnoTitle { margin: 0; font-size: 1rem; }
+
+.turnoTitle {
+    margin: 0;
+    font-size: 1rem;
+}
 
 .actionRow {
     display: flex;
@@ -646,7 +753,11 @@
     flex-wrap: wrap;
     align-items: flex-end;
 }
-.flexGrow { flex: 1; min-width: 180px; }
+
+.flexGrow {
+    flex: 1;
+    min-width: 180px;
+}
 
 .preguntaBox {
     padding: 1rem;
@@ -657,6 +768,7 @@
     flex-direction: column;
     gap: 0.6rem;
 }
+
 .preguntaBoxActive {
     background: color-mix(in srgb, var(--my-primary) 10%, transparent);
     border-color: color-mix(in srgb, var(--my-primary) 25%, transparent);
@@ -668,9 +780,19 @@
     gap: 0.5rem;
     font-size: 0.85rem;
 }
-.preguntaDe { font-weight: 700; }
-.preguntaArrow { opacity: 0.5; }
-.preguntaPara { font-weight: 700; color: var(--my-primary); }
+
+.preguntaDe {
+    font-weight: 700;
+}
+
+.preguntaArrow {
+    opacity: 0.5;
+}
+
+.preguntaPara {
+    font-weight: 700;
+    color: var(--my-primary);
+}
 
 .preguntaTexto {
     font-size: 1.1rem;
@@ -684,7 +806,10 @@
     display: flex;
     gap: 0.5rem;
 }
-.btnRespuestaSi, .btnRespuestaNo, .btnRespuestaQuizas {
+
+.btnRespuestaSi,
+.btnRespuestaNo,
+.btnRespuestaQuizas {
     flex: 1;
     padding: 0.5rem;
     border-radius: 8px;
@@ -692,11 +817,26 @@
     font-weight: 700;
     cursor: pointer;
     transition: opacity 0.2s;
-    &:hover { opacity: 0.85; }
+
+    &:hover {
+        opacity: 0.85;
+    }
 }
-.btnRespuestaSi { background: var(--my-success); color: #fff; }
-.btnRespuestaNo { background: var(--my-danger); color: #fff; }
-.btnRespuestaQuizas { background: var(--my-yellow); color: #000; }
+
+.btnRespuestaSi {
+    background: var(--my-success);
+    color: #fff;
+}
+
+.btnRespuestaNo {
+    background: var(--my-danger);
+    color: #fff;
+}
+
+.btnRespuestaQuizas {
+    background: var(--my-yellow);
+    color: #000;
+}
 
 .preguntaRespuesta {
     font-size: 0.9rem;
@@ -704,7 +844,10 @@
     padding: 0.4rem;
     background: color-mix(in srgb, var(--my-minor) 10%, transparent);
     border-radius: 6px;
-    strong { color: var(--my-primary); }
+
+    strong {
+        color: var(--my-primary);
+    }
 }
 
 .respuestaWaiting {
@@ -725,17 +868,22 @@
     flex-direction: column;
     gap: 0.5rem;
 }
-.historialTitle { margin: 0; font-size: 0.9rem; opacity: 0.8; }
+
+.historialTitle {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
 .historialList {
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
-    max-height: 180px;
-    overflow-y: auto;
     padding: 0.5rem;
     background: color-mix(in srgb, var(--my-minor) 4%, transparent);
     border-radius: 8px;
 }
+
 .historialItem {
     font-size: 0.8rem;
     padding: 0.25rem 0.4rem;
@@ -774,10 +922,89 @@
     @media (max-width: 900px) {
         border-left: none;
         border-top: 1px solid color-mix(in srgb, var(--my-minor) 10%, transparent);
-        max-height: 35vh; /* better dynamic height */
+        max-height: 35vh;
         min-height: 200px;
         flex-shrink: 0;
     }
+}
+
+/* Cuando el chat está dentro del MenuBar, ocupar toda la altura disponible */
+.chatPanelInBar {
+    height: 100% !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    border-top: none !important;
+    border-left: none !important;
+}
+
+/* Form del chat en MenuBar */
+.chatForm {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.btnSendChat {
+    flex-shrink: 0;
+    width: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ─── Mobile players strip ────────────────────────────────────────────────── */
+.playersStrip {
+    display: none;
+
+    @media (max-width: 767px) {
+        display: flex;
+        flex-direction: row;
+        gap: 0.35rem;
+        overflow-x: auto;
+        padding: 0.4rem 0.75rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--my-minor) 10%, transparent);
+        background: color-mix(in srgb, var(--my-minor) 3%, transparent);
+        flex-shrink: 0;
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
+}
+
+.playerStripItem {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--my-minor) 8%, transparent);
+    border: 1px solid transparent;
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    transition: border-color 0.2s;
+}
+
+.playerStripActive {
+    border-color: var(--my-primary);
+    background: color-mix(in srgb, var(--my-primary) 15%, transparent);
+    color: var(--my-primary);
+    font-weight: 700;
+}
+
+.playerStripElim {
+    opacity: 0.4;
+    text-decoration: line-through;
+}
+
+.playerStripName {
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .chatMessages {
@@ -798,8 +1025,15 @@
     border-radius: 6px;
     background: color-mix(in srgb, var(--my-minor) 6%, transparent);
 }
-.chatFrom { font-weight: 700; color: var(--my-primary); }
-.chatText { word-break: break-word; }
+
+.chatFrom {
+    font-weight: 700;
+    color: var(--my-primary);
+}
+
+.chatText {
+    word-break: break-word;
+}
 
 .chatSystem {
     text-align: center;
@@ -807,12 +1041,16 @@
     opacity: 0.6;
     padding: 0.15rem 0;
 }
-.chatSystemText { font-style: italic; }
+
+.chatSystemText {
+    font-style: italic;
+}
 
 .chatInputRow {
     display: flex;
     gap: 0.4rem;
 }
+
 .chatInput {
     flex: 1;
     background: color-mix(in srgb, var(--my-minor) 8%, transparent);
@@ -821,8 +1059,13 @@
     padding: 0.5rem 0.75rem;
     color: var(--my-minor);
     font-size: 0.85rem;
-    &:focus { outline: none; border-color: var(--my-primary); }
+
+    &:focus {
+        outline: none;
+        border-color: var(--my-primary);
+    }
 }
+
 .btnSend {
     background: var(--my-primary);
     border: none;
@@ -833,7 +1076,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    &:hover { opacity: 0.85; }
+
+    &:hover {
+        opacity: 0.85;
+    }
 }
 
 /* ─── Forms & Buttons ─────────────────────────────────────────────────────── */
@@ -841,18 +1087,28 @@
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
-    label { font-size: 0.8rem; opacity: 0.8; font-weight: 600; }
+
+    label {
+        font-size: 0.8rem;
+        opacity: 0.8;
+        font-weight: 600;
+    }
 }
 
-.input, .select {
+.input,
+.select {
     background: color-mix(in srgb, var(--my-minor) 8%, transparent);
     border: 1px solid color-mix(in srgb, var(--my-minor) 20%, transparent);
     border-radius: 8px;
     padding: 0.5rem 0.75rem;
     color: var(--my-minor);
     font-size: 0.9rem;
-    &:focus { outline: none; border-color: var(--my-primary); }
-    
+
+    &:focus {
+        outline: none;
+        border-color: var(--my-primary);
+    }
+
     option {
         background: var(--my-major);
         color: var(--my-minor);
@@ -869,8 +1125,15 @@
     cursor: pointer;
     transition: opacity 0.2s;
     white-space: nowrap;
-    &:hover:not(:disabled) { opacity: 0.85; }
-    &:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    &:hover:not(:disabled) {
+        opacity: 0.85;
+    }
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
 }
 
 .btnSecondary {
@@ -883,14 +1146,17 @@
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.2s;
-    &:hover { background: color-mix(in srgb, var(--my-minor) 18%, transparent); }
+
+    &:hover {
+        background: color-mix(in srgb, var(--my-minor) 18%, transparent);
+    }
 }
 
 /* ─── Modals ──────────────────────────────────────────────────────────────── */
 .modalOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -907,7 +1173,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 .modalLarge {
@@ -921,7 +1187,12 @@
     justify-content: space-between;
     padding: 1rem 1.25rem;
     border-bottom: 1px solid color-mix(in srgb, var(--my-minor) 15%, transparent);
-    h3 { margin: 0; font-size: 1.05rem; }
+
+    h3 {
+        margin: 0;
+        font-size: 1.05rem;
+    }
+
     flex-shrink: 0;
 }
 
@@ -943,7 +1214,11 @@
     flex-shrink: 0;
 }
 
-.modalHint { margin: 0; opacity: 0.7; font-size: 0.85rem; }
+.modalHint {
+    margin: 0;
+    opacity: 0.7;
+    font-size: 0.85rem;
+}
 
 .btnClose {
     background: none;
@@ -952,7 +1227,10 @@
     font-size: 1.1rem;
     cursor: pointer;
     opacity: 0.7;
-    &:hover { opacity: 1; }
+
+    &:hover {
+        opacity: 1;
+    }
 }
 
 /* ─── Toast ───────────────────────────────────────────────────────────────── */
@@ -973,19 +1251,31 @@
     padding: 1.25rem 1.5rem;
     max-width: 360px;
     width: 100%;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     text-align: center;
     pointer-events: auto;
     animation: toastIn 0.3s ease;
 }
 
 @keyframes toastIn {
-    from { transform: scale(0.9); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
-.toastSuccess { border: 2px solid var(--my-success); }
-.toastError { border: 2px solid var(--my-danger); }
+.toastSuccess {
+    border: 2px solid var(--my-success);
+}
+
+.toastError {
+    border: 2px solid var(--my-danger);
+}
 
 .toastTitle {
     font-size: 1.2rem;
@@ -995,7 +1285,10 @@
 
 .toastBody {
     font-size: 0.9rem;
-    p { margin: 0.25rem 0; }
+
+    p {
+        margin: 0.25rem 0;
+    }
 }
 
 /* ─── Game Over ───────────────────────────────────────────────────────────── */
@@ -1007,9 +1300,22 @@
     border: 1px solid color-mix(in srgb, var(--my-yellow) 30%, transparent);
     margin-bottom: 0.5rem;
 }
-.winnerCrown { font-size: 2.5rem; }
-.winnerName { font-size: 1.4rem; font-weight: 800; }
-.winnerLabel { font-size: 0.85rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.1em; }
+
+.winnerCrown {
+    font-size: 2.5rem;
+}
+
+.winnerName {
+    font-size: 1.4rem;
+    font-weight: 800;
+}
+
+.winnerLabel {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
 
 .revealGrid {
     display: grid;
@@ -1017,6 +1323,7 @@
     gap: 0.75rem;
     padding: 0.5rem 0;
 }
+
 .revealCard {
     display: flex;
     flex-direction: column;
@@ -1026,13 +1333,19 @@
     background: color-mix(in srgb, var(--my-minor) 6%, transparent);
     border-radius: 10px;
 }
-.revealName { font-size: 0.8rem; font-weight: 700; }
+
+.revealName {
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
 .revealImg {
     width: 100%;
     aspect-ratio: 3/2;
     object-fit: cover;
     border-radius: 6px;
 }
+
 .revealImgPlaceholder {
     width: 100%;
     aspect-ratio: 3/2;
@@ -1043,7 +1356,12 @@
     background: color-mix(in srgb, var(--my-minor) 10%, transparent);
     border-radius: 6px;
 }
-.revealPersonaje { font-size: 0.75rem; font-weight: 600; color: var(--my-primary); }
+
+.revealPersonaje {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--my-primary);
+}
 
 .playerWins {
     font-size: 0.75rem;
@@ -1083,7 +1401,7 @@
     font-size: 2rem;
     color: var(--my-danger);
     pointer-events: none;
-    text-shadow: 0 0 10px rgba(0,0,0,0.5);
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .btnInvite {
@@ -1096,6 +1414,7 @@
     font-size: 0.85rem;
     font-weight: 600;
     transition: all 0.2s;
+
     &:hover {
         background: var(--my-primary);
         color: #fff;
@@ -1160,13 +1479,28 @@
 }
 
 @keyframes winnerIn {
-    from { transform: scale(0.5); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    from {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
-.winnerBigBox .winnerCrown { font-size: 4rem; }
-.winnerBigBox .winnerName { font-size: 2.5rem; }
-.winnerBigBox .winnerLabel { font-size: 1.1rem; }
+.winnerBigBox .winnerCrown {
+    font-size: 4rem;
+}
+
+.winnerBigBox .winnerName {
+    font-size: 2.5rem;
+}
+
+.winnerBigBox .winnerLabel {
+    font-size: 1.1rem;
+}
 
 .terminadoActions {
     display: flex;
@@ -1190,7 +1524,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     z-index: 10;
 }
 
@@ -1206,49 +1540,180 @@
 
 @media (max-width: 600px) {
     .salaHeader {
-        padding: 0.5rem;
-        flex-direction: column;
-        align-items: flex-start;
+        padding: 0.5rem 0.75rem;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 0.5rem;
     }
+
+    .salaHeaderLeft {
+        gap: 0.5rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .salaTitle {
+        font-size: 0.95rem;
+    }
+
+    .salaMeta {
+        font-size: 0.7rem;
+        flex-wrap: nowrap;
+        overflow: hidden;
+    }
+
+    .salaEstado {
+        font-size: 0.6rem;
+    }
+
+    .salaPlayers,
+    .salaConn {
+        display: none;
+    }
+
     .salaHeaderRight {
-        width: 100%;
-        justify-content: flex-end;
+        gap: 0.25rem;
+        flex-shrink: 0;
     }
+
+    .btnVoice,
+    .btnHearing {
+        width: 30px;
+        height: 30px;
+        font-size: 0.85rem;
+    }
+
+    .btnInvite {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .btnBack {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
     .turnPairing {
         gap: 0.5rem;
         padding: 0.5rem;
         flex-direction: column;
     }
+
     .turnArrow {
         transform: rotate(90deg);
         margin: -0.5rem 0;
     }
+
     .roleName {
         font-size: 1rem;
     }
-    .myTarjetaImg, .myTarjetaPlaceholder {
-        width: 100px;
-        height: 66px;
+
+    .myTarjetaImg,
+    .myTarjetaPlaceholder {
+        width: 90px;
+        height: 60px;
     }
+
     .tarjetasGridSmall {
-        grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     }
+
     .phaseTitle {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
+
+    .phaseDesc {
+        font-size: 0.82rem;
+    }
+
     .actionRow {
         flex-direction: column;
         align-items: stretch;
     }
-    .btnPrimary, .btnSecondary {
+
+    .actionRow .btnPrimary,
+    .actionRow .btnSecondary {
         width: 100%;
     }
+
     .salaBody {
         display: flex;
         flex-direction: column;
     }
-    .playersPanel, .chatPanel {
+
+    .centerPanel {
+        padding: 0.75rem 0.75rem 6rem 0.75rem;
+        gap: 0.75rem;
+    }
+
+    .filterRow {
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .filterRow .input,
+    .filterRow .select {
+        width: 100%;
+        font-size: 0.85rem;
+    }
+
+    .filterRow .btnSecondary {
+        width: 100%;
+    }
+
+    .modal {
+        max-height: 90dvh;
+    }
+
+    .modalBody {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+        padding: 1rem;
+    }
+
+    .modalOverlay {
+        padding: 0.5rem;
+        align-items: flex-end;
+    }
+
+    .modal {
+        border-radius: 16px 16px 12px 12px;
+    }
+
+    .historialList {
+    }
+
+    .turnoActions,
+    .preguntaBox,
+    .myTarjetaBox {
+        padding: 0.75rem;
+    }
+
+    .respuestaButtons {
+        gap: 0.35rem;
+    }
+
+    .btnRespuestaSi,
+    .btnRespuestaNo,
+    .btnRespuestaQuizas {
+        padding: 0.4rem 0.25rem;
+        font-size: 0.9rem;
+    }
+
+    .catalogBox {
+        margin-top: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    .tabItem {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.78rem;
+    }
+
+    .playersPanel,
+    .chatPanel {
         max-height: 150px;
     }
 }
-

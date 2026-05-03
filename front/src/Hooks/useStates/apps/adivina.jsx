@@ -186,6 +186,85 @@ export const adivina = props => {
             .catch(err => console.log(err));
     };
 
+    const publicarDeck = (deck_id, publico, cb) => {
+        if (s.loadings?.adivina?.publicarDeck) return;
+        u2('loadings', 'adivina', 'publicarDeck', true);
+        miAxios.patch('games/adivina/decks/publicar', { deck_id, publico })
+            .then(res => {
+                const msg = publico ? 'Deck publicado' : 'Deck privado';
+                general.notificacion({ message: msg, title: 'Éxito', mode: 'success' });
+                getDecks();
+                if (cb) cb(res.data);
+            })
+            .catch(err => {
+                const message = err?.response?.data?.detail || 'Error al actualizar deck';
+                general.notificacion({ message, title: 'Error', mode: 'danger' });
+            })
+            .finally(() => u2('loadings', 'adivina', 'publicarDeck', false));
+    };
+
+    const getDecksPublicos = (cb) => {
+        if (s.loadings?.adivina?.decksPublicos) return;
+        u2('loadings', 'adivina', 'decksPublicos', true);
+        miAxios.get('games/adivina/decks/publicos')
+            .then(res => {
+                u1('adivina', 'decksPublicos', res.data.decks);
+                if (cb) cb(res.data.decks);
+            })
+            .catch(err => console.log(err))
+            .finally(() => u2('loadings', 'adivina', 'decksPublicos', false));
+    };
+
+    const importarDeck = (deck_id, cb) => {
+        if (s.loadings?.adivina?.importarDeck) return;
+        u2('loadings', 'adivina', 'importarDeck', true);
+        miAxios.post('games/adivina/decks/importar', { deck_id })
+            .then(res => {
+                general.notificacion({ message: 'Deck importado a tu colección', title: 'Éxito', mode: 'success' });
+                getDecks();
+                getDecksPublicos();
+                if (cb) cb(res.data);
+            })
+            .catch(err => {
+                const message = err?.response?.data?.detail || 'Error al importar deck';
+                general.notificacion({ message, title: 'Error', mode: 'danger' });
+            })
+            .finally(() => u2('loadings', 'adivina', 'importarDeck', false));
+    };
+
+    const desvincularDeck = (deck_id, cb) => {
+        if (s.loadings?.adivina?.desvincularDeck) return;
+        u2('loadings', 'adivina', 'desvincularDeck', true);
+        miAxios.delete('games/adivina/decks/importar', { data: { deck_id } })
+            .then(res => {
+                general.notificacion({ message: 'Deck desvinculado', title: 'Éxito', mode: 'success' });
+                getDecks();
+                getDecksPublicos();
+                if (cb) cb(res.data);
+            })
+            .catch(err => {
+                const message = err?.response?.data?.detail || 'Error al desvincular deck';
+                general.notificacion({ message, title: 'Error', mode: 'danger' });
+            })
+            .finally(() => u2('loadings', 'adivina', 'desvincularDeck', false));
+    };
+
+    const copiarDeck = (deck_id, cb) => {
+        if (s.loadings?.adivina?.copiarDeck) return;
+        u2('loadings', 'adivina', 'copiarDeck', true);
+        miAxios.post('games/adivina/decks/copiar', { deck_id })
+            .then(res => {
+                general.notificacion({ message: 'Deck copiado como tuyo (sin vínculo)', title: 'Éxito', mode: 'success' });
+                getDecks();
+                if (cb) cb(res.data);
+            })
+            .catch(err => {
+                const message = err?.response?.data?.detail || 'Error al copiar deck';
+                general.notificacion({ message, title: 'Error', mode: 'danger' });
+            })
+            .finally(() => u2('loadings', 'adivina', 'copiarDeck', false));
+    };
+
     const getSalas = () => {
         if (s.loadings?.adivina?.salas) return;
         u2('loadings', 'adivina', 'salas', true);
@@ -220,6 +299,7 @@ export const adivina = props => {
         getTags, createTag, deleteTag,
         getTarjetas, createTarjeta, updateTarjeta, deleteTarjeta, uploadTarjetaImage,
         getDecks, createDeck, updateDeck, deleteDeck, getDeckTarjetas,
+        publicarDeck, getDecksPublicos, importarDeck, desvincularDeck, copiarDeck,
         getSalas, createSala, getSala,
     };
 };

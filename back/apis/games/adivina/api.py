@@ -335,15 +335,36 @@ class ListDecks(SessionApi):
         user = get_usuario_from_token(self.conexion, self.d2d, self.token, self.MYE)
 
         query = """
-            SELECT d.id, d.nombre, d.descripcion, d.created_at,
-                   COUNT(dt.id) as tarjetas_count
+            SELECT d.id, d.nombre, d.descripcion, d.created_at, d.publico,
+                   COUNT(dt.id) as tarjetas_count,
+                   TRUE::boolean as is_owner,
+                   FALSE::boolean as linked,
+                   NULL::VARCHAR as import_id,
+                   u.username as creador_username
             FROM adivina_decks d
             LEFT JOIN adivina_decks_tarjetas dt ON dt.deck_id = d.id
-            WHERE d.creador_id = :creador_id
-            GROUP BY d.id
-            ORDER BY d.nombre
+            LEFT JOIN usuarios u ON u.id = d.creador_id
+            WHERE d.creador_id = :uid
+            GROUP BY d.id, u.username
+
+            UNION ALL
+
+            SELECT d.id, d.nombre, d.descripcion, d.created_at, d.publico,
+                   COUNT(dt.id) as tarjetas_count,
+                   FALSE::boolean as is_owner,
+                   TRUE::boolean as linked,
+                   di.id::VARCHAR as import_id,
+                   u.username as creador_username
+            FROM adivina_decks_importados di
+            JOIN adivina_decks d ON d.id = di.deck_id
+            LEFT JOIN adivina_decks_tarjetas dt ON dt.deck_id = d.id
+            LEFT JOIN usuarios u ON u.id = d.creador_id
+            WHERE di.usuario_id = :uid
+            GROUP BY d.id, di.id, u.username
+
+            ORDER BY nombre
         """
-        result = self.conexion.consulta_asociativa(query, {'creador_id': user['id']})
+        result = self.conexion.consulta_asociativa(query, {'uid': user['id']})
         self.response = {"decks": self.d2d(result)}
 
 
@@ -368,11 +389,11 @@ class CreateDeck(SessionApi):
             {'id': deck_id, 'nombre': nombre, 'descripcion': descripcion, 'creador_id': user['id']}
         )
 
-        for tarjeta_id in tarjeta_ids:
+        for index, tarjeta_id in enumerate(tarjeta_ids):
             dt_id = self.get_id()
             self.conexion.ejecutar(
-                "INSERT INTO adivina_decks_tarjetas (id, deck_id, tarjeta_id) VALUES (:id, :deck_id, :tarjeta_id)",
-                {'id': dt_id, 'deck_id': deck_id, 'tarjeta_id': tarjeta_id}
+                "INSERT INTO adivina_decks_tarjetas (id, deck_id, tarjeta_id, orden) VALUES (:id, :deck_id, :tarjeta_id, :orden)",
+                {'id': dt_id, 'deck_id': deck_id, 'tarjeta_id': tarjeta_id, 'orden': index}
             )
 
         self.response = {"message": "Deck creado", "id": deck_id}
@@ -414,11 +435,11 @@ class UpdateDeck(SessionApi):
             "DELETE FROM adivina_decks_tarjetas WHERE deck_id = :deck_id",
             {'deck_id': deck_id}
         )
-        for tarjeta_id in tarjeta_ids:
+        for index, tarjeta_id in enumerate(tarjeta_ids):
             dt_id = self.get_id()
             self.conexion.ejecutar(
-                "INSERT INTO adivina_decks_tarjetas (id, deck_id, tarjeta_id) VALUES (:id, :deck_id, :tarjeta_id)",
-                {'id': dt_id, 'deck_id': deck_id, 'tarjeta_id': tarjeta_id}
+                "INSERT INTO adivina_decks_tarjetas (id, deck_id, tarjeta_id, orden) VALUES (:id, :deck_id, :tarjeta_id, :orden)",
+                {'id': dt_id, 'deck_id': deck_id, 'tarjeta_id': tarjeta_id, 'orden': index}
             )
 
         self.response = {"message": "Deck actualizado"}
@@ -468,8 +489,8 @@ class GetDeckTarjetas(SessionApi):
             LEFT JOIN adivina_tarjetas_tags tt ON tt.tarjeta_id = t.id
             LEFT JOIN adivina_tags tg ON tg.id = tt.tag_id
             WHERE dt.deck_id = :deck_id
-            GROUP BY t.id
-            ORDER BY t.nombre
+            GROUP BY t.id, dt.orden
+            ORDER BY dt.orden ASC, t.nombre
         """
         result = self.conexion.consulta_asociativa(query, {'deck_id': deck_id})
         data = self.d2d(result)
@@ -479,6 +500,162 @@ class GetDeckTarjetas(SessionApi):
             else:
                 t['imagen_url'] = None
         self.response = {"tarjetas": data}
+
+
+class PublicarDeck(SessionApi):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.create_conexion()
+
+    def main(self):
+        deck_id = self.data.get('deck_id', '')
+        publico = bool(self.data.get('publico', True))
+        if not deck_id:
+            raise self.MYE("ID requerido")
+
+        result = self.conexion.consulta_asociativa(
+            "SELECT creador_id FROM adivina_decks WHERE id = :id",
+            {'id': deck_id}
+        )
+        rows = self.d2d(result)
+        if not rows:
+            raise self.MYE("Deck no encontrado")
+
+        validate_creator_or_admin(self.conexion, self.d2d, self.token, rows[0]['creador_id'], self.MYE)
+        self.conexion.ejecutar(
+            "UPDATE adivina_decks SET publico = :publico WHERE id = :id",
+            {'id': deck_id, 'publico': publico}
+        )
+        self.response = {"message": "Deck actualizado", "publico": publico}
+
+
+class DecksPublicos(SessionApi):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.create_conexion()
+
+    def main(self):
+        user = get_usuario_from_token(self.conexion, self.d2d, self.token, self.MYE)
+
+        query = """
+            SELECT d.id, d.nombre, d.descripcion, d.created_at,
+                   COUNT(dt.id) as tarjetas_count,
+                   u.username as creador_username,
+                   EXISTS(
+                       SELECT 1 FROM adivina_decks_importados di2
+                       WHERE di2.deck_id = d.id AND di2.usuario_id = :uid
+                   ) as ya_importado
+            FROM adivina_decks d
+            LEFT JOIN adivina_decks_tarjetas dt ON dt.deck_id = d.id
+            LEFT JOIN usuarios u ON u.id = d.creador_id
+            WHERE d.publico = TRUE AND d.creador_id != :uid
+            GROUP BY d.id, u.username
+            ORDER BY d.nombre
+        """
+        result = self.conexion.consulta_asociativa(query, {'uid': user['id']})
+        self.response = {"decks": self.d2d(result)}
+
+
+class ImportarDeck(SessionApi):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.create_conexion()
+
+    def main(self):
+        user = get_usuario_from_token(self.conexion, self.d2d, self.token, self.MYE)
+        deck_id = self.data.get('deck_id', '')
+        if not deck_id:
+            raise self.MYE("ID requerido")
+
+        result = self.conexion.consulta_asociativa(
+            "SELECT id, publico, creador_id FROM adivina_decks WHERE id = :id",
+            {'id': deck_id}
+        )
+        rows = self.d2d(result)
+        if not rows:
+            raise self.MYE("Deck no encontrado")
+        if not rows[0]['publico']:
+            raise self.MYE("Este deck no es público")
+        if rows[0]['creador_id'] == user['id']:
+            raise self.MYE("No puedes importar tu propio deck")
+
+        check = self.conexion.consulta_asociativa(
+            "SELECT id FROM adivina_decks_importados WHERE deck_id = :deck_id AND usuario_id = :uid",
+            {'deck_id': deck_id, 'uid': user['id']}
+        )
+        if self.d2d(check):
+            raise self.MYE("Ya tienes este deck importado")
+
+        import_id = self.get_id()
+        self.conexion.ejecutar(
+            "INSERT INTO adivina_decks_importados (id, deck_id, usuario_id) VALUES (:id, :deck_id, :uid)",
+            {'id': import_id, 'deck_id': deck_id, 'uid': user['id']}
+        )
+        self.response = {"message": "Deck importado", "id": import_id}
+
+
+class DesvincularDeck(SessionApi):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.create_conexion()
+
+    def main(self):
+        user = get_usuario_from_token(self.conexion, self.d2d, self.token, self.MYE)
+        deck_id = self.data.get('deck_id', '')
+        if not deck_id:
+            raise self.MYE("ID requerido")
+
+        self.conexion.ejecutar(
+            "DELETE FROM adivina_decks_importados WHERE deck_id = :deck_id AND usuario_id = :uid",
+            {'deck_id': deck_id, 'uid': user['id']}
+        )
+        self.response = {"message": "Deck desvinculado"}
+
+
+class CopiarDeck(SessionApi):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.create_conexion()
+
+    def main(self):
+        user = get_usuario_from_token(self.conexion, self.d2d, self.token, self.MYE)
+        deck_id = self.data.get('deck_id', '')
+        if not deck_id:
+            raise self.MYE("ID requerido")
+
+        result = self.conexion.consulta_asociativa(
+            "SELECT id, nombre, descripcion FROM adivina_decks WHERE id = :id",
+            {'id': deck_id}
+        )
+        rows = self.d2d(result)
+        if not rows:
+            raise self.MYE("Deck no encontrado")
+
+        original = rows[0]
+        new_deck_id = self.get_id()
+        self.conexion.ejecutar(
+            "INSERT INTO adivina_decks (id, nombre, descripcion, creador_id, publico) VALUES (:id, :nombre, :desc, :uid, FALSE)",
+            {'id': new_deck_id, 'nombre': f"Copia de {original['nombre']}", 'desc': original['descripcion'], 'uid': user['id']}
+        )
+
+        tarjetas_result = self.conexion.consulta_asociativa(
+            "SELECT tarjeta_id, orden FROM adivina_decks_tarjetas WHERE deck_id = :deck_id ORDER BY orden",
+            {'deck_id': deck_id}
+        )
+        for t in self.d2d(tarjetas_result):
+            dt_id = self.get_id()
+            self.conexion.ejecutar(
+                "INSERT INTO adivina_decks_tarjetas (id, deck_id, tarjeta_id, orden) VALUES (:id, :deck_id, :tarjeta_id, :orden)",
+                {'id': dt_id, 'deck_id': new_deck_id, 'tarjeta_id': t['tarjeta_id'], 'orden': t['orden']}
+            )
+
+        # Remove link if user had this deck imported
+        self.conexion.ejecutar(
+            "DELETE FROM adivina_decks_importados WHERE deck_id = :deck_id AND usuario_id = :uid",
+            {'deck_id': deck_id, 'uid': user['id']}
+        )
+
+        self.response = {"message": "Deck copiado", "id": new_deck_id}
 
 
 # ─────────────────────────── SALAS ────────────────────────────

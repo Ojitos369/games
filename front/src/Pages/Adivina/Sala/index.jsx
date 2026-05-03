@@ -25,8 +25,9 @@ export const AdivinaSala = () => {
         preguntaTexto, setPreguntaTexto, preguntaTarget, setPreguntaTarget,
         respuestaValue,
         showAdivinar, setShowAdivinar, adivinarTarget, setAdivinarTarget,
-        adivinarNombre, setAdivinarNombre, guessResult,
-        gameOverData,
+        adivinarNombre, setAdivinarNombre, guessResult, setGuessResult,
+        gameOverData, setGameOverData,
+        waitingForHost, setWaitingForHost,
         showImageModal, setShowImageModal,
         previewTarget, openPreview,
         isHost, myPlayer, activePlayers, isMyTurn, isEspectador, espectadores, userId,
@@ -123,6 +124,25 @@ export const AdivinaSala = () => {
 
             {/* Main content */}
             <div className={`${style.salaBody}`}>
+                {/* Players strip - visible only on mobile (sidebar hidden by default) */}
+                <div className={`${style.playersStrip}`}>
+                    {jugadoresList.map(j => (
+                        <div
+                            key={j.user_id}
+                            className={`${style.playerStripItem} ${j.user_id === gameState?.turno_actual ? style.playerStripActive : ''} ${j.eliminado ? style.playerStripElim : ''}`}
+                        >
+                            <span>{j.user_id === gameState?.creador_id ? '👑' : '👤'}</span>
+                            <span className={`${style.playerStripName}`}>{j.username}</span>
+                        </div>
+                    ))}
+                    {espectadores.length > 0 && (
+                        <div className={`${style.playerStripItem}`} style={{ opacity: 0.6 }}>
+                            <span>👁️</span>
+                            <span>{espectadores.length}</span>
+                        </div>
+                    )}
+                </div>
+
                 {/* Center panel */}
                 <div className={`${style.centerPanel}`}>
                     {/* ESPERANDO */}
@@ -183,6 +203,8 @@ export const AdivinaSala = () => {
                             gameOverData={gameOverData}
                             gameState={gameState}
                             isHost={isHost}
+                            waitingForHost={waitingForHost}
+                            setWaitingForHost={setWaitingForHost}
                             handleRestartGame={handleRestartGame}
                             navigate={navigate}
                         />
@@ -298,30 +320,40 @@ export const AdivinaSala = () => {
                         <div className={`${style.modalHeader}`}>
                             <h3>🏆 Juego Terminado</h3>
                         </div>
-                        <div className={`${style.modalBody}`}>
-                            <div className={`${style.winnerBox}`}>
-                                <div className={`${style.winnerCrown}`}>👑</div>
-                                <div className={`${style.winnerName}`}>{gameOverData.ganador_username}</div>
-                                <div className={`${style.winnerLabel}`}>Ganador</div>
+                        {waitingForHost && !isHost ? (
+                            <div className={`${style.modalBody}`} style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                                <div className={style.spinner} style={{ margin: '0 auto 1.5rem auto' }}></div>
+                                <h3 style={{ opacity: 0.8, marginBottom: '0.5rem' }}>En la fila</h3>
+                                <p style={{ opacity: 0.6 }}>Esperando a que el anfitrión inicie una nueva partida...</p>
                             </div>
-                            <div className={`${style.revealGrid}`}>
-                                {Object.entries(gameOverData.jugadores || {}).map(([uid, p]) => (
-                                    <div key={uid} className={`${style.revealCard}`} onClick={() => p.tarjeta && openPreview(p.tarjeta)}>
-                                        <div className={`${style.revealName}`}>{p.username}</div>
-                                        {p.tarjeta?.imagen_url ? (
-                                            <img src={getImageUrl(p.tarjeta.imagen_url)} alt="" className={`${style.revealImg}`} />
-                                        ) : (
-                                            <div className={`${style.revealImgPlaceholder}`}>🎭</div>
-                                        )}
-                                        <div className={`${style.revealPersonaje}`}>{p.tarjeta?.nombre || '???'}</div>
-                                    </div>
-                                ))}
+                        ) : (
+                            <div className={`${style.modalBody}`}>
+                                <div className={`${style.winnerBox}`}>
+                                    <div className={`${style.winnerCrown}`}>👑</div>
+                                    <div className={`${style.winnerName}`}>{gameOverData.ganador_username}</div>
+                                    <div className={`${style.winnerLabel}`}>Ganador</div>
+                                </div>
+                                <div className={`${style.revealGrid}`}>
+                                    {Object.entries(gameOverData.jugadores || {}).map(([uid, p]) => (
+                                        <div key={uid} className={`${style.revealCard}`} onClick={() => p.tarjeta && openPreview(p.tarjeta)}>
+                                            <div className={`${style.revealName}`}>{p.username}</div>
+                                            {p.tarjeta?.imagen_url ? (
+                                                <img src={getImageUrl(p.tarjeta.imagen_url)} alt="" className={`${style.revealImg}`} />
+                                            ) : (
+                                                <div className={`${style.revealImgPlaceholder}`}>🎭</div>
+                                            )}
+                                            <div className={`${style.revealPersonaje}`}>{p.tarjeta?.nombre || '???'}</div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
                         <div className={`${style.modalFooter}`}>
                             <button className={`${style.btnSecondary}`} onClick={() => navigate('/adivina')}>Volver al Lobby</button>
-                            {isHost && (
+                            {isHost ? (
                                 <button className={`${style.btnPrimary}`} onClick={handleRestartGame}>Reiniciar Partida</button>
+                            ) : !waitingForHost && (
+                                <button className={`${style.btnPrimary}`} onClick={() => setWaitingForHost(true)}>Volver a jugar</button>
                             )}
                         </div>
                     </div>
@@ -502,7 +534,7 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
     const myTarjeta = myPlayer?.tarjeta;
     const myDiscards = myPlayer?.discards || [];
     const tarjetasDisponibles = gameState?.seleccion?.tarjetas_disponibles || [];
-    
+
     const targetId = gameState?.jugador_objetivo;
     const targetName = gameState?.jugadores?.[targetId]?.username || '???';
     const guesserId = gameState?.turno_actual;
@@ -512,7 +544,7 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
 
     // Tabs for discards
     const [viewTargetId, setViewTargetId] = useState(targetId);
-    
+
     useEffect(() => {
         if (targetId) setViewTargetId(targetId);
     }, [targetId]);
@@ -613,7 +645,7 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
                         <span className={`${style.preguntaPara}`}>{preguntaActiva.para_nombre}</span>
                     </div>
                     <div className={`${style.preguntaTexto}`}>"{preguntaActiva.texto}"</div>
-                    
+
                     {meTocaResponder && (preguntaActiva.respuesta === 'pendiente' || !preguntaActiva.respuesta) && (
                         <div className={`${style.respuestaButtons}`}>
                             <button className={`${style.btnRespuestaSi}`} onClick={() => handleRespuesta('si')}>SÍ</button>
@@ -621,7 +653,7 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
                             <button className={`${style.btnRespuestaQuizas}`} onClick={() => handleRespuesta('quizas')}>QUIZÁS</button>
                         </div>
                     )}
-                    
+
                     {preguntaActiva.respuesta && preguntaActiva.respuesta !== 'pendiente' ? (
                         <div className={`${style.preguntaRespuesta}`}>
                             Respuesta: <strong>{preguntaActiva.respuesta.toUpperCase()}</strong>
@@ -713,8 +745,29 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
     );
 }
 
-function TerminadoView({ style, gameOverData, gameState, isHost, handleRestartGame, navigate }) {
+function TerminadoView({ style, gameOverData, gameState, isHost, waitingForHost, setWaitingForHost, handleRestartGame, navigate }) {
     const winnerName = gameState?.jugadores?.[gameState?.ganador]?.username || gameOverData?.ganador_username || 'Alguien';
+
+    if (waitingForHost && !isHost) {
+        return (
+            <div className={`${style.phaseBox} ${style.phaseTerminado}`}>
+                <h2 className={`${style.phaseTitle}`}>🏆 ¡Tenemos un ganador!</h2>
+                <div className={`${style.winnerBigBox}`} style={{ opacity: 0.8 }}>
+                    <div className={`${style.winnerCrown}`}>👑</div>
+                    <div className={`${style.winnerName}`}>{winnerName}</div>
+                </div>
+                <div style={{ marginTop: '2rem', textAlign: 'center', opacity: 0.8 }}>
+                    <div className={style.spinner} style={{ margin: '0 auto 1rem auto' }}></div>
+                    <p>Esperando a que el anfitrión inicie una nueva partida...</p>
+                </div>
+                <div className={`${style.terminadoActions}`} style={{ marginTop: '1.5rem' }}>
+                    <button className={`${style.btnSecondary}`} onClick={() => navigate('/adivina')}>
+                        🏠 Volver al Lobby
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={`${style.phaseBox} ${style.phaseTerminado}`}>
@@ -724,12 +777,12 @@ function TerminadoView({ style, gameOverData, gameState, isHost, handleRestartGa
                 <div className={`${style.winnerName}`}>{winnerName}</div>
                 <div className={`${style.winnerLabel}`}>¡Ha ganado la partida!</div>
             </div>
-            
+
             <div className={`${style.terminadoActions}`}>
                 <button className={`${style.btnSecondary}`} onClick={() => navigate('/adivina')}>
                     🏠 Volver al Lobby
                 </button>
-                {isHost && (
+                {isHost ? (
                     <>
                         <button className={`${style.btnPrimary}`} onClick={handleRestartGame}>
                             🔄 Volver a jugar
@@ -738,6 +791,10 @@ function TerminadoView({ style, gameOverData, gameState, isHost, handleRestartGa
                             🗂️ Cambiar baraja
                         </button>
                     </>
+                ) : (
+                    <button className={`${style.btnPrimary}`} onClick={() => setWaitingForHost(true)}>
+                        🔄 Volver a jugar
+                    </button>
                 )}
             </div>
         </div>
