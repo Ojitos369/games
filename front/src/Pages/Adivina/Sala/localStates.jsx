@@ -6,8 +6,9 @@ import style from './styles/index.module.scss';
 const host = window.location.hostname;
 const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
 const httpProtocol = window.location.protocol;
-const WS_BASE = `${protocol}://${host}:8372/api/games/adivina/ws`;
-const API_BASE = `${httpProtocol}//${host}:8372`;
+const port = window.location.port === '5173' ? ':8372' : (window.location.port ? `:${window.location.port}` : '');
+const WS_BASE = `${protocol}://${host}${port}/api/games/adivina/ws`;
+const API_BASE = `${httpProtocol}//${host}${port}`;
 
 function getCookie(name) {
     const value = `; ${document.cookie}`;
@@ -22,6 +23,9 @@ export const localStates = () => {
     const navigate = useNavigate();
 
     const [, setTitulo] = createState(['page', 'title'], '');
+    const [, setSalaProps] = createState(['adivina', 'salaProps'], {});
+    const [, setMenuBarMode] = createState(['menubar', 'menuMode'], null);
+    const [, setSideBarMode] = createState(['sidebar', 'sideMode'], null);
 
     // Refs para valores que no deben causar re-creación de callbacks
     const fRef = useRef(f);
@@ -69,6 +73,14 @@ export const localStates = () => {
     const [guessResult, setGuessResult] = useState(null);
     const [gameOverData, setGameOverData] = useState(null);
 
+    const [showImageModal, setShowImageModal] = useState(false);
+    const [previewTarget, setPreviewTarget] = useState(null);
+
+    const openPreview = useCallback((tarjeta) => {
+        setPreviewTarget(tarjeta);
+        setShowImageModal(true);
+    }, []);
+
     // Refs para valores de estado usados en callbacks estables (evitar stale closures)
     const chatInputRef = useRef('');
     useEffect(() => { chatInputRef.current = chatInput; }, [chatInput]);
@@ -106,10 +118,47 @@ export const localStates = () => {
         return Object.values(gameState.jugadores).filter(p => !p.eliminado);
     }, [gameState]);
 
+    const isEspectador = useMemo(() => {
+        if (!gameState || !userId) return false;
+        return gameState.es_espectador === true;
+    }, [gameState, userId]);
+
+    const espectadores = useMemo(() => {
+        if (!gameState?.espectadores) return [];
+        return Object.values(gameState.espectadores);
+    }, [gameState]);
+
     const isMyTurn = useMemo(() => {
         if (!gameState || !userId) return false;
         return gameState.turno_actual === userId && gameState.estado === 'jugando';
     }, [gameState, userId]);
+
+    // --- Turn Timer Logic ---
+    const tiempoTurno = useMemo(() => gameState?.tiempo_turno || 60, [gameState?.tiempo_turno]);
+    const turnoInicio = useMemo(() => gameState?.turno_inicio, [gameState?.turno_inicio]);
+    const [countdown, setCountdown] = useState(0);
+
+    useEffect(() => {
+        if (!turnoInicio || tiempoTurno <= 0 || gameState?.estado !== 'jugando') {
+            setCountdown(0);
+            return;
+        }
+
+        const updateCountdown = () => {
+            const now = Date.now() / 1000; // seconds
+            const elapsed = now - turnoInicio;
+            const remaining = Math.max(0, tiempoTurno - elapsed);
+            setCountdown(Math.ceil(remaining));
+        };
+
+        updateCountdown();
+        const interval = setInterval(updateCountdown, 1000);
+        return () => clearInterval(interval);
+    }, [turnoInicio, tiempoTurno, gameState?.estado]);
+
+    const handleSetTiempoTurno = useCallback((seconds) => {
+        sendWs({ type: 'set_tiempo_turno', tiempo: seconds });
+    }, []);
 
     // WS sender — estable, usa ref del socket
     const sendWs = useRef((msg) => {
@@ -276,14 +325,7 @@ export const localStates = () => {
                 setRespuestaValue('');
                 break;
             case 'guess_result':
-                setGuessResult({
-                    correct: msg.correct,
-                    from_name: msg.from_name,
-                    target_name: msg.target_name,
-                    personaje: msg.personaje_nombre,
-                    revealed: msg.revealed_tarjeta,
-                });
-                setTimeout(() => setGuessResult(null), 4000);
+
                 if (msg.correct) {
                     setChatMessages(prev => [...prev, {
                         system: true,
@@ -476,8 +518,8 @@ export const localStates = () => {
         sendWs({ type: 'kick_player', user_id: targetId });
     }).current;
 
-    const handleToggleDiscard = useRef((tarjetaId) => {
-        sendWs({ type: 'toggle_discard', tarjeta_id: tarjetaId });
+    const handleToggleDiscard = useRef((tarjetaId, targetId) => {
+        sendWs({ type: 'toggle_discard', tarjeta_id: tarjetaId, target_id: targetId });
     }).current;
 
     const handlePregunta = useRef(() => {
@@ -516,10 +558,21 @@ export const localStates = () => {
         fRef.current.adivina.getDecks();
     }).current;
 
-    const getImageUrl = useCallback((imagen_url) => {
-        if (!imagen_url) return null;
-        if (imagen_url.startsWith('http')) return imagen_url;
-        return `${API_BASE}${imagen_url}`;
+    const getImageUrl = useCallback((tarjetaOrUrl) => {
+        if (!tarjetaOrUrl) return null;
+        if (typeof tarjetaOrUrl === 'string') {
+            if (tarjetaOrUrl.startsWith('http')) return tarjetaOrUrl;
+            return `${API_BASE}${tarjetaOrUrl}`;
+        }
+        const t = tarjetaOrUrl;
+        if (t.imagen_url) {
+            if (t.imagen_url.startsWith('http')) return t.imagen_url;
+            return `${API_BASE}${t.imagen_url}`;
+        }
+        if (t.imagen) {
+            return `${API_BASE}/media/images/adivina/${t.id}/${t.imagen}`;
+        }
+        return null;
     }, []);
 
     const applyDeck = useCallback((deckId) => {
@@ -534,6 +587,48 @@ export const localStates = () => {
         });
     }, [isHost]);
 
+    useEffect(() => {
+        setMenuBarMode('adivina_sala');
+        setSideBarMode('adivina_sala');
+        return () => {
+            setMenuBarMode(null);
+            setSideBarMode(null);
+            setSalaProps({});
+            window.adivinaActions = null;
+        };
+    }, []);
+
+    useEffect(() => {
+        setSalaProps({
+            gameState, chatMessages, chatInput, voiceEnabled, voiceStates,
+            hearingEnabled, talkingStates, selectMode, selectedTarjetas,
+            voteSelections, preguntaTexto, preguntaTarget, respuestaValue,
+            showAdivinar, adivinarTarget, adivinarNombre, guessResult,
+            gameOverData, showImageModal, previewTarget, isHost, myPlayer,
+            activePlayers, isMyTurn, isEspectador, espectadores, userId,
+            tarjetas, decks, tags, isAdmin, tiempoTurno, countdown, codigo,
+            jugadoresList: Object.values(gameState?.jugadores || {}),
+        });
+        window.adivinaActions = {
+            setChatInput, toggleVoice, setHearingEnabled, setSelectedTarjetas,
+            toggleVoteSelection, setPreguntaTexto, setPreguntaTarget, setRespuestaValue,
+            setShowAdivinar, setAdivinarTarget, setAdivinarNombre, setGuessResult,
+            setGameOverData, setShowImageModal, openPreview, handleSetTiempoTurno,
+            sendChat, setSeleccionModo, handleSetTarjetas, handleOpenVote, handleVoteCast,
+            handleCloseVote, handleStartGame, handleRestartGame, handlePregunta,
+            handleRespuesta, handleAdivinar, handleAdvanceTurn, handleKick,
+            handleToggleDiscard, navigate, loadTarjetas, getImageUrl, applyDeck,
+        };
+    }, [
+        gameState, chatMessages, chatInput, voiceEnabled, voiceStates,
+        hearingEnabled, talkingStates, selectMode, selectedTarjetas,
+        voteSelections, preguntaTexto, preguntaTarget, respuestaValue,
+        showAdivinar, adivinarTarget, adivinarNombre, guessResult,
+        gameOverData, showImageModal, previewTarget, isHost, myPlayer,
+        activePlayers, isMyTurn, isEspectador, espectadores, userId,
+        tarjetas, decks, tags, isAdmin, tiempoTurno, countdown, codigo
+    ]);
+
     return {
         style, codigo, connected, gameState, chatMessages, chatInput, setChatInput,
         voiceEnabled, voiceStates, toggleVoice,
@@ -545,8 +640,11 @@ export const localStates = () => {
         showAdivinar, setShowAdivinar, adivinarTarget, setAdivinarTarget,
         adivinarNombre, setAdivinarNombre, guessResult, setGuessResult,
         gameOverData, setGameOverData,
-        isHost, myPlayer, activePlayers, isMyTurn, userId,
+        showImageModal, setShowImageModal,
+        previewTarget, openPreview,
+        isHost, myPlayer, activePlayers, isMyTurn, isEspectador, espectadores, userId,
         tarjetas, decks, tags, isAdmin,
+        tiempoTurno, countdown, handleSetTiempoTurno,
         sendChat, setSeleccionModo, handleSetTarjetas,
         handleOpenVote, handleVoteCast, handleCloseVote, handleStartGame, handleRestartGame,
         handlePregunta, handleRespuesta, handleAdivinar, handleAdvanceTurn, handleKick,

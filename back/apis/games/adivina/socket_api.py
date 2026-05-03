@@ -1,5 +1,7 @@
 import json
 import random
+import asyncio
+import time
 from uuid import uuid4
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException, status
 from ojitos369_postgres_db.postgres_db import ConexionPostgreSQL
@@ -29,10 +31,15 @@ def _new_state(sala_id: str, creador_id: str, visibilidad: str = 'publica') -> d
         'estado': 'esperando',
         'visibilidad': visibilidad,
         'jugadores': {},
+        'espectadores': {},          # {user_id: {username, victorias}}
+        'desconectados': set(),      # user_ids de jugadores desconectados temporalmente
         'turno_actual': None,  # This will be the "Guesser" (jugador_pregunta)
         'jugador_objetivo': None,
         'turno_numero': 0,
         'n_offset': 1,
+        'tiempo_turno': 60,          # seconds per turn, 0 = no limit
+        'turno_inicio': None,        # timestamp when current turn started
+        'turn_timer_task': None,     # asyncio task for auto-advance
         'seleccion': {
             'modo': 'host',
             'tarjetas_disponibles': [],
@@ -44,6 +51,7 @@ def _new_state(sala_id: str, creador_id: str, visibilidad: str = 'publica') -> d
         'historial': [],
         'ganador': None,
         'ws_connections': {},
+        'cleanup_task': None,
     }
 
 
@@ -95,6 +103,20 @@ def _get_tarjetas_data(tarjeta_ids: list) -> list:
             pass
 
 
+def _disqualify_player(state: dict, uid: str) -> None:
+    """Move a player from jugadores to espectadores (disqualified)."""
+    player = state['jugadores'].get(uid)
+    if not player:
+        return
+    player['eliminado'] = True
+    # Move to espectadores keeping username & victorias
+    state['espectadores'][uid] = {
+        'username': player['username'],
+        'victorias': player.get('victorias', 0),
+    }
+    state['desconectados'].discard(uid)
+
+
 def _advance_turn(state: dict) -> None:
     # Get all active players sorted by their initial order
     active = sorted(
@@ -121,19 +143,55 @@ def _advance_turn(state: dict) -> None:
         if idx_target == 0:
             state['n_offset'] = (state.get('n_offset', 1) % (len(active) - 1)) + 1
 
+    # Ensure n_offset is strictly less than len(active) and at least 1
+    # This prevents a player from asking themselves if the number of active players decreased
+    current_n_offset = state.get('n_offset', 1)
+    if current_n_offset >= len(active):
+        current_n_offset = 1
+        state['n_offset'] = current_n_offset
+
     # Find the guesser (Player 2) based on N offset
-    idx_guesser = (idx_target + state.get('n_offset', 1)) % len(active)
+    idx_guesser = (idx_target + current_n_offset) % len(active)
     state['turno_actual'] = active[idx_guesser]
     
     state['turno_numero'] += 1
     state['pregunta_actual'] = None
 
+    # --- Auto-disqualify disconnected players when it's their turn ---
+    desconectados = state.get('desconectados', set())
+    target_uid = state['jugador_objetivo']
+    guesser_uid = state['turno_actual']
+    disqualified_any = False
+
+    if target_uid in desconectados:
+        _disqualify_player(state, target_uid)
+        disqualified_any = True
+    if guesser_uid in desconectados:
+        _disqualify_player(state, guesser_uid)
+        disqualified_any = True
+
+    if disqualified_any:
+        # Re-check active players after disqualification
+        active_after = [uid for uid, p in state['jugadores'].items() if not p.get('eliminado')]
+        if len(active_after) >= 2:
+            # Recurse to find a valid turn
+            _advance_turn(state)
+        # If < 2, _check_win will be called by the caller
+
 
 def _check_win(state: dict) -> str | None:
+    """Check win condition: only 1 player active AND connected."""
+    desconectados = state.get('desconectados', set())
     active = [uid for uid, p in state['jugadores'].items() if not p.get('eliminado')]
-    if len(active) == 1:
-        return active[0]
-    if len(active) == 0:
+    # Filter out disconnected from active
+    active_connected = [uid for uid in active if uid not in desconectados]
+    
+    if len(active_connected) == 1:
+        return active_connected[0]
+    if len(active_connected) == 0:
+        # Fallback: if everyone disconnected, last active wins
+        if active:
+            return active[-1]
         ids = list(state['jugadores'].keys())
         return ids[-1] if ids else None
     return None
@@ -142,25 +200,38 @@ def _check_win(state: dict) -> str | None:
 def _public_state(state: dict, for_user_id: str) -> dict:
     jugadores_public = {}
     current_target_id = state.get('jugador_objetivo')
+    desconectados = state.get('desconectados', set())
 
     for uid, p in state['jugadores'].items():
         entry = {
             'user_id': uid,
             'username': p['username'],
             'eliminado': p.get('eliminado', False),
+            'desconectado': uid in desconectados,
             'orden': p.get('orden', 0),
             'victorias': p.get('victorias', 0),
         }
         if uid == for_user_id:
             entry['tarjeta'] = p.get('tarjeta')
             entry['tarjeta_id'] = p.get('tarjeta_id')
-            # Only send discards for the current target to the current user
             # discards is now a dict: { target_id: [tarjeta_ids] }
-            entry['discards'] = p.get('discards', {}).get(current_target_id, [])
+            entry['discards'] = p.get('discards', {})
         else:
             entry['tarjeta'] = None
             entry['tarjeta_id'] = None
         jugadores_public[uid] = entry
+
+    # Build espectadores list
+    espectadores_public = {}
+    for uid, e in state.get('espectadores', {}).items():
+        espectadores_public[uid] = {
+            'user_id': uid,
+            'username': e['username'],
+            'victorias': e.get('victorias', 0),
+        }
+
+    # Determine if for_user_id is a spectator
+    es_espectador = for_user_id in state.get('espectadores', {})
 
     return {
         'sala_id': state['sala_id'],
@@ -168,10 +239,14 @@ def _public_state(state: dict, for_user_id: str) -> dict:
         'estado': state['estado'],
         'visibilidad': state.get('visibilidad', 'publica'),
         'jugadores': jugadores_public,
+        'espectadores': espectadores_public,
+        'es_espectador': es_espectador,
         'turno_actual': state['turno_actual'], # Guesser
         'jugador_objetivo': state['jugador_objetivo'], # Target
         'turno_numero': state['turno_numero'],
         'n_offset': state.get('n_offset', 1),
+        'tiempo_turno': state.get('tiempo_turno', 60),
+        'turno_inicio': state.get('turno_inicio'),
         'seleccion': {
             'modo': state['seleccion']['modo'],
             'tarjetas_disponibles': state['seleccion']['tarjetas_disponibles'],
@@ -276,61 +351,21 @@ class AdivinaSocketApi:
             await self.on_disconnect(state)
 
     async def on_connect(self, state: dict):
-        if self.usuario_id not in state['jugadores']:
-            # Try to load victorias from DB if player was already in room
-            victorias = 0
+        if state.get('cleanup_task'):
+            state['cleanup_task'].cancel()
+            state['cleanup_task'] = None
+
+        game_active = state['estado'] in ('jugando', 'votando')
+
+        # Si la sala está vacía, el que entra se vuelve el creador/admin
+        if not state['jugadores'] and not state.get('espectadores', {}):
+            state['creador_id'] = self.usuario_id
             c = get_conexion()
             try:
-                result = c.consulta_asociativa(
-                    "SELECT victorias FROM adivina_salas_jugadores WHERE sala_id = :sala_id AND usuario_id = :usuario_id",
-                    {'sala_id': state['sala_id'], 'usuario_id': self.usuario_id}
+                c.ejecutar(
+                    "UPDATE adivina_salas SET creador_id = :creador_id WHERE id = :id",
+                    {'creador_id': self.usuario_id, 'id': state['sala_id']}
                 )
-                rows = result.to_dict(orient='records') if hasattr(result, 'to_dict') else []
-                if rows:
-                    victorias = rows[0].get('victorias', 0)
-                else:
-                    # New player in room — insert into DB
-                    c.ejecutar(
-                        "INSERT INTO adivina_salas_jugadores (sala_id, usuario_id) VALUES (:sala_id, :usuario_id) ON CONFLICT DO NOTHING",
-                        {'sala_id': state['sala_id'], 'usuario_id': self.usuario_id}
-                    )
-                    c.commit()
-            except Exception:
-                pass
-            finally:
-                try:
-                    c.close()
-                except Exception:
-                    pass
-
-            state['jugadores'][self.usuario_id] = {
-                'username': self.username,
-                'eliminado': False,
-                'tarjeta_id': None,
-                'tarjeta': None,
-                'orden': len(state['jugadores']),
-                'victorias': victorias,
-                'discards': {}, # target_id -> [tarjeta_ids]
-            }
-
-        await self._broadcast_to_all(state, {
-            "type": "player_joined",
-            "user_id": self.usuario_id,
-            "username": self.username,
-        })
-        await self._send_state_to_user(state, self.usuario_id)
-
-    async def on_disconnect(self, state: dict):
-        # Always remove player from state
-        state['jugadores'].pop(self.usuario_id, None)
-
-        if not state['jugadores']:
-            # No players left — clean up room
-            game_states.pop(self.codigo, None)
-            c = get_conexion()
-            try:
-                c.ejecutar("DELETE FROM adivina_salas_jugadores WHERE sala_id = :sala_id", {'sala_id': state['sala_id']})
-                c.ejecutar("DELETE FROM adivina_salas WHERE id = :id", {'id': state['sala_id']})
                 c.commit()
             except Exception:
                 pass
@@ -339,26 +374,180 @@ class AdivinaSocketApi:
                     c.close()
                 except Exception:
                     pass
+
+        # --- Reconnection: player already in jugadores ---
+        if self.usuario_id in state['jugadores']:
+            state['desconectados'].discard(self.usuario_id)
+            await self._broadcast_to_all(state, {
+                "type": "player_joined",
+                "user_id": self.usuario_id,
+                "username": self.username,
+            })
+            await self._broadcast_state_to_all(state)
             return
 
-        if state['estado'] == 'esperando':
+        # --- Was spectator, reconnecting ---
+        if self.usuario_id in state.get('espectadores', {}):
+            if not game_active:
+                # Promote back to player if game is not active
+                spec = state['espectadores'].pop(self.usuario_id)
+                state['jugadores'][self.usuario_id] = {
+                    'username': self.username,
+                    'eliminado': False,
+                    'tarjeta_id': None,
+                    'tarjeta': None,
+                    'orden': len(state['jugadores']),
+                    'victorias': spec.get('victorias', 0),
+                    'discards': {},
+                }
             await self._broadcast_to_all(state, {
-                "type": "player_left",
+                "type": "player_joined",
+                "user_id": self.usuario_id,
+                "username": self.username,
+            })
+            await self._broadcast_state_to_all(state)
+            return
+
+        # --- Completely new user ---
+        # Load victorias from DB
+        victorias = 0
+        c = get_conexion()
+        try:
+            result = c.consulta_asociativa(
+                "SELECT victorias FROM adivina_salas_jugadores WHERE sala_id = :sala_id AND usuario_id = :usuario_id",
+                {'sala_id': state['sala_id'], 'usuario_id': self.usuario_id}
+            )
+            rows = result.to_dict(orient='records') if hasattr(result, 'to_dict') else []
+            if rows:
+                victorias = rows[0].get('victorias', 0)
+            else:
+                c.ejecutar(
+                    "INSERT INTO adivina_salas_jugadores (sala_id, usuario_id) VALUES (:sala_id, :usuario_id) ON CONFLICT DO NOTHING",
+                    {'sala_id': state['sala_id'], 'usuario_id': self.usuario_id}
+                )
+                c.commit()
+        except Exception:
+            pass
+        finally:
+            try:
+                c.close()
+            except Exception:
+                pass
+
+        if game_active:
+            # Game in progress → join as spectator
+            state['espectadores'][self.usuario_id] = {
+                'username': self.username,
+                'victorias': victorias,
+            }
+            await self._broadcast_to_all(state, {
+                "type": "spectator_joined",
                 "user_id": self.usuario_id,
                 "username": self.username,
             })
         else:
+            # Waiting/Finished → join as player
+            state['jugadores'][self.usuario_id] = {
+                'username': self.username,
+                'eliminado': False,
+                'tarjeta_id': None,
+                'tarjeta': None,
+                'orden': len(state['jugadores']),
+                'victorias': victorias,
+                'discards': {},
+            }
             await self._broadcast_to_all(state, {
-                "type": "player_disconnected",
+                "type": "player_joined",
                 "user_id": self.usuario_id,
                 "username": self.username,
             })
 
-        # If game is in progress and disconnected player was the current turn, advance
-        if state['estado'] == 'jugando' and (state['turno_actual'] == self.usuario_id or state['jugador_objetivo'] == self.usuario_id):
-            _advance_turn(state)
+        await self._broadcast_state_to_all(state)
+
+    async def on_disconnect(self, state: dict):
+        is_spectator = self.usuario_id in state.get('espectadores', {})
+        is_player = self.usuario_id in state['jugadores']
+        game_active = state['estado'] in ('jugando', 'votando')
+
+        if is_spectator:
+            # Spectators are simply removed
+            state['espectadores'].pop(self.usuario_id, None)
+            await self._broadcast_to_all(state, {
+                "type": "spectator_left",
+                "user_id": self.usuario_id,
+                "username": self.username,
+            })
+            # Check if room is totally empty (no jugadores AND no espectadores)
+            if not state['jugadores'] and not state.get('espectadores', {}):
+                await self._start_cleanup_timer(state)
+            return
+
+        if is_player:
+            if game_active:
+                # During active game: DON'T remove from jugadores, just mark as disconnected
+                state['desconectados'].add(self.usuario_id)
+                await self._broadcast_to_all(state, {
+                    "type": "player_disconnected",
+                    "user_id": self.usuario_id,
+                    "username": self.username,
+                })
+                
+                # Si es el turno de alguien y se desconecta, se toma como turno finalizado
+                if state.get('turno_actual') == self.usuario_id or state.get('jugador_objetivo') == self.usuario_id:
+                    _advance_turn(state)
+                    self._start_turn_timer(state)
+            else:
+                # During esperando/terminado: remove player fully
+                state['jugadores'].pop(self.usuario_id, None)
+                await self._broadcast_to_all(state, {
+                    "type": "player_left",
+                    "user_id": self.usuario_id,
+                    "username": self.username,
+                })
+
+        # Check if room is totally empty
+        has_anyone = bool(state['jugadores']) or bool(state.get('espectadores', {}))
+        if not has_anyone:
+            await self._start_cleanup_timer(state)
+            return
+
+        # Ensure we have a connected host
+        self._ensure_host_connected(state)
+
+        # Check for win condition due to disconnection
+        if game_active:
+            ganador = _check_win(state)
+            if ganador:
+                await self._handle_win(state, ganador)
+                return
 
         await self._broadcast_state_to_all(state)
+
+    async def _start_cleanup_timer(self, state: dict):
+        """Start the 1-minute delayed cleanup for empty rooms."""
+        async def _delayed_cleanup(codigo, sala_id):
+            try:
+                await asyncio.sleep(60)
+                if codigo in game_states:
+                    gs = game_states[codigo]
+                    if not gs['jugadores'] and not gs.get('espectadores', {}):
+                        game_states.pop(codigo, None)
+                        c = get_conexion()
+                        try:
+                            c.ejecutar("DELETE FROM adivina_salas_jugadores WHERE sala_id = :sala_id", {'sala_id': sala_id})
+                            c.ejecutar("DELETE FROM adivina_salas WHERE id = :id", {'id': sala_id})
+                            c.commit()
+                        except Exception:
+                            pass
+                        finally:
+                            try:
+                                c.close()
+                            except Exception:
+                                pass
+            except asyncio.CancelledError:
+                pass
+
+        state['cleanup_task'] = asyncio.create_task(_delayed_cleanup(self.codigo, state['sala_id']))
 
     async def on_receive(self, raw: str, state: dict):
         try:
@@ -373,6 +562,7 @@ class AdivinaSocketApi:
             'voice_signal': self._handle_voice_signal,
             'voice_toggle': self._handle_voice_toggle,
             'set_tarjetas': self._handle_set_tarjetas,
+            'set_tiempo_turno': self._handle_set_tiempo_turno,
             'start_game': self._handle_start_game,
             'pregunta': self._handle_pregunta,
             'respuesta': self._handle_respuesta,
@@ -421,6 +611,114 @@ class AdivinaSocketApi:
     def _is_host(self, state: dict) -> bool:
         return self.usuario_id == state['creador_id']
 
+    def _is_spectator(self, state: dict) -> bool:
+        return self.usuario_id in state.get('espectadores', {})
+
+    def _cancel_turn_timer(self, state: dict):
+        """Cancel the current turn timer if any."""
+        task = state.get('turn_timer_task')
+        if task and not task.done():
+            task.cancel()
+        state['turn_timer_task'] = None
+
+    def _start_turn_timer(self, state: dict):
+        """Start an async timer for the current turn. Auto-advances when expired."""
+        self._cancel_turn_timer(state)
+        tiempo = state.get('tiempo_turno', 60)
+        if tiempo <= 0:
+            # 0 = no limit
+            state['turno_inicio'] = time.time()
+            return
+
+        state['turno_inicio'] = time.time()
+        codigo = self.codigo
+
+        async def _turn_timeout():
+            try:
+                await asyncio.sleep(tiempo)
+                s = game_states.get(codigo)
+                if s and s['estado'] == 'jugando':
+                    _advance_turn(s)
+                    # Check win after auto-advance (disqualifications may have occurred)
+                    ganador = _check_win(s)
+                    if ganador:
+                        await self._handle_win(s, ganador)
+                    else:
+                        self._start_turn_timer(s)
+                        await self._broadcast_state_to_all(s)
+            except asyncio.CancelledError:
+                pass
+
+        state['turn_timer_task'] = asyncio.create_task(_turn_timeout())
+
+    async def _handle_win(self, state: dict, ganador: str):
+        """Centralized win handling: set state, broadcast, save, transfer host."""
+        state['ganador'] = ganador
+        state['estado'] = 'terminado'
+        self._cancel_turn_timer(state)
+        state['turno_inicio'] = None
+
+        ganador_player = state['jugadores'].get(ganador)
+        if ganador_player:
+            ganador_player['victorias'] = ganador_player.get('victorias', 0) + 1
+
+        ganador_username = ganador_player.get('username', '') if ganador_player else ''
+        await self._broadcast_to_all(state, {
+            "type": "game_over",
+            "ganador": ganador,
+            "ganador_username": ganador_username,
+            "jugadores": {
+                uid: {
+                    'username': p['username'],
+                    'tarjeta': p.get('tarjeta'),
+                }
+                for uid, p in state['jugadores'].items()
+            }
+        })
+        await self._save_partida(state, ganador)
+        self._ensure_host_connected(state)
+        await self._broadcast_state_to_all(state)
+
+    def _ensure_host_connected(self, state: dict):
+        """Transfer host to a connected player if current host is disconnected."""
+        creador_id = state['creador_id']
+        ws_connections = state.get('ws_connections', {})
+
+        # Host is connected — nothing to do
+        if creador_id in ws_connections:
+            return
+
+        # Find a connected player (prefer non-spectators first)
+        for uid in state['jugadores']:
+            if uid in ws_connections and not state['jugadores'][uid].get('eliminado'):
+                state['creador_id'] = uid
+                self._update_host_db(state, uid)
+                return
+
+        # Fallback: any connected spectator
+        for uid in state.get('espectadores', {}):
+            if uid in ws_connections:
+                state['creador_id'] = uid
+                self._update_host_db(state, uid)
+                return
+
+    def _update_host_db(self, state: dict, new_host_id: str):
+        """Update creador_id in database."""
+        c = get_conexion()
+        try:
+            c.ejecutar(
+                "UPDATE adivina_salas SET creador_id = :creador_id WHERE id = :id",
+                {'creador_id': new_host_id, 'id': state['sala_id']}
+            )
+            c.commit()
+        except Exception:
+            pass
+        finally:
+            try:
+                c.close()
+            except Exception:
+                pass
+
     # ── Message handlers ───────────────────────────────────────────────────
 
     async def _handle_chat(self, msg: dict, state: dict):
@@ -449,6 +747,8 @@ class AdivinaSocketApi:
         })
 
     async def _handle_set_tarjetas(self, msg: dict, state: dict):
+        if self._is_spectator(state):
+            return
         if not self._is_host(state):
             return
         if state['estado'] != 'esperando':
@@ -459,7 +759,23 @@ class AdivinaSocketApi:
         state['seleccion']['tarjetas_disponibles'] = tarjetas
         await self._broadcast_state_to_all(state)
 
+    async def _handle_set_tiempo_turno(self, msg: dict, state: dict):
+        if self._is_spectator(state):
+            return
+        if not self._is_host(state):
+            return
+        if state['estado'] != 'esperando':
+            return
+        tiempo = msg.get('tiempo', 60)
+        if not isinstance(tiempo, (int, float)):
+            return
+        tiempo = max(0, int(tiempo))  # 0 = sin límite
+        state['tiempo_turno'] = tiempo
+        await self._broadcast_state_to_all(state)
+
     async def _handle_start_game(self, msg: dict, state: dict):
+        if self._is_spectator(state):
+            return
         if not self._is_host(state):
             return
 
@@ -519,9 +835,12 @@ class AdivinaSocketApi:
                 pass
 
         await self._broadcast_to_all(state, {"type": "game_started"})
+        self._start_turn_timer(state)
         await self._broadcast_state_to_all(state)
 
     async def _handle_pregunta(self, msg: dict, state: dict):
+        if self._is_spectator(state):
+            return
         if state['estado'] != 'jugando':
             return
         if state['turno_actual'] != self.usuario_id:
@@ -551,6 +870,8 @@ class AdivinaSocketApi:
         await self._broadcast_state_to_all(state)
 
     async def _handle_respuesta(self, msg: dict, state: dict):
+        if self._is_spectator(state):
+            return
         if state['estado'] != 'jugando':
             return
         if not state['pregunta_actual']:
@@ -584,6 +905,8 @@ class AdivinaSocketApi:
         await self._broadcast_state_to_all(state)
 
     async def _handle_adivinar(self, msg: dict, state: dict):
+        if self._is_spectator(state):
+            return
         if state['estado'] != 'jugando':
             return
         if state['turno_actual'] != self.usuario_id:
@@ -628,29 +951,9 @@ class AdivinaSocketApi:
             })
 
             ganador = _check_win(state)
+            await self._broadcast_to_all(state, event)
             if ganador:
-                state['ganador'] = ganador
-                state['estado'] = 'terminado'
-                ganador_player = state['jugadores'].get(ganador)
-                if ganador_player:
-                    ganador_player['victorias'] = ganador_player.get('victorias', 0) + 1
-                
-                ganador_username = ganador_player.get('username', '') if ganador_player else ''
-                await self._broadcast_to_all(state, event)
-                await self._broadcast_to_all(state, {
-                    "type": "game_over",
-                    "ganador": ganador,
-                    "ganador_username": ganador_username,
-                    "jugadores": {
-                        uid: {
-                            'username': p['username'],
-                            'tarjeta': p.get('tarjeta'),
-                        }
-                        for uid, p in state['jugadores'].items()
-                    }
-                })
-                await self._save_partida(state, ganador)
-                await self._broadcast_state_to_all(state)
+                await self._handle_win(state, ganador)
                 return
         else:
             state['historial'].append({
@@ -663,28 +966,46 @@ class AdivinaSocketApi:
                 'personaje': personaje_nombre,
                 'correcto': False,
             })
-            # Automatic discard on fail for this specific target
-            guessing_player = state['jugadores'].get(self.usuario_id)
-            if guessing_player:
-                if target_id not in guessing_player['discards']:
-                    guessing_player['discards'][target_id] = []
-                
-                failed_tarjeta_id = target.get('tarjeta_id')
-                if failed_tarjeta_id and failed_tarjeta_id not in guessing_player['discards'][target_id]:
-                    guessing_player['discards'][target_id].append(failed_tarjeta_id)
+            # Automatic discard on fail for this specific target for EVERYONE
+            failed_tarjeta_id = None
+            for t in state.get('seleccion', {}).get('tarjetas_disponibles', []):
+                if t.get('nombre', '').lower() == personaje_nombre.lower():
+                    failed_tarjeta_id = t.get('id')
+                    break
+                    
+            if failed_tarjeta_id:
+                for uid, p in state['jugadores'].items():
+                    if 'discards' not in p or not isinstance(p['discards'], dict):
+                        p['discards'] = {}
+                    if target_id not in p['discards']:
+                        p['discards'][target_id] = []
+                    if failed_tarjeta_id not in p['discards'][target_id]:
+                        p['discards'][target_id].append(failed_tarjeta_id)
 
         await self._broadcast_to_all(state, event)
         _advance_turn(state)
         state['pregunta_actual'] = None
-        await self._broadcast_state_to_all(state)
+        ganador = _check_win(state)
+        if ganador:
+            await self._handle_win(state, ganador)
+        else:
+            self._start_turn_timer(state)
+            await self._broadcast_state_to_all(state)
 
     async def _handle_advance_turn(self, msg: dict, state: dict):
+        if self._is_spectator(state):
+            return
         if not self._is_host(state) and state['turno_actual'] != self.usuario_id:
             return
         if state['estado'] != 'jugando':
             return
         _advance_turn(state)
-        await self._broadcast_state_to_all(state)
+        ganador = _check_win(state)
+        if ganador:
+            await self._handle_win(state, ganador)
+        else:
+            self._start_turn_timer(state)
+            await self._broadcast_state_to_all(state)
 
     async def _handle_kick_player(self, msg: dict, state: dict):
         if not self._is_host(state):
@@ -717,12 +1038,32 @@ class AdivinaSocketApi:
         state['pregunta_actual'] = None
         state['historial'] = []
         state['ganador'] = None
-        
-        for uid, p in state['jugadores'].items():
+
+        # Remove disconnected players that never came back
+        for uid in list(state.get('desconectados', set())):
+            state['jugadores'].pop(uid, None)
+        state['desconectados'] = set()
+
+        # Reset remaining players
+        for uid, p in list(state['jugadores'].items()):
             p['eliminado'] = False
             p['tarjeta_id'] = None
             p['tarjeta'] = None
             p['discards'] = {}
+
+        # Promote spectators to players
+        for uid, spec in list(state.get('espectadores', {}).items()):
+            if uid not in state['jugadores']:
+                state['jugadores'][uid] = {
+                    'username': spec['username'],
+                    'eliminado': False,
+                    'tarjeta_id': None,
+                    'tarjeta': None,
+                    'orden': len(state['jugadores']),
+                    'victorias': spec.get('victorias', 0),
+                    'discards': {},
+                }
+        state['espectadores'] = {}
             
         c = get_conexion()
         try:
@@ -751,8 +1092,8 @@ class AdivinaSocketApi:
         if not player:
             return
         
-        # We need the target_id to toggle for. It should be the current jugador_objetivo
-        target_id = state.get('jugador_objetivo')
+        # We need the target_id to toggle for. It can be sent from frontend (tab), fallback to jugador_objetivo
+        target_id = msg.get('target_id') or state.get('jugador_objetivo')
         if not target_id:
             return
 

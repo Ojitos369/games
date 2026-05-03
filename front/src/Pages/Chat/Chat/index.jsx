@@ -19,7 +19,8 @@ export const Chat = () => {
 
         const host = window.location.hostname;
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        const wsUrl = `${protocol}://${host}:8372/api/ws/${group}?clientId=${clientId.current}`;
+        const port = window.location.port === '5173' ? ':8372' : (window.location.port ? `:${window.location.port}` : '');
+        const wsUrl = `${protocol}://${host}${port}/api/ws/${group}?clientId=${clientId.current}`;
         socket.current = new WebSocket(wsUrl);
 
         console.log('Intentando conectar al WebSocket...');

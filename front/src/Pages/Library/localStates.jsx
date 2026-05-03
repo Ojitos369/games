@@ -5,7 +5,8 @@ import style from './styles/index.module.scss';
 
 const host = window.location.hostname;
 const protocol = window.location.protocol;
-const API_BASE = `${protocol}//${host}:8372`;
+const port = window.location.port === '5173' ? ':8372' : (window.location.port ? `:${window.location.port}` : '');
+const API_BASE = `${protocol}//${host}${port}`;
 
 export const localStates = () => {
     const { s, f } = useStates();

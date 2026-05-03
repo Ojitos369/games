@@ -18,10 +18,17 @@ export const localStates = () => {
     const [expandedDeck, setExpandedDeck] = useState(null);
     const [deckTarjetas, setDeckTarjetas] = useState({});
     const [showModal, setShowModal] = useState(false);
+    const [showImageModal, setShowImageModal] = useState(false);
     const [editTarget, setEditTarget] = useState(null);
+    const [previewTarget, setPreviewTarget] = useState(null);
     const [form, setForm] = useState({ nombre: '', descripcion: '', tarjeta_ids: [] });
     const [tarjetaSearch, setTarjetaSearch] = useState('');
     const [tarjetaTagFilter, setTarjetaTagFilter] = useState('');
+
+    const openPreview = useCallback((tarjeta) => {
+        setPreviewTarget(tarjeta);
+        setShowImageModal(true);
+    }, []);
 
     const filteredTarjetas = useMemo(() => {
         let list = allTarjetas;
@@ -101,12 +108,14 @@ export const localStates = () => {
         tags, filteredTarjetas,
         expandedDeck, deckTarjetas, toggleExpand,
         showModal, setShowModal, editTarget,
+        showImageModal, setShowImageModal,
+        previewTarget, openPreview,
         form, setForm,
         tarjetaSearch, setTarjetaSearch,
         tarjetaTagFilter, setTarjetaTagFilter,
         toggleDeckTarjeta, openCreate, openEdit,
         handleSave, handleDelete,
-        navigate,
+        navigate, init,
     }
 }
 

@@ -62,9 +62,19 @@ class CreateTag(SessionApi):
         self.create_conexion()
 
     def main(self):
-        nombre = self.data.get('nombre', '').strip()
+        nombre = self.data.get('nombre', '').strip().upper()
         if not nombre:
             raise self.MYE("El nombre es requerido")
+
+        # Verificar si ya existe
+        check = self.conexion.consulta_asociativa(
+            "SELECT id FROM adivina_tags WHERE UPPER(nombre) = :nombre",
+            {'nombre': nombre}
+        )
+        existing = self.d2d(check)
+        if existing:
+            self.response = {"message": "Tag ya existe", "id": existing[0]['id'], "exists": True}
+            return
 
         tag_id = self.get_id()
         query = "INSERT INTO adivina_tags (id, nombre) VALUES (:id, :nombre)"
@@ -104,13 +114,13 @@ class ListTarjetas(ConexionApi):
             params['q'] = f'%{q_filter}%'
 
         if tags_filter:
-            tag_names = [x.strip() for x in tags_filter.split(',') if x.strip()]
+            tag_names = [x.strip().upper() for x in tags_filter.split(',') if x.strip()]
             if tag_names:
                 where_clauses.append("""
                     t.id IN (
                         SELECT tt2.tarjeta_id FROM adivina_tarjetas_tags tt2
                         JOIN adivina_tags tg2 ON tg2.id = tt2.tag_id
-                        WHERE tg2.nombre = ANY(:tag_names)
+                        WHERE UPPER(tg2.nombre) = ANY(:tag_names)
                     )
                 """)
                 params['tag_names'] = tag_names

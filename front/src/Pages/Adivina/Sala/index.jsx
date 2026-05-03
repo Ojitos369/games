@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { localStates } from './localStates';
+import { ImageModal } from '../Components/ImageModal';
 
 export const AdivinaSala = () => {
     const ls = localStates();
@@ -26,13 +27,16 @@ export const AdivinaSala = () => {
         showAdivinar, setShowAdivinar, adivinarTarget, setAdivinarTarget,
         adivinarNombre, setAdivinarNombre, guessResult,
         gameOverData,
-        isHost, myPlayer, activePlayers, isMyTurn, userId,
+        showImageModal, setShowImageModal,
+        previewTarget, openPreview,
+        isHost, myPlayer, activePlayers, isMyTurn, isEspectador, espectadores, userId,
         tarjetas, decks, tags,
         sendChat, setSeleccionModo, handleSetTarjetas,
         handleOpenVote, handleVoteCast, handleCloseVote, handleStartGame, handleRestartGame,
         handlePregunta, handleRespuesta, handleAdivinar, handleAdvanceTurn, handleKick,
         handleToggleDiscard,
         navigate, getImageUrl, applyDeck,
+        tiempoTurno, handleSetTiempoTurno, countdown,
     } = ls;
 
     const estadoLabel = (estado) => {
@@ -71,6 +75,8 @@ export const AdivinaSala = () => {
                             </span>
                             <span className={`${style.salaPlayers}`}>
                                 👥 {jugadoresList.length} jugadores
+                                {espectadores.length > 0 && (
+                                    <> · 👁️ {espectadores.length} espectador{espectadores.length !== 1 ? 'es' : ''}</>)}
                             </span>
                             {gameState?.visibilidad === 'privada' ? (
                                 <span className={`${style.salaVisibilidad} ${style.visPrivada}`}>🔒 Privada</span>
@@ -117,41 +123,10 @@ export const AdivinaSala = () => {
 
             {/* Main content */}
             <div className={`${style.salaBody}`}>
-                {/* Players panel */}
-                <div className={`${style.playersPanel}`}>
-                    <h3 className={`${style.panelTitle}`}>Jugadores</h3>
-                    <div className={`${style.playersList}`}>
-                        {jugadoresList.map(j => (
-                            <div key={j.user_id} className={`${style.playerItem} ${j.eliminado ? style.playerEliminado : ''} ${j.user_id === gameState?.turno_actual ? style.playerTurno : ''} ${talkingStates[j.user_id] ? style.playerTalking : ''}`}>
-                                <div className={`${style.playerAvatar}`}>
-                                    {j.user_id === gameState?.creador_id ? '👑' : '👤'}
-                                </div>
-                                <div className={`${style.playerInfo}`}>
-                                    <span className={`${style.playerName}`}>{j.username}</span>
-                                    {j.victorias > 0 && <span className={`${style.playerWins}`}>🏆 {j.victorias}</span>}
-                                    {j.eliminado && <span className={`${style.playerBadge}`}>Eliminado</span>}
-                                    {j.user_id === gameState?.turno_actual && <span className={`${style.playerBadgeTurno}`}>Turno</span>}
-                                    {voiceStates[j.user_id] && <span className={`${style.playerBadgeVoice} ${talkingStates[j.user_id] ? style.voiceTalking : ''}`}>🎙️</span>}
-                                </div>
-                                {isHost && gameState?.estado === 'esperando' && j.user_id !== userId && (
-                                    <button className={`${style.btnKick}`} onClick={() => handleKick(j.user_id)} title="Expulsar">✕</button>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-
-                    {gameState?.estado === 'jugando' && (
-                        <div className={`${style.turnoBox}`}>
-                            <div className={`${style.turnoLabel}`}>Turno de</div>
-                            <div className={`${style.turnoName}`}>{turnoActualName}</div>
-                        </div>
-                    )}
-                </div>
-
                 {/* Center panel */}
                 <div className={`${style.centerPanel}`}>
                     {/* ESPERANDO */}
-                    {gameState?.estado === 'esperando' && (
+                    {gameState?.estado === 'esperando' && !isEspectador && (
                         <EsperandoView
                             style={style}
                             isHost={isHost}
@@ -165,11 +140,14 @@ export const AdivinaSala = () => {
                             jugadoresCount={jugadoresList.length}
                             getImageUrl={getImageUrl}
                             applyDeck={applyDeck}
+                            openPreview={openPreview}
+                            tiempoTurno={tiempoTurno}
+                            handleSetTiempoTurno={handleSetTiempoTurno}
                         />
                     )}
 
                     {/* JUGANDO */}
-                    {gameState?.estado === 'jugando' && (
+                    {gameState?.estado === 'jugando' && !isEspectador && (
                         <JugandoView
                             style={style}
                             gameState={gameState}
@@ -192,6 +170,9 @@ export const AdivinaSala = () => {
                             handleToggleDiscard={handleToggleDiscard}
                             isHost={isHost}
                             getImageUrl={getImageUrl}
+                            openPreview={openPreview}
+                            countdown={countdown}
+                            tiempoTurno={tiempoTurno}
                         />
                     )}
 
@@ -206,36 +187,51 @@ export const AdivinaSala = () => {
                             navigate={navigate}
                         />
                     )}
-                </div>
 
-                {/* Chat panel */}
-                <div className={`${style.chatPanel}`}>
-                    <h3 className={`${style.panelTitle}`}>Chat</h3>
-                    <div className={`${style.chatMessages}`}>
-                        {chatMessages.map((msg, i) => (
-                            <div key={i} className={`${msg.system ? style.chatSystem : style.chatMsg}`}>
-                                {msg.system ? (
-                                    <span className={`${style.chatSystemText}`}>{msg.text}</span>
-                                ) : (
-                                    <>
-                                        <span className={`${style.chatFrom}`}>{msg.from_name}:</span>
-                                        <span className={`${style.chatText}`}>{msg.text}</span>
-                                    </>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                    <div className={`${style.chatInputRow}`}>
-                        <input
-                            type="text"
-                            placeholder="Escribe un mensaje..."
-                            value={chatInput}
-                            onChange={e => setChatInput(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && sendChat()}
-                            className={`${style.chatInput}`}
-                        />
-                        <button className={`${style.btnSend}`} onClick={sendChat}>➤</button>
-                    </div>
+                    {/* SPECTATOR BANNER */}
+                    {isEspectador && gameState?.estado !== 'terminado' && (
+                        <div className={`${style.phaseBox} ${style.espectadorBanner}`}>
+                            <h2 className={`${style.phaseTitle}`}>👁️ Modo Espectador</h2>
+                            <p className={`${style.phaseDesc}`}>
+                                Estás como espectador. Podrás jugar en la siguiente partida.
+                            </p>
+                            {gameState?.estado === 'jugando' && gameState?.pregunta_actual && (
+                                <div className={`${style.preguntaBox}`}>
+                                    <div className={`${style.preguntaHeader}`}>
+                                        <span className={`${style.preguntaDe}`}>{gameState.pregunta_actual.de_nombre}</span>
+                                        <span className={`${style.preguntaArrow}`}>→</span>
+                                        <span className={`${style.preguntaPara}`}>{gameState.pregunta_actual.para_nombre}</span>
+                                    </div>
+                                    <div className={`${style.preguntaTexto}`}>"{gameState.pregunta_actual.texto}"</div>
+                                    {gameState.pregunta_actual.respuesta && gameState.pregunta_actual.respuesta !== 'pendiente' && (
+                                        <div className={`${style.preguntaRespuesta}`}>
+                                            Respuesta: <strong>{gameState.pregunta_actual.respuesta.toUpperCase()}</strong>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            {gameState?.historial?.length > 0 && (
+                                <div className={`${style.historialBox}`}>
+                                    <h4 className={`${style.historialTitle}`}>📜 Historial</h4>
+                                    <div className={`${style.historialList}`}>
+                                        {gameState.historial.slice(-10).map((h, i) => (
+                                            <div key={i} className={`${style.historialItem}`}>
+                                                {h.tipo === 'adivino' ? (
+                                                    <span>
+                                                        {h.correcto ? '✅' : '❌'} {h.de_nombre || h.de} intentó adivinar a {h.para_nombre || h.para}: <strong>{h.personaje}</strong>
+                                                    </span>
+                                                ) : (
+                                                    <span>
+                                                        <strong>{h.de_nombre}</strong> → <strong>{h.para_nombre}</strong>: "{h.texto}" → <strong>{h.respuesta?.toUpperCase()}</strong>
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -261,20 +257,25 @@ export const AdivinaSala = () => {
                             <p className={`${style.modalHint}`}>Haz clic en la tarjeta que crees que tiene el jugador objetivo:</p>
                             <div className={`${style.tarjetasGridSmall}`}>
                                 {(gameState?.seleccion?.tarjetas_disponibles || []).map(t => {
-                                    const isDiscarded = (myPlayer?.discards || []).includes(t.id);
+                                    const isDiscarded = (myPlayer?.discards?.[gameState?.jugador_objetivo] || []).includes(t.id);
                                     return (
                                         <div
                                             key={t.id}
-                                            className={`${style.tarjetaPickItem} ${adivinarNombre === t.nombre ? style.tarjetaPickActive : ''} ${isDiscarded ? style.tarjetaDiscarded : ''}`}
-                                            onClick={() => !isDiscarded && setAdivinarNombre(t.nombre)}
+                                            className={`${style.tarjetaPickItemWrapper}`}
                                         >
-                                            {t.imagen_url ? (
-                                                <img src={getImageUrl(t.imagen_url)} alt="" className={`${style.tarjetaPickImg}`} />
-                                            ) : (
-                                                <div className={`${style.tarjetaPickPlaceholder}`}>🎭</div>
-                                            )}
-                                            <span className={`${style.tarjetaPickName}`}>{t.nombre}</span>
-                                            {isDiscarded && <div className={`${style.discardOverlay}`}>❌</div>}
+                                            <div
+                                                className={`${style.tarjetaPickItem} ${adivinarNombre === t.nombre ? style.tarjetaPickActive : ''} ${isDiscarded ? style.tarjetaDiscarded : ''}`}
+                                                onClick={() => !isDiscarded && setAdivinarNombre(t.nombre)}
+                                            >
+                                                {t.imagen_url ? (
+                                                    <img src={getImageUrl(t.imagen_url)} alt="" className={`${style.tarjetaPickImg}`} />
+                                                ) : (
+                                                    <div className={`${style.tarjetaPickPlaceholder}`}>🎭</div>
+                                                )}
+                                                <span className={`${style.tarjetaPickName}`}>{t.nombre}</span>
+                                                {isDiscarded && <div className={`${style.discardOverlay}`}>❌</div>}
+                                            </div>
+                                            <button className={style.btnFloatPreview} onClick={() => openPreview(t)} title="Ver detalles">👁️</button>
                                         </div>
                                     );
                                 })}
@@ -288,23 +289,7 @@ export const AdivinaSala = () => {
                 </div>
             )}
 
-            {/* Guess result toast */}
-            {guessResult && (
-                <div className={`${style.toastOverlay}`}>
-                    <div className={`${style.toast} ${guessResult.correct ? style.toastSuccess : style.toastError}`}>
-                        <div className={`${style.toastTitle}`}>
-                            {guessResult.correct ? '✅ ¡Adivinaste!' : '❌ Fallaste'}
-                        </div>
-                        <div className={`${style.toastBody}`}>
-                            <p>{guessResult.from_name} intentó adivinar a <strong>{guessResult.target_name}</strong></p>
-                            <p>Personaje: <strong>{guessResult.personaje}</strong></p>
-                            {guessResult.revealed && (
-                                <p>Era: <strong>{guessResult.revealed.nombre}</strong></p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
+
 
             {/* Game over modal */}
             {gameOverData && gameState?.estado === 'terminado' && (
@@ -321,7 +306,7 @@ export const AdivinaSala = () => {
                             </div>
                             <div className={`${style.revealGrid}`}>
                                 {Object.entries(gameOverData.jugadores || {}).map(([uid, p]) => (
-                                    <div key={uid} className={`${style.revealCard}`}>
+                                    <div key={uid} className={`${style.revealCard}`} onClick={() => p.tarjeta && openPreview(p.tarjeta)}>
                                         <div className={`${style.revealName}`}>{p.username}</div>
                                         {p.tarjeta?.imagen_url ? (
                                             <img src={getImageUrl(p.tarjeta.imagen_url)} alt="" className={`${style.revealImg}`} />
@@ -342,13 +327,22 @@ export const AdivinaSala = () => {
                     </div>
                 </div>
             )}
+
+            <ImageModal
+                show={showImageModal}
+                onClose={() => setShowImageModal(false)}
+                image={getImageUrl(previewTarget)}
+                title={previewTarget?.nombre}
+                description={previewTarget?.descripcion}
+                tags={previewTarget?.tags}
+            />
         </div>
     );
 };
 
 // ─── Sub-views ───────────────────────────────────────────────────────────────
 
-function EsperandoView({ style, isHost, tarjetas, decks, tags, selectedTarjetas, setSelectedTarjetas, handleSetTarjetas, handleStartGame, jugadoresCount, getImageUrl, applyDeck }) {
+function EsperandoView({ style, isHost, tarjetas, decks, tags, selectedTarjetas, setSelectedTarjetas, handleSetTarjetas, handleStartGame, jugadoresCount, getImageUrl, applyDeck, openPreview, tiempoTurno, handleSetTiempoTurno }) {
     const [deckFilter, setDeckFilter] = useState('');
     const [tagFilter, setTagFilter] = useState('');
     const [searchFilter, setSearchFilter] = useState('');
@@ -405,6 +399,14 @@ function EsperandoView({ style, isHost, tarjetas, decks, tags, selectedTarjetas,
                                 <option key={d.id} value={d.id}>{d.nombre} ({d.tarjetas_count})</option>
                             ))}
                         </select>
+                        <select className={`${style.select}`} value={tiempoTurno} onChange={e => handleSetTiempoTurno(Number(e.target.value))}>
+                            <option value="30">⏳ 30s</option>
+                            <option value="45">⏳ 45s</option>
+                            <option value="60">⏳ 1 min</option>
+                            <option value="90">⏳ 1.5 min</option>
+                            <option value="120">⏳ 2 min</option>
+                            <option value="0">⏳ Sin límite</option>
+                        </select>
                     </div>
                     <div className={`${style.filterRow}`}>
                         <button className={`${style.btnSecondary}`} onClick={selectAll}>Seleccionar visibles</button>
@@ -417,15 +419,20 @@ function EsperandoView({ style, isHost, tarjetas, decks, tags, selectedTarjetas,
                         {filtered.map(t => (
                             <div
                                 key={t.id}
-                                className={`${style.tarjetaPickItem} ${selectedTarjetas.includes(t.id) ? style.tarjetaPickActive : ''}`}
-                                onClick={() => toggleTarjeta(t.id)}
+                                className={`${style.tarjetaPickItemWrapper}`}
                             >
-                                {t.imagen_url ? (
-                                    <img src={getImageUrl(t.imagen_url)} alt="" className={`${style.tarjetaPickImg}`} />
-                                ) : (
-                                    <div className={`${style.tarjetaPickPlaceholder}`}>🎭</div>
-                                )}
-                                <span className={`${style.tarjetaPickName}`}>{t.nombre}</span>
+                                <div
+                                    className={`${style.tarjetaPickItem} ${selectedTarjetas.includes(t.id) ? style.tarjetaPickActive : ''}`}
+                                    onClick={() => toggleTarjeta(t.id)}
+                                >
+                                    {t.imagen_url ? (
+                                        <img src={getImageUrl(t.imagen_url)} alt="" className={`${style.tarjetaPickImg}`} />
+                                    ) : (
+                                        <div className={`${style.tarjetaPickPlaceholder}`}>🎭</div>
+                                    )}
+                                    <span className={`${style.tarjetaPickName}`}>{t.nombre}</span>
+                                </div>
+                                <button className={style.btnFloatPreview} onClick={() => openPreview(t)} title="Ver detalles">👁️</button>
                             </div>
                         ))}
                     </div>
@@ -447,7 +454,7 @@ function EsperandoView({ style, isHost, tarjetas, decks, tags, selectedTarjetas,
     );
 }
 
-function VotandoView({ style, tarjetas, voteSelections, toggleVoteSelection, handleVoteCast, isHost, handleCloseVote, getImageUrl, gameState }) {
+function VotandoView({ style, tarjetas, voteSelections, toggleVoteSelection, handleVoteCast, isHost, handleCloseVote, getImageUrl, gameState, openPreview }) {
     const votosCount = gameState?.seleccion?.votos_count || {};
 
     return (
@@ -461,18 +468,23 @@ function VotandoView({ style, tarjetas, voteSelections, toggleVoteSelection, han
                 {tarjetas.map(t => (
                     <div
                         key={t.id}
-                        className={`${style.tarjetaPickItem} ${voteSelections.includes(t.id) ? style.tarjetaPickActive : ''}`}
-                        onClick={() => toggleVoteSelection(t.id)}
+                        className={`${style.tarjetaPickItemWrapper}`}
                     >
-                        {t.imagen_url ? (
-                            <img src={getImageUrl(t.imagen_url)} alt="" className={`${style.tarjetaPickImg}`} />
-                        ) : (
-                            <div className={`${style.tarjetaPickPlaceholder}`}>🎭</div>
-                        )}
-                        <span className={`${style.tarjetaPickName}`}>{t.nombre}</span>
-                        {votosCount[t.id] > 0 && (
-                            <div className={`${style.voteBadge}`}>{votosCount[t.id]}</div>
-                        )}
+                        <div
+                            className={`${style.tarjetaPickItem} ${voteSelections.includes(t.id) ? style.tarjetaPickActive : ''}`}
+                            onClick={() => toggleVoteSelection(t.id)}
+                        >
+                            {t.imagen_url ? (
+                                <img src={getImageUrl(t.imagen_url)} alt="" className={`${style.tarjetaPickImg}`} />
+                            ) : (
+                                <div className={`${style.tarjetaPickPlaceholder}`}>🎭</div>
+                            )}
+                            <span className={`${style.tarjetaPickName}`}>{t.nombre}</span>
+                            {votosCount[t.id] > 0 && (
+                                <div className={`${style.voteBadge}`}>{votosCount[t.id]}</div>
+                            )}
+                        </div>
+                        <button className={style.btnFloatPreview} onClick={() => openPreview(t)} title="Ver detalles">👁️</button>
                     </div>
                 ))}
             </div>
@@ -486,7 +498,7 @@ function VotandoView({ style, tarjetas, voteSelections, toggleVoteSelection, han
     );
 }
 
-function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresList, preguntaTexto, setPreguntaTexto, preguntaTarget, setPreguntaTarget, preguntaActiva, meTocaResponder, respuestaValue, handlePregunta, handleRespuesta, setShowAdivinar, setAdivinarTarget, handleAdvanceTurn, handleToggleDiscard, isHost, getImageUrl }) {
+function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresList, preguntaTexto, setPreguntaTexto, preguntaTarget, setPreguntaTarget, preguntaActiva, meTocaResponder, respuestaValue, handlePregunta, handleRespuesta, setShowAdivinar, setAdivinarTarget, handleAdvanceTurn, handleToggleDiscard, isHost, getImageUrl, openPreview, countdown, tiempoTurno }) {
     const myTarjeta = myPlayer?.tarjeta;
     const myDiscards = myPlayer?.discards || [];
     const tarjetasDisponibles = gameState?.seleccion?.tarjetas_disponibles || [];
@@ -497,6 +509,17 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
     const guesserName = gameState?.jugadores?.[guesserId]?.username || '???';
 
     const meTocaPreguntar = isMyTurn;
+
+    // Tabs for discards
+    const [viewTargetId, setViewTargetId] = useState(targetId);
+    
+    useEffect(() => {
+        if (targetId) setViewTargetId(targetId);
+    }, [targetId]);
+
+    const targetPlayers = jugadoresList.filter(p => p.user_id !== userId && !p.eliminado);
+    const currentViewName = gameState?.jugadores?.[viewTargetId]?.username || '???';
+    const currentViewDiscards = (myPlayer?.discards && myPlayer.discards[viewTargetId]) || [];
 
     // Set automatic target for UI consistency
     useEffect(() => {
@@ -518,11 +541,19 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
                 </div>
             </div>
 
+            {/* Turn Timer */}
+            {tiempoTurno > 0 && (
+                <div className={`${style.timerContainer} ${countdown <= 10 ? style.timerDanger : ''}`}>
+                    <div className={`${style.timerBar}`} style={{ width: `${(countdown / tiempoTurno) * 100}%` }}></div>
+                    <span className={`${style.timerText}`}>{countdown}s</span>
+                </div>
+            )}
+
             {/* Mi tarjeta secreta */}
             <div className={`${style.myTarjetaBox}`}>
                 <span className={`${style.myTarjetaLabel}`}>Tu personaje secreto:</span>
                 {myTarjeta ? (
-                    <div className={`${style.myTarjetaCard}`}>
+                    <div className={`${style.myTarjetaCard}`} onClick={() => openPreview(myTarjeta)} style={{ cursor: 'pointer' }}>
                         {myTarjeta.imagen_url ? (
                             <img src={getImageUrl(myTarjeta.imagen_url)} alt="" className={`${style.myTarjetaImg}`} />
                         ) : (
@@ -632,31 +663,48 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
             )}
 
             {/* Personajes en juego (Catálogo para descartar) */}
-            {!meTocaResponder && (
+            {targetId !== userId && (
                 <div className={`${style.catalogBox}`}>
-                    <h4 className={`${style.catalogTitle}`}>🎭 Personajes de {targetName} (clic para descartar)</h4>
+                    <div className={`${style.tabsContainer}`}>
+                        {targetPlayers.map(p => (
+                            <button
+                                key={p.user_id}
+                                className={`${style.tabItem} ${p.user_id === viewTargetId ? style.tabActive : ''} ${p.user_id === targetId ? style.tabCurrentTurn : ''}`}
+                                onClick={() => setViewTargetId(p.user_id)}
+                                title={p.user_id === targetId ? 'Turno de responder' : ''}
+                            >
+                                {p.username}
+                            </button>
+                        ))}
+                    </div>
+                    <h4 className={`${style.catalogTitle}`}>🎭 Personajes de {currentViewName} (clic para descartar)</h4>
                     <div className={`${style.tarjetasGridSmall}`}>
                         {tarjetasDisponibles.map(t => (
                             <div
                                 key={t.id}
-                                className={`${style.tarjetaPickItem} ${myDiscards.includes(t.id) ? style.tarjetaDiscarded : ''}`}
-                                onClick={() => handleToggleDiscard(t.id)}
-                                title={myDiscards.includes(t.id) ? 'Desmarcar' : 'Descartar'}
+                                className={`${style.tarjetaPickItemWrapper}`}
                             >
-                                {t.imagen_url ? (
-                                    <img src={getImageUrl(t.imagen_url)} alt="" className={`${style.tarjetaPickImg}`} />
-                                ) : (
-                                    <div className={`${style.tarjetaPickPlaceholder}`}>🎭</div>
-                                )}
-                                <span className={`${style.tarjetaPickName}`}>{t.nombre}</span>
-                                {myDiscards.includes(t.id) && <div className={`${style.discardOverlay}`}>❌</div>}
+                                <div
+                                    className={`${style.tarjetaPickItem} ${currentViewDiscards.includes(t.id) ? style.tarjetaDiscarded : ''}`}
+                                    onClick={() => handleToggleDiscard(t.id, viewTargetId)}
+                                    title={currentViewDiscards.includes(t.id) ? 'Desmarcar' : 'Descartar'}
+                                >
+                                    {t.imagen_url ? (
+                                        <img src={getImageUrl(t.imagen_url)} alt="" className={`${style.tarjetaPickImg}`} />
+                                    ) : (
+                                        <div className={`${style.tarjetaPickPlaceholder}`}>🎭</div>
+                                    )}
+                                    <span className={`${style.tarjetaPickName}`}>{t.nombre}</span>
+                                    {currentViewDiscards.includes(t.id) && <div className={`${style.discardOverlay}`}>❌</div>}
+                                </div>
+                                <button className={style.btnFloatPreview} onClick={() => openPreview(t)} title="Ver detalles">👁️</button>
                             </div>
                         ))}
                     </div>
                 </div>
             )}
 
-            {(isHost || isMyTurn) && !preguntaActiva && (
+            {isMyTurn && !preguntaActiva && (
                 <button className={`${style.btnSecondary} ${style.btnSkip}`} onClick={handleAdvanceTurn}>
                     Saltar turno →
                 </button>

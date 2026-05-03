@@ -1,4 +1,5 @@
 import { localStates, localEffects } from './localStates';
+import { ImageModal } from '../Components/ImageModal';
 
 export const Decks = () => {
     const {
@@ -6,6 +7,8 @@ export const Decks = () => {
         tags, filteredTarjetas,
         expandedDeck, deckTarjetas, toggleExpand,
         showModal, setShowModal, editTarget,
+        showImageModal, setShowImageModal,
+        previewTarget, openPreview,
         form, setForm,
         tarjetaSearch, setTarjetaSearch,
         tarjetaTagFilter, setTarjetaTagFilter,
@@ -14,6 +17,20 @@ export const Decks = () => {
         navigate,
     } = localStates();
     localEffects();
+
+    const host = window.location.hostname;
+    const protocol = window.location.protocol;
+    const port = window.location.port === '5173' ? ':8372' : (window.location.port ? `:${window.location.port}` : '');
+    const API_BASE = `${protocol}//${host}${port}`;
+
+    const getImageUrl = (t) => {
+        if (t?.imagen_url) {
+            if (t.imagen_url.startsWith('http')) return t.imagen_url;
+            return `${API_BASE}${t.imagen_url}`;
+        }
+        if (!t?.imagen) return null;
+        return `${API_BASE}/media/images/adivina/${t.id}/${t.imagen}`;
+    };
 
     return (
         <div className={`${style.decksPage}`}>
@@ -60,10 +77,15 @@ export const Decks = () => {
                                             <div className={`${style.deckTarjetasGrid}`}>
                                                 {deckTarjetas[deck.id].map(t => (
                                                     <div key={t.id} className={`${style.miniTarjeta}`}>
-                                                        <span>{t.nombre}</span>
-                                                        {t.tags?.map(tg => (
-                                                            <span key={tg.id} className={`${style.miniTag}`}>{tg.nombre}</span>
-                                                        ))}
+                                                        <div className={style.miniTarjetaContent}>
+                                                            <span>{t.nombre}</span>
+                                                            <div className={style.miniTarjetaTags}>
+                                                                {t.tags?.map(tg => (
+                                                                    <span key={tg.id} className={`${style.miniTag}`}>{tg.nombre}</span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        <button className={style.btnMiniPreview} onClick={() => openPreview(t)}>👁️</button>
                                                     </div>
                                                 ))}
                                             </div>
@@ -127,32 +149,35 @@ export const Decks = () => {
                                 </div>
                                 <div className={`${style.tarjetaPicker}`}>
                                     {filteredTarjetas.map(t => (
-                                        <label key={t.id} className={`${style.tarjetaPickerItem} ${form.tarjeta_ids.includes(t.id) ? style.tarjetaPickerSelected : ''}`}>
-                                            <input
-                                                type="checkbox"
-                                                checked={form.tarjeta_ids.includes(t.id)}
-                                                onChange={() => toggleDeckTarjeta(t.id)}
-                                                style={{ display: 'none' }}
-                                            />
-                                            <div className={`${style.tarjetaPickerImgBox}`}>
-                                                {t.imagen ? (
-                                                    <img src={`${window.location.protocol}//${window.location.hostname}:8372/media/images/adivina/${t.id}/${t.imagen}`} alt="" className={`${style.miniTarjetaImg}`} />
-                                                ) : (
-                                                    <div className={`${style.miniTarjetaPlaceholder}`}>🎭</div>
-                                                )}
-                                            </div>
-                                            <div className={`${style.tarjetaPickerInfo}`}>
-                                                <div className={`${style.tarjetaPickerName}`}>
-                                                    <span className={`${style.checkmark}`}>{form.tarjeta_ids.includes(t.id) ? '✓ ' : ''}</span>
-                                                    {t.nombre}
+                                        <div key={t.id} className={`${style.tarjetaPickerItemWrapper}`}>
+                                            <label className={`${style.tarjetaPickerItem} ${form.tarjeta_ids.includes(t.id) ? style.tarjetaPickerSelected : ''}`}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={form.tarjeta_ids.includes(t.id)}
+                                                    onChange={() => toggleDeckTarjeta(t.id)}
+                                                    style={{ display: 'none' }}
+                                                />
+                                                <div className={`${style.tarjetaPickerImgBox}`}>
+                                                    {t.imagen ? (
+                                                        <img src={getImageUrl(t)} alt="" className={`${style.miniTarjetaImg}`} />
+                                                    ) : (
+                                                        <div className={`${style.miniTarjetaPlaceholder}`}>🎭</div>
+                                                    )}
                                                 </div>
-                                                <div className={`${style.tarjetaPickerTags}`}>
-                                                    {t.tags?.slice(0, 2).map(tg => (
-                                                        <span key={tg.id} className={`${style.miniTag}`}>{tg.nombre}</span>
-                                                    ))}
+                                                <div className={`${style.tarjetaPickerInfo}`}>
+                                                    <div className={`${style.tarjetaPickerName}`}>
+                                                        <span className={`${style.checkmark}`}>{form.tarjeta_ids.includes(t.id) ? '✓ ' : ''}</span>
+                                                        {t.nombre}
+                                                    </div>
+                                                    <div className={`${style.tarjetaPickerTags}`}>
+                                                        {t.tags?.slice(0, 2).map(tg => (
+                                                            <span key={tg.id} className={`${style.miniTag}`}>{tg.nombre}</span>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </label>
+                                            </label>
+                                            <button className={style.btnFloatPreview} onClick={() => openPreview(t)} title="Ver imagen">👁️</button>
+                                        </div>
                                     ))}
                                     {filteredTarjetas.length === 0 && (
                                         <p style={{ padding: '1rem', textAlign: 'center', opacity: 0.5 }}>Sin resultados</p>
@@ -169,6 +194,16 @@ export const Decks = () => {
                     </div>
                 </div>
             )}
+
+            <ImageModal
+                show={showImageModal}
+                onClose={() => setShowImageModal(false)}
+                image={previewTarget ? getImageUrl(previewTarget) : null}
+                title={previewTarget?.nombre}
+                description={previewTarget?.descripcion}
+                tags={previewTarget?.tags}
+            />
         </div>
     );
 };
+

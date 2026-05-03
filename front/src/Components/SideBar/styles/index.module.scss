@@ -31,11 +31,13 @@
             transition: grid-template-rows 0.5s ease-in-out;
             display: grid;
             grid-template-rows: 0fr;
+
             &.linksListSelected {
                 grid-template-rows: 1fr;
                 overflow-x: hidden;
                 overflow-y: auto;
             }
+
             .linksListContent {
                 min-height: 0;
                 overflow: hidden;
@@ -89,6 +91,7 @@
             &.linkSelected {
                 color: var(--my-success);
                 border: none;
+
                 &:hover {
                     background-color: var(--my-success);
                     color: white;

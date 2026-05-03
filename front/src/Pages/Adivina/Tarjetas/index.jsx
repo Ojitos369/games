@@ -1,4 +1,5 @@
 import { localStates, localEffects } from './localStates';
+import { ImageModal } from '../Components/ImageModal';
 
 export const Tarjetas = () => {
     const {
@@ -7,13 +8,14 @@ export const Tarjetas = () => {
         searchQ, setSearchQ,
         selectedTags, toggleTag,
         showModal, setShowModal,
-        editTarget,
+        showImageModal, setShowImageModal,
+        editTarget, previewTarget,
         form, setForm,
         imagePreview,
         newTagName, setNewTagName,
         getImageUrl, canEdit,
         toggleFormTag,
-        openCreate, openEdit, handleImageChange,
+        openCreate, openEdit, handleImageChange, openPreview,
         handleSave, handleDelete, handleCreateTag, handleSearch,
         navigate,
     } = localStates();
@@ -75,6 +77,7 @@ export const Tarjetas = () => {
                             getImageUrl={getImageUrl}
                             onEdit={() => openEdit(tarjeta)}
                             onDelete={() => handleDelete(tarjeta.id)}
+                            onPreview={() => openPreview(tarjeta)}
                         />
                     ))}
                 </div>
@@ -159,15 +162,24 @@ export const Tarjetas = () => {
                     </div>
                 </div>
             )}
+
+            <ImageModal
+                show={showImageModal}
+                onClose={() => setShowImageModal(false)}
+                image={previewTarget ? getImageUrl(previewTarget) : null}
+                title={previewTarget?.nombre}
+                description={previewTarget?.descripcion}
+                tags={previewTarget?.tags}
+            />
         </div>
     );
 };
 
-const TarjetaCard = ({ tarjeta, style, canEdit, getImageUrl, onEdit, onDelete }) => {
+const TarjetaCard = ({ tarjeta, style, canEdit, getImageUrl, onEdit, onDelete, onPreview }) => {
     const img = getImageUrl(tarjeta);
     return (
         <div className={`${style.tarjetaCard}`}>
-            <div className={`${style.tarjetaImage}`}>
+            <div className={`${style.tarjetaImage}`} onClick={onPreview} style={{ cursor: 'pointer' }}>
                 {img ? (
                     <img src={img} alt={tarjeta.nombre} />
                 ) : (
@@ -175,6 +187,7 @@ const TarjetaCard = ({ tarjeta, style, canEdit, getImageUrl, onEdit, onDelete })
                         <span>🎭</span>
                     </div>
                 )}
+                <div className={style.zoomOverlay}>🔍</div>
             </div>
             <div className={`${style.tarjetaInfo}`}>
                 <h3 className={`${style.tarjetaNombre}`}>{tarjeta.nombre}</h3>
@@ -192,12 +205,15 @@ const TarjetaCard = ({ tarjeta, style, canEdit, getImageUrl, onEdit, onDelete })
                     <span className={`${style.tarjetaCreador}`}>👤 {tarjeta.creador.username}</span>
                 )}
             </div>
-            {canEdit && (
-                <div className={`${style.tarjetaActions}`}>
-                    <button className={`${style.btnEdit}`} onClick={onEdit}>✏️</button>
-                    <button className={`${style.btnDel}`} onClick={onDelete}>🗑️</button>
-                </div>
-            )}
+            <div className={`${style.tarjetaActions}`}>
+                <button className={`${style.btnPreview}`} onClick={onPreview} title="Ver detalles">👁️</button>
+                {canEdit && (
+                    <>
+                        <button className={`${style.btnEdit}`} onClick={onEdit} title="Editar">✏️</button>
+                        <button className={`${style.btnDel}`} onClick={onDelete} title="Eliminar">🗑️</button>
+                    </>
+                )}
+            </div>
         </div>
     );
 };

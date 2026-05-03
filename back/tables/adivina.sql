@@ -70,4 +70,4 @@ CREATE TABLE adivina_partidas (
 ALTER TABLE adivina_salas_jugadores ADD COLUMN victorias INTEGER DEFAULT 0;
 
 -- ------ cambios de adivina -----
-
+UPDATE adivina_tags SET nombre = UPPER(nombre);

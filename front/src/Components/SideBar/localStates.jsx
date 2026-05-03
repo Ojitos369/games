@@ -2,6 +2,8 @@ import { useMemo, useEffect } from "react";
 import { useStates, createState } from "../../Hooks/useStates";
 import style from './styles/index.module.scss';
 import { pages } from "../../Core/helper";
+import { SideBarDefault } from "./SideBarDefault";
+import { SideBarAdivinaSala } from "../../Pages/Adivina/Sala/SideBarAdivina";
 
 export const localStates = () => {
     const { f, s } = useStates();
@@ -13,6 +15,7 @@ export const localStates = () => {
     const [sidebarOpen, setSidebarOpen] = createState(['sidebar', 'open'], false);
     const [menusAbiertos, setMenusAbiertos] = createState(['sidebar', 'menusAbiertos'], {});
     const [menuBarMode, setMenuBarMode] = createState(['menubar', 'menuMode'], null);
+    const [sideBarMode, setSideBarMode] = createState(['sidebar', 'sideMode'], null);
 
     const isAdmin = useMemo(() => s.usuario?.data?.is_admin, [s.usuario?.data?.is_admin]);
 
@@ -43,6 +46,15 @@ export const localStates = () => {
         setMenusAbiertos({ [menu]: !menusAbiertos[menu] });
     }
 
+    const Component = useMemo(() => {
+        switch (sideBarMode) {
+            case 'adivina_sala':
+                return SideBarAdivinaSala;
+            default:
+                return SideBarDefault;
+        }
+    }, [sideBarMode]);
+
     return {
         style,
         prod_mode, dev_mode, isInMd,
@@ -52,6 +64,8 @@ export const localStates = () => {
         setMenusAbiertos,
         elementos, actualMenu, 
         setMenuBarMode, 
+        sideBarMode, setSideBarMode,
+        Component,
     }
 }
 

@@ -70,11 +70,11 @@ function AppUI() {
                         <Route path="admin/*" element={ <CatalogAdminPage /> } />
                     )}
                     <Route path="adivina/*" element={ <AdivinaPage /> } />
+                    <Route path="adivina/sala/:codigo" element={ <AdivinaSalaPage /> } />
                     <Route path="*" element={ <P404 /> } />
                     {/* -----------   /404   ----------- */}
                 </Route>
                 <Route path="rushcar/*" element={ <RushCarPage /> } />
-                <Route path="adivina/sala/:codigo" element={ <AdivinaSalaPage /> } />
             </Routes>
 
             {!!s.modals?.general?.notification &&

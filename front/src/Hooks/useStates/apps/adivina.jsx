@@ -10,12 +10,12 @@ export const adivina = props => {
             .finally(() => u2('loadings', 'adivina', 'tags', false));
     };
 
-    const createTag = (nombre, cb) => {
+    const createTag = (nombre, cb, silent = false) => {
         if (s.loadings?.adivina?.createTag) return;
         u2('loadings', 'adivina', 'createTag', true);
         miAxios.post('games/adivina/tags', { nombre })
             .then(res => {
-                general.notificacion({ message: 'Tag creado', title: 'Éxito', mode: 'success' });
+                if (!silent) general.notificacion({ message: 'Tag creado', title: 'Éxito', mode: 'success' });
                 getTags();
                 if (cb) cb(res.data);
             })

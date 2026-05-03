@@ -4,6 +4,7 @@ import style from './styles/index.module.scss';
 
 import { MenuBarDefault } from "../../Pages/Index/MenuBarDefault";
 import { MenuBar1 as MenuBar1SLRC } from "../../Pages/Solo/RushCar/MenuBar1";
+import { MenuBarAdivinaSala } from "../../Pages/Adivina/Sala/MenuBarAdivina";
 
 export const localStates = () => {
     const { s } = useStates();
@@ -14,6 +15,8 @@ export const localStates = () => {
 
     const Component = useMemo(() => {
         switch (menuMode) {
+            case 'adivina_sala':
+                return MenuBarAdivinaSala;
             case 'menuBarDefault':
                 return MenuBarDefault;
             case 'menuBar1SLRC':

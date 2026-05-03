@@ -134,6 +134,22 @@
     overflow: hidden;
     background: color-mix(in srgb, var(--my-minor) 10%, transparent);
     img { width: 100%; height: 100%; object-fit: cover; }
+    position: relative;
+    &:hover .zoomOverlay { opacity: 1; }
+}
+
+.zoomOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 2rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
 }
 
 .tarjetaImagePlaceholder {
@@ -202,7 +218,7 @@
     transition: opacity 0.2s;
 }
 
-.btnEdit, .btnDel {
+.btnEdit, .btnDel, .btnPreview {
     background: var(--my-major);
     border: 1px solid color-mix(in srgb, var(--my-minor) 20%, transparent);
     border-radius: 6px;
@@ -216,6 +232,11 @@
     transition: background 0.15s;
     &:hover { background: color-mix(in srgb, var(--my-minor) 15%, transparent); }
 }
+
+.btnPreview {
+    color: var(--my-primary);
+}
+
 
 /* Modal */
 .modalOverlay {

@@ -1,11 +1,12 @@
 .salaPage {
     width: 100%;
-    height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     background: var(--my-major);
     color: var(--my-minor);
     overflow: hidden;
+    overscroll-behavior-y: none;
 }
 
 /* ─── Header ──────────────────────────────────────────────────────────────── */
@@ -135,17 +136,11 @@
 
 /* ─── Body Layout ─────────────────────────────────────────────────────────── */
 .salaBody {
-    display: grid;
-    grid-template-columns: 220px 1fr 280px;
-    gap: 0;
+    display: flex;
+    flex-direction: column;
     flex: 1;
     overflow: hidden;
-
-    @media (max-width: 900px) {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr auto;
-        overflow-y: auto;
-    }
+    overscroll-behavior-y: none;
 }
 
 /* ─── Players Panel ───────────────────────────────────────────────────────── */
@@ -160,7 +155,16 @@
     @media (max-width: 900px) {
         border-right: none;
         border-bottom: 1px solid color-mix(in srgb, var(--my-minor) 10%, transparent);
-        max-height: 200px;
+        max-height: none;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 0.5rem;
+        align-items: center;
+        
+        .panelTitle {
+            display: none;
+        }
     }
 }
 
@@ -176,6 +180,11 @@
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
+
+    @media (max-width: 900px) {
+        flex-direction: row;
+        gap: 0.5rem;
+    }
 }
 
 .playerItem {
@@ -187,6 +196,12 @@
     background: color-mix(in srgb, var(--my-minor) 5%, transparent);
     border: 1px solid transparent;
     transition: border-color 0.2s;
+
+    @media (max-width: 900px) {
+        flex-shrink: 0;
+        padding: 0.3rem 0.5rem;
+        max-width: 150px;
+    }
 }
 .playerTurno {
     border-color: var(--my-primary);
@@ -255,9 +270,59 @@
     border-radius: 10px;
     background: color-mix(in srgb, var(--my-primary) 12%, transparent);
     text-align: center;
+
+    @media (max-width: 900px) {
+        display: none;
+    }
 }
 .turnoLabel { font-size: 0.75rem; opacity: 0.7; }
 .turnoName { font-weight: 800; font-size: 1rem; }
+
+/* ─── Spectator & Disconnected ───────────────────────────────────────────── */
+.spectatorSection {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed color-mix(in srgb, var(--my-minor) 15%, transparent);
+
+    @media (max-width: 900px) {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+        margin-left: 0.5rem;
+        padding-left: 0.5rem;
+        border-left: 1px dashed color-mix(in srgb, var(--my-minor) 15%, transparent);
+        display: flex;
+        align-items: center;
+    }
+}
+
+.espectadorItem {
+    opacity: 0.6;
+    font-style: italic;
+}
+
+.playerDesconectado {
+    opacity: 0.45;
+    border-left: 2px solid var(--my-warning, #f0ad4e) !important;
+}
+
+.playerBadgeDisconnect {
+    font-size: 0.65rem;
+    color: var(--my-warning, #f0ad4e);
+    font-weight: 500;
+}
+
+.espectadorBanner {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--my-info, #5bc0de) 8%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--my-info, #5bc0de) 25%, transparent);
+
+    .phaseTitle {
+        color: var(--my-info, #5bc0de);
+    }
+}
 
 /* ─── Center Panel ────────────────────────────────────────────────────────── */
 .centerPanel {
@@ -313,6 +378,45 @@
     font-weight: 600;
     transition: all 0.2s;
 }
+/* Timer */
+.timerContainer {
+    width: 100%;
+    height: 12px;
+    background: color-mix(in srgb, var(--my-minor) 10%, transparent);
+    border-radius: 6px;
+    margin: 1rem 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.timerBar {
+    height: 100%;
+    background: var(--my-info, #5bc0de);
+    border-radius: 6px;
+    transition: width 1s linear, background-color 0.3s;
+}
+
+.timerDanger .timerBar {
+    background: var(--my-danger, #d9534f);
+    animation: pulseDanger 1s infinite alternate;
+}
+
+.timerText {
+    position: absolute;
+    top: -2px;
+    right: 8px;
+    font-size: 0.65rem;
+    font-weight: bold;
+    color: var(--my-major);
+    mix-blend-mode: difference;
+    z-index: 2;
+}
+
+@keyframes pulseDanger {
+    0% { opacity: 1; }
+    100% { opacity: 0.5; }
+}
+
 .btnModoActive {
     background: var(--my-primary);
     border-color: var(--my-primary);
@@ -331,6 +435,46 @@
     opacity: 0.8;
 }
 
+/* ─── Tabs Container ──────────────────────────────────────────────────────── */
+.tabsContainer {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+}
+
+.tabItem {
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid color-mix(in srgb, var(--my-minor) 20%, transparent);
+    border-bottom: none;
+    background: color-mix(in srgb, var(--my-minor) 5%, transparent);
+    color: var(--my-minor);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0.7;
+    transition: all 0.2s;
+    &:hover {
+        opacity: 1;
+        background: color-mix(in srgb, var(--my-minor) 10%, transparent);
+    }
+}
+
+.tabActive {
+    opacity: 1;
+    background: color-mix(in srgb, var(--my-primary) 15%, transparent);
+    border-color: var(--my-primary);
+    color: var(--my-primary);
+    border-bottom: 2px solid var(--my-primary);
+}
+
+.tabCurrentTurn {
+    box-shadow: inset 0 2px 0 var(--my-success);
+}
+
 /* Tarjetas grid small */
 .tarjetasGridSmall {
     display: grid;
@@ -343,6 +487,33 @@
     border-radius: 10px;
     background: color-mix(in srgb, var(--my-minor) 3%, transparent);
 }
+
+.tarjetaPickItemWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.btnFloatPreview {
+    position: absolute;
+    right: 0.3rem;
+    top: 0.3rem;
+    background: var(--my-major);
+    border: 1px solid color-mix(in srgb, var(--my-minor) 20%, transparent);
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.75rem;
+    z-index: 5;
+    opacity: 0.6;
+    transition: all 0.2s;
+    &:hover { opacity: 1; border-color: var(--my-primary); }
+}
+
 
 .tarjetaPickItem {
     display: flex;
@@ -387,6 +558,20 @@
     white-space: nowrap;
     width: 100%;
 }
+
+.discardOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--my-danger);
+    border-radius: 6px;
+    pointer-events: none;
+}
+
 
 .btnStart {
     align-self: center;
@@ -589,7 +774,9 @@
     @media (max-width: 900px) {
         border-left: none;
         border-top: 1px solid color-mix(in srgb, var(--my-minor) 10%, transparent);
-        max-height: 250px;
+        max-height: 35vh; /* better dynamic height */
+        min-height: 200px;
+        flex-shrink: 0;
     }
 }
 
@@ -665,6 +852,11 @@
     color: var(--my-minor);
     font-size: 0.9rem;
     &:focus { outline: none; border-color: var(--my-primary); }
+    
+    option {
+        background: var(--my-major);
+        color: var(--my-minor);
+    }
 }
 
 .btnPrimary {

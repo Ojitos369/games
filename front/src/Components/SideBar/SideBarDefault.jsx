@@ -1,0 +1,57 @@
+import { Link } from "react-router-dom";
+import { Fragment } from "react";
+import { localStates, localEffects } from "./localStates";
+
+export const SideBarDefault = props => {
+    const { style, toggleMenu, elementos, actualPage, isInMd, setMenuBarMode, setSidebarOpen } = localStates();
+    localEffects();
+
+    return (
+        <li className={`${style.elementsList}`}>
+            <Link to="/" className={`${style.link} ${actualPage === 'index' && style.linkSelected}`} 
+            onClick={() => {
+                setMenuBarMode(null);
+                if (!isInMd) setSidebarOpen(false);
+            }}
+            ><span style={{ fontWeight: 900, letterSpacing: '3px' }}>GAMES</span><span style={{ display: 'inline-block', width: 6, height: 6, background: 'linear-gradient(135deg, #7c3aed, #06b6d4)', borderRadius: '50%', marginLeft: 3, verticalAlign: 'super' }}></span></Link>
+
+            {elementos.map((ele, index) => {
+                const show = ele.show ?? true;
+                if (!show) return null;
+                return (
+                    <Fragment key={index}>
+                    <button 
+                        className={`${style.link} ${ele.opened && style.linkSelected}`}
+                        onClick={() => {
+                            toggleMenu(ele.menu_name);
+                        }}
+                        >
+                        {ele.name}
+                    </button>
+                    <div className={`${style.linksList} ${style[ele.menu_name]} ${ele.opened && style.linksListSelected}`}>
+                        <div className={style.linksListContent}>
+                            {ele.elements.map((ele2, index2) => {
+                                const show2 = ele2.show ?? true;
+                                if (!show2) return null;
+                                return (
+                                    <Link 
+                                        key={index2}
+                                        className={`${style.linkPage} ${style.link} ${(actualPage === ele2.page_name && !window.location.search.includes('cat=')) || (ele2.isCategory && window.location.search === `?cat=${ele2.id}`) ? style.linkSelected : ''}`}
+                                        to={ele2.to}
+                                        onClick={() => {
+                                            if (ele2.menuBar) setMenuBarMode(ele2.menuBar);
+                                            if (!isInMd) setSidebarOpen(false);
+                                        }}
+                                    >
+                                        {ele2.name}
+                                    </Link>
+                                )
+                            })}
+                        </div>
+                    </div>
+                    </Fragment>
+                )
+            })}
+        </li>
+    )
+}

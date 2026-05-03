@@ -5,7 +5,8 @@ import style from './styles/index.module.scss';
 
 const host = window.location.hostname;
 const protocol = window.location.protocol;
-const API_BASE = `${protocol}//${host}:8372`;
+const port = window.location.port === '5173' ? ':8372' : (window.location.port ? `:${window.location.port}` : '');
+const API_BASE = `${protocol}//${host}${port}`;
 
 export const localStates = () => {
     const { s, f } = useStates();
@@ -23,11 +24,18 @@ export const localStates = () => {
     const [searchQ, setSearchQ] = useState('');
     const [selectedTags, setSelectedTags] = useState([]);
     const [showModal, setShowModal] = useState(false);
+    const [showImageModal, setShowImageModal] = useState(false);
     const [editTarget, setEditTarget] = useState(null);
+    const [previewTarget, setPreviewTarget] = useState(null);
     const [form, setForm] = useState({ nombre: '', descripcion: '', tags: [] });
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [newTagName, setNewTagName] = useState('');
+
+    const openPreview = useCallback((tarjeta) => {
+        setPreviewTarget(tarjeta);
+        setShowImageModal(true);
+    }, []);
 
     const getImageUrl = useCallback((tarjeta) => {
         if (!tarjeta?.imagen_url) return null;
@@ -104,7 +112,7 @@ export const localStates = () => {
         f.adivina.createTag(newTagName.trim(), (res) => {
             setForm(prev => ({ ...prev, tags: [...prev.tags, res.id] }));
             setNewTagName('');
-        });
+        }, true);
     }, [newTagName, f.adivina]);
 
     const handleSearch = useCallback(() => {
@@ -123,15 +131,16 @@ export const localStates = () => {
         searchQ, setSearchQ,
         selectedTags, toggleTag,
         showModal, setShowModal,
-        editTarget,
+        showImageModal, setShowImageModal,
+        editTarget, previewTarget,
         form, setForm,
         imagePreview,
         newTagName, setNewTagName,
         getImageUrl, canEdit,
         toggleFormTag,
-        openCreate, openEdit, handleImageChange,
+        openCreate, openEdit, handleImageChange, openPreview,
         handleSave, handleDelete, handleCreateTag, handleSearch,
-        navigate,
+        navigate, init,
     }
 }
 

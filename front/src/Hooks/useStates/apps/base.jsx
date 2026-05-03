@@ -7,7 +7,8 @@ import withReactContent from 'sweetalert2-react-content';
 const MySwal = withReactContent(Swal);
 const host = window.location.hostname;
 const protocol = window.location.protocol;
-const link = `${protocol}//${host}:8372/api/`;
+const port = window.location.port === '5173' ? ':8372' : (window.location.port ? `:${window.location.port}` : '');
+const link = `${protocol}//${host}${port}/api/`;
 axios.defaults.withCredentials = true;
 const miAxios = axios.create({
     baseURL: link,
