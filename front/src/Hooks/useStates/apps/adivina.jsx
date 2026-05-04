@@ -289,6 +289,12 @@ export const adivina = props => {
             .finally(() => u2('loadings', 'adivina', 'createSala', false));
     };
 
+    const getSala = (codigo, cb) => {
+        miAxios.get(`games/adivina/salas/info?codigo=${codigo}`)
+            .then(res => { if (cb) cb(res.data.sala); })
+            .catch(err => console.log(err));
+    };
+
     const reaperturarSala = (codigo, cb) => {
         if (s.loadings?.adivina?.reaperturarSala) return;
         u2('loadings', 'adivina', 'reaperturarSala', true);

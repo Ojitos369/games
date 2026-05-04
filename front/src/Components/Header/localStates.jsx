@@ -41,7 +41,7 @@ export const localStates = () => {
         actualPage, pageTitle, 
         userMenu, openUserMenu,
         username, menubarOpen, setMenubarOpen,
-        pageTitle, IconMenu,
+        IconMenu,
     }
 }
 
