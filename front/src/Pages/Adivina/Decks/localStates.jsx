@@ -161,8 +161,10 @@ export const localStates = () => {
     }, [f.adivina]);
 
     const init = useCallback(() => {
-        setTitulo('Decks');
+        const title = 'Decks';
+        setTitulo(title);
         setActualPage('adivina_decks');
+        document.title = title;
         f.adivina.getDecks();
         f.adivina.getTarjetas();
         f.adivina.getTags();

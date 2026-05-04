@@ -617,6 +617,12 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
                                     />
                                 </div>
                                 <button className={`${style.btnPrimary}`} onClick={handlePregunta} disabled={!preguntaTexto.trim()}>Preguntar</button>
+                                <button
+                                    className={`${style.btnSecondary}`}
+                                    onClick={() => { setAdivinarTarget(targetId); setShowAdivinar(true); }}
+                                >
+                                    🤔 Adivinar
+                                </button>
                             </>
                         ) : (
                             <div className={`${style.formGroup} ${style.flexGrow}`}>
@@ -626,12 +632,6 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
                                 </button>
                             </div>
                         )}
-                        <button
-                            className={`${style.btnSecondary}`}
-                            onClick={() => { setAdivinarTarget(targetId); setShowAdivinar(true); }}
-                        >
-                            🤔 Adivinar
-                        </button>
                     </div>
                 </div>
             )}

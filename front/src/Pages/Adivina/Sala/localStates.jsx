@@ -244,7 +244,7 @@ export const localStates = () => {
             let sum = 0;
             for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
             const average = sum / bufferLength;
-            
+
             setTalkingStates(prev => ({ ...prev, [userId]: average > 10 }));
             animationFrames.current[userId] = requestAnimationFrame(checkTalking);
         };
@@ -431,7 +431,9 @@ export const localStates = () => {
 
     // Init effect — runs ONLY ONCE per codigo change
     useEffect(() => {
-        setTitulo(`Sala ${codigo}`);
+        const title = `Sala ${codigo}`;
+        setTitulo(title);
+        document.title = title;
         fRef.current.adivina.getTarjetas();
         fRef.current.adivina.getTags();
         fRef.current.adivina.getDecks();

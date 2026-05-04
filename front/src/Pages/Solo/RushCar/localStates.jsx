@@ -239,8 +239,10 @@ export const localStates = () => {
 
     // --- INIT ---
     const init = useCallback(() => {
-        setTitulo("Rush Car");
+        const title = "Rush Car";
+        setTitulo(title);
         setActualPage("solo_rushcar");
+        document.title = title;
         f.u1('menubar', 'menuMode', 'menuBar1SLRC');
 
         // Check URL for level param

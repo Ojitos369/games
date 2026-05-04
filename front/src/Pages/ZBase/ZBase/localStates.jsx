@@ -9,12 +9,14 @@ export const localStates = props => {
     const [titulo, setTitulo] = createState(['page', 'title'], "");
     const [actualPage, setActualPage] = createState(['page', 'actual'], "");
     const init = () => {
-        setTitulo("Acciones Celestian");
+        const title = "Acciones Celestian";
+        setTitulo(title);
         setActualPage("acciones_celestian");
+        document.title = title;
     }
 
 
-    return { 
+    return {
         styles, stylesGen,
         init,
     }
@@ -22,7 +24,7 @@ export const localStates = props => {
 
 export const localEffects = () => {
     const { init } = localStates();
-    
+
     useEffect(() => {
         init();
     }, []);

@@ -16,12 +16,14 @@ export const localStates = props => {
     const hhMessage = useMemo(() => s.app?.hh?.response?.message, [s.app?.hh?.response?.message]);
     const [menuBarMode, setMenuBarMode] = createState(['menubar', 'menuMode'], null);
 
-    const init = () => {
-        setTitulo("Games");
+    const init = useCallback(() => {
+        const title = "Games";
+        setTitulo(title);
         setActualPage("index");
+        document.title = title;
         setMenuBarMode(null);
         f.catalog.getJuegos();
-    }
+    }, []);
 
     const toggleNot = () => {
         f.general.notificacion({
@@ -67,18 +69,18 @@ export const localStates = props => {
     const elementos = useMemo(() => {
         return [
             ...juegosMenu,
-            {name: `Theme: ${actualTheme}`, action: changeTheme},
-            {name: `Cerrar Sesion`, action: closeSession},
+            { name: `Theme: ${actualTheme}`, action: changeTheme },
+            { name: `Cerrar Sesion`, action: closeSession },
         ]
     }, [actualTheme, changeTheme, juegosMenu]);
 
     return {
-        init, toggleNot, 
+        init, toggleNot,
         styles,
-        theme, toggleModalMode, toggleShowModal, 
-        showModal, modalMode, 
+        theme, toggleModalMode, toggleShowModal,
+        showModal, modalMode,
         hhMessage,
-        menubarOpen, changeTheme, elementos, 
+        menubarOpen, changeTheme, elementos,
     }
 }
 

@@ -6,14 +6,16 @@ import styleGen from '../styles/index.module.scss';
 export const localStates = props => {
     const [titulo, setTitulo] = createState(['page', 'title'], "");
     const [actualPage, setActualPage] = createState(['page', 'actual'], "");
-    
+
     const init = () => {
-        setTitulo("chat");
+        const title = "chat";
+        setTitulo(title);
         setActualPage("chat");
+        document.title = title;
     }
 
 
-    return { 
+    return {
         style, styleGen,
         init,
     }

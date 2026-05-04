@@ -120,8 +120,10 @@ export const localStates = () => {
     }, [searchQ, selectedTags, f.adivina]);
 
     const init = useCallback(() => {
-        setTitulo('Tarjetas');
+        const title = 'Tarjetas';
+        setTitulo(title);
         setActualPage('adivina_tarjetas');
+        document.title = title;
         f.adivina.getTarjetas();
         f.adivina.getTags();
     }, []);
