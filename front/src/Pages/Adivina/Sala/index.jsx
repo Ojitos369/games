@@ -35,10 +35,14 @@ export const AdivinaSala = () => {
         sendChat, setSeleccionModo, handleSetTarjetas,
         handleOpenVote, handleVoteCast, handleCloseVote, handleStartGame, handleRestartGame,
         handlePregunta, handleRespuesta, handleAdivinar, handleAdvanceTurn, handleKick,
-        handleToggleDiscard,
+        handleToggleDiscard, handleReaperturar, roomNotFound,
         navigate, getImageUrl, applyDeck,
         tiempoTurno, handleSetTiempoTurno, countdown,
     } = ls;
+
+    if (roomNotFound) {
+        return <RoomNotFoundView style={style} codigo={codigo} handleReaperturar={handleReaperturar} navigate={navigate} />;
+    }
 
     const estadoLabel = (estado) => {
         const map = { esperando: 'Esperando', votando: 'Votando', jugando: 'En juego', terminado: 'Terminado' };
@@ -626,7 +630,11 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
                             </>
                         ) : (
                             <div className={`${style.formGroup} ${style.flexGrow}`}>
-                                <p className={`${style.turnFinishingHint}`}>Espera a que {targetName} responda por chat o voz, luego finaliza tu turno.</p>
+                                <p className={`${style.turnFinishingHint}`}>
+                                    {preguntaActiva.respuesta && preguntaActiva.respuesta !== 'pendiente' 
+                                        ? '¡Respuesta recibida! Puedes descartar tarjetas y luego finalizar tu turno.'
+                                        : `Espera a que ${targetName} responda por chat o voz, luego finaliza tu turno.`}
+                                </p>
                                 <button className={`${style.btnPrimary} ${style.btnFinishTurn}`} onClick={handleAdvanceTurn}>
                                     Finalizar Turno ✓
                                 </button>
@@ -800,5 +808,29 @@ function TerminadoView({ style, gameOverData, gameState, isHost, waitingForHost,
         </div>
     );
 }
+
+const RoomNotFoundView = ({ style, codigo, handleReaperturar, navigate }) => {
+    return (
+        <div className={style.salaPage}>
+            <div className={style.centerPanel} style={{ justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '2rem' }}>
+                <div className={style.espectadorBanner} style={{ maxWidth: '500px', borderStyle: 'solid' }}>
+                    <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🏚️</div>
+                    <h2 className={style.phaseTitle} style={{ color: 'var(--my-danger)' }}>Sala no disponible</h2>
+                    <p className={style.phaseDesc} style={{ marginBottom: '2rem' }}>
+                        La sala con código <strong>{codigo}</strong> ya no existe o ha caducado.
+                    </p>
+                    <div className={style.voteActions} style={{ flexDirection: 'column' }}>
+                        <button className={`${style.btnPrimary} ${style.btnStart}`} onClick={handleReaperturar}>
+                            ✨ Reaperturar Sala
+                        </button>
+                        <button className={`${style.btnSecondary}`} onClick={() => navigate('/adivina')} style={{ marginTop: '0.5rem' }}>
+                            🚪 Regresar al Lobby
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 

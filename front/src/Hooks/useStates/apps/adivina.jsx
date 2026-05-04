@@ -289,10 +289,19 @@ export const adivina = props => {
             .finally(() => u2('loadings', 'adivina', 'createSala', false));
     };
 
-    const getSala = (codigo, cb) => {
-        miAxios.get(`games/adivina/salas/info?codigo=${codigo}`)
-            .then(res => { if (cb) cb(res.data.sala); })
-            .catch(err => console.log(err));
+    const reaperturarSala = (codigo, cb) => {
+        if (s.loadings?.adivina?.reaperturarSala) return;
+        u2('loadings', 'adivina', 'reaperturarSala', true);
+        miAxios.post('games/adivina/salas/reaperturar', { codigo })
+            .then(res => {
+                general.notificacion({ message: 'Sala reaperturada con éxito', title: 'Éxito', mode: 'success' });
+                if (cb) cb(res.data);
+            })
+            .catch(err => {
+                const message = err?.response?.data?.detail || 'Error al reaperturar sala';
+                general.notificacion({ message, title: 'Error', mode: 'danger' });
+            })
+            .finally(() => u2('loadings', 'adivina', 'reaperturarSala', false));
     };
 
     return {
@@ -300,6 +309,6 @@ export const adivina = props => {
         getTarjetas, createTarjeta, updateTarjeta, deleteTarjeta, uploadTarjetaImage,
         getDecks, createDeck, updateDeck, deleteDeck, getDeckTarjetas,
         publicarDeck, getDecksPublicos, importarDeck, desvincularDeck, copiarDeck,
-        getSalas, createSala, getSala,
+        getSalas, createSala, getSala, reaperturarSala,
     };
 };

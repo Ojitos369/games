@@ -744,3 +744,42 @@ class GetSala(ConexionApi):
             raise self.MYE("Sala no encontrada")
 
         self.response = {"sala": rows[0]}
+
+
+class ReaperturarSala(SessionApi):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.create_conexion()
+
+    def main(self):
+        user = get_usuario_from_token(self.conexion, self.d2d, self.token, self.MYE)
+        codigo = self.data.get('codigo', '').strip().upper()
+        if not codigo:
+            raise self.MYE("Código requerido")
+
+        # Verificar si ya existe una sala activa con ese código
+        check = self.conexion.consulta_asociativa(
+            "SELECT id FROM adivina_salas WHERE codigo = :codigo AND estado != 'terminado'",
+            {'codigo': codigo}
+        )
+        if self.d2d(check):
+            raise self.MYE("Ya existe una sala activa con este código")
+
+        # Crear la sala con el código solicitado
+        sala_id = self.get_id()
+        nombre = f"Sala de {user['username']} (Reaperturada)"
+        
+        self.conexion.ejecutar(
+            """INSERT INTO adivina_salas (id, codigo, nombre, creador_id, visibilidad, max_jugadores)
+               VALUES (:id, :codigo, :nombre, :creador_id, 'publica', 8)""",
+            {'id': sala_id, 'codigo': codigo, 'nombre': nombre,
+             'creador_id': user['id']}
+        )
+
+        jugador_id = self.get_id()
+        self.conexion.ejecutar(
+            "INSERT INTO adivina_salas_jugadores (id, sala_id, usuario_id) VALUES (:id, :sala_id, :usuario_id)",
+            {'id': jugador_id, 'sala_id': sala_id, 'usuario_id': user['id']}
+        )
+
+        self.response = {"message": "Sala reaperturada", "sala_id": sala_id, "codigo": codigo}

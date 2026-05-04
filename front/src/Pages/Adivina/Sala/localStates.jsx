@@ -73,6 +73,7 @@ export const localStates = () => {
     const [guessResult, setGuessResult] = useState(null);
     const [gameOverData, setGameOverData] = useState(null);
     const [waitingForHost, setWaitingForHost] = useState(false);
+    const [roomNotFound, setRoomNotFound] = useState(false);
 
     const [showImageModal, setShowImageModal] = useState(false);
     const [previewTarget, setPreviewTarget] = useState(null);
@@ -359,6 +360,9 @@ export const localStates = () => {
                 handleVoiceSignal(msg.from, msg.signal);
                 break;
             case 'error':
+                if (msg.message === 'Sala no encontrada') {
+                    setRoomNotFound(true);
+                }
                 console.error('WS error:', msg.message);
                 break;
             default:
@@ -550,6 +554,13 @@ export const localStates = () => {
         setAdivinarNombre('');
         setAdivinarTarget('');
     }).current;
+    
+    const handleReaperturar = useCallback(() => {
+        fRef.current.adivina.reaperturarSala(codigoRef.current, () => {
+            setRoomNotFound(false);
+            connectSocket();
+        });
+    }, [connectSocket]);
 
     const toggleVoteSelection = useRef((tarjetaId) => {
         setVoteSelections(prev =>
@@ -654,7 +665,7 @@ export const localStates = () => {
         sendChat, setSeleccionModo, handleSetTarjetas,
         handleOpenVote, handleVoteCast, handleCloseVote, handleStartGame, handleRestartGame,
         handlePregunta, handleRespuesta, handleAdivinar, handleAdvanceTurn, handleKick,
-        handleToggleDiscard,
+        handleToggleDiscard, handleReaperturar, roomNotFound,
         navigate, loadTarjetas, getImageUrl, applyDeck,
     };
 };

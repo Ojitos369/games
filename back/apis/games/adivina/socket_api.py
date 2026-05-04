@@ -851,6 +851,10 @@ class AdivinaSocketApi:
         if not target_id or not texto:
             return
 
+        if state.get('pregunta_actual'):
+            # Ya hay una pregunta en curso en este turno
+            return
+
         pregunta = {
             'id': str(uuid4()),
             'de': self.usuario_id,
@@ -897,10 +901,6 @@ class AdivinaSocketApi:
             "de": self.usuario_id,
             "de_nombre": self.username,
         })
-        
-        # Auto-advance turn after answer is received (Only one option per turn: Ask OR Guess)
-        _advance_turn(state)
-        state['pregunta_actual'] = None
         
         await self._broadcast_state_to_all(state)
 

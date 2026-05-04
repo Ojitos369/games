@@ -4,7 +4,7 @@ from .api import (
     ListTarjetas, CreateTarjeta, UpdateTarjeta, DeleteTarjeta, UploadTarjetaImagen,
     ListDecks, CreateDeck, UpdateDeck, DeleteDeck, GetDeckTarjetas,
     PublicarDeck, DecksPublicos, ImportarDeck, DesvincularDeck, CopiarDeck,
-    ListSalas, CreateSala, GetSala,
+    ListSalas, CreateSala, GetSala, ReaperturarSala,
 )
 from .socket_api import AdivinaSocketApi
 from core.websockets.manager import manager
@@ -103,6 +103,9 @@ async def create_sala(request: Request):
 @router.get("/salas/info")
 async def get_sala(request: Request):
     return await GetSala(request=request).run()
+@router.post("/salas/reaperturar")
+async def reaperturar_sala(request: Request):
+    return await ReaperturarSala(request=request).run()
 
 # ── WebSocket ─────────────────────────────────────────────────────────────────
 
