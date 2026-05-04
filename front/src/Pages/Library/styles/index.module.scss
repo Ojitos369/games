@@ -7,9 +7,12 @@
 
 // ============ HERO / DESTACADO ============
 .heroSection {
-    background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(6, 182, 212, 0.1) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
+    background:
+        repeating-linear-gradient(115deg, rgba(212,175,55,0.04) 0 2px, transparent 2px 14px),
+        radial-gradient(ellipse at 78% 50%, rgba(212,175,55,0.30) 0%, rgba(212,175,55,0.06) 35%, transparent 70%),
+        linear-gradient(135deg, #1A140A 0%, #0C0A07 60%, var(--vault-bg-0) 100%);
+    border: 1px solid rgba(212, 175, 55, 0.18);
+    border-radius: var(--vault-r-xl);
     padding: 2rem;
     margin-bottom: 2rem;
     display: grid;
@@ -18,15 +21,16 @@
     gap: 1.5rem;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.55), inset 0 0 80px rgba(212,175,55,0.05);
 
     &::before {
         content: '';
         position: absolute;
         top: 0;
         right: 0;
-        width: 40%;
+        width: 50%;
         height: 100%;
-        background: radial-gradient(circle at 80% 50%, rgba(124, 58, 237, 0.12), transparent 70%);
+        background: radial-gradient(circle at 80% 50%, rgba(212, 175, 55, 0.18), transparent 70%);
         pointer-events: none;
     }
 
@@ -35,24 +39,28 @@
 
         .heroBadge {
             display: inline-block;
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: #000;
-            padding: 4px 12px;
-            border-radius: 6px;
+            background: linear-gradient(180deg, #2A2010 0%, #1A1407 100%);
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            color: var(--vault-gold-2);
+            padding: 5px 14px;
+            border-radius: var(--vault-r-sm);
             font-size: 0.7rem;
             font-weight: 800;
-            letter-spacing: 1.5px;
+            letter-spacing: 0.18em;
             text-transform: uppercase;
-            margin-bottom: 0.8rem;
+            margin-bottom: 0.9rem;
+            box-shadow: 0 0 16px rgba(212, 175, 55, 0.18);
         }
 
         .heroTitle {
-            font-family: 'Inter', system-ui, sans-serif;
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: #ffffff;
+            font-family: var(--vault-font-display);
+            font-size: 2.6rem;
+            font-weight: 800;
+            color: var(--vault-text);
             margin: 0 0 0.5rem 0;
-            line-height: 1.1;
+            line-height: 1.05;
+            letter-spacing: -0.01em;
+            text-shadow: 0 2px 24px rgba(0,0,0,0.6);
         }
 
         .heroMeta {
@@ -64,12 +72,12 @@
             margin-bottom: 1rem;
 
             .heroRating {
-                color: #f59e0b;
+                color: #D4AF37;
                 font-weight: 700;
             }
 
             .heroStars {
-                color: #f59e0b;
+                color: #D4AF37;
             }
         }
 
@@ -133,7 +141,7 @@
             font-size: 3rem;
             font-weight: 900;
             color: rgba(255, 255, 255, 0.15);
-            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(6, 182, 212, 0.15));
+            background: linear-gradient(135deg, rgba(124, 92, 255, 0.2), rgba(6, 182, 212, 0.15));
         }
     }
 }
@@ -192,13 +200,13 @@
             transition: all 0.25s;
 
             &:hover {
-                background: rgba(124, 58, 237, 0.15);
-                border-color: rgba(124, 58, 237, 0.3);
+                background: rgba(124, 92, 255, 0.15);
+                border-color: rgba(124, 92, 255, 0.3);
                 color: #c4b5fd;
             }
 
             &.active {
-                background: linear-gradient(135deg, #7c3aed, #6d28d9);
+                background: linear-gradient(135deg, #7C5CFF, #5E3AFF);
                 border-color: transparent;
                 color: #ffffff;
                 font-weight: 600;
@@ -236,19 +244,21 @@
 
 // ============ GAME CARD ============
 .gameCard {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 16px;
+    background: var(--vault-bg-2);
+    border: 1px solid var(--vault-border);
+    border-radius: var(--vault-r-lg);
     overflow: hidden;
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
+    box-shadow: var(--vault-shadow-sm);
 
     &:hover {
         transform: translateY(-4px);
-        border-color: rgba(124, 58, 237, 0.3);
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3),
-                    0 0 0 1px rgba(124, 58, 237, 0.2);
+        border-color: var(--vault-border-violet);
+        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.55),
+                    0 0 0 1px var(--vault-border-violet),
+                    0 0 28px rgba(124, 92, 255, 0.25);
 
         .cardImage img {
             transform: scale(1.05);
@@ -398,7 +408,7 @@
         }
 
         .cardStars {
-            color: #f59e0b;
+            color: #D4AF37;
             font-size: 0.75rem;
             margin-bottom: 4px;
         }
@@ -413,12 +423,23 @@
 }
 
 // ============ COLOR VARIANTS FOR PLACEHOLDERS ============
-.placeholderColor0 { background: linear-gradient(135deg, rgba(220, 168, 60, 0.25), rgba(120, 80, 20, 0.3)); }
-.placeholderColor1 { background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(60, 20, 140, 0.3)); }
-.placeholderColor2 { background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(10, 80, 100, 0.3)); }
-.placeholderColor3 { background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(120, 30, 30, 0.3)); }
-.placeholderColor4 { background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(20, 100, 50, 0.3)); }
-.placeholderColor5 { background: linear-gradient(135deg, rgba(251, 146, 60, 0.2), rgba(120, 60, 20, 0.3)); }
+.placeholderColor0 { background: var(--vault-card-yellow); }
+.placeholderColor1 { background: var(--vault-card-violet); }
+.placeholderColor2 { background: var(--vault-card-teal); }
+.placeholderColor3 { background: var(--vault-card-red); }
+.placeholderColor4 { background: var(--vault-card-green); }
+.placeholderColor5 { background: var(--vault-card-orange); }
+.placeholderColor6 { background: var(--vault-card-pink); }
+.placeholderColor7 { background: var(--vault-card-blue); }
+.placeholderColor8 { background: var(--vault-card-lime); }
+
+.cardImagePlaceholder .placeholderText {
+    color: rgba(255, 255, 255, 0.55) !important;
+    text-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    font-family: var(--vault-font-display);
+    font-size: 4rem !important;
+    letter-spacing: -0.04em;
+}
 
 // ============ EMPTY STATE ============
 .emptyState {

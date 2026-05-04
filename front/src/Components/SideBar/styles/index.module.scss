@@ -1,8 +1,9 @@
 @use '../../../static/css/response.scss' as *;
 
 .SideBarContent {
-    background: var(--my-major);
-    color: var(--my-minor);
+    background: linear-gradient(180deg, var(--vault-bg-1) 0%, var(--vault-bg-0) 100%);
+    border-right: 1px solid var(--vault-border);
+    color: var(--vault-text-soft);
     height: calc(100vh - var(--header-h));
     width: 100%;
     display: flex;
@@ -10,9 +11,8 @@
     justify-content: center;
     align-content: start;
     flex-wrap: wrap;
-    // border-right: 1px solid var(--my-minor);
-    transition: all 0.5s ease-in-out;
-    padding-top: 20px;
+    transition: all 0.4s ease;
+    padding-top: 16px;
     z-index: 50;
     position: fixed;
     overflow: hidden;
@@ -24,11 +24,13 @@
         align-self: center;
         justify-content: center;
         flex-wrap: wrap;
+        gap: 4px;
+        padding: 0 10px;
 
         .linksList {
             width: 100%;
             overflow: hidden;
-            transition: grid-template-rows 0.5s ease-in-out;
+            transition: grid-template-rows 0.4s ease;
             display: grid;
             grid-template-rows: 0fr;
 
@@ -45,26 +47,37 @@
                 flex-direction: column;
                 justify-content: center;
                 align-items: start;
+                padding: 4px 0 4px 12px;
+                border-left: 1px dashed var(--vault-border-strong);
+                margin-left: 16px;
+                gap: 2px;
             }
 
             .linkPage {
                 width: 100%;
                 border: none;
+                background: transparent;
                 text-align: start;
-                padding: 5px 35px;
-                color: var(--my-minor);
+                padding: 8px 14px;
+                border-radius: var(--vault-r-md);
+                color: var(--vault-text-soft);
+                font-size: 0.9rem;
+                transition: all 0.2s ease;
+
+                &:hover {
+                    background: var(--vault-btn-ghost-hover);
+                    color: var(--vault-text);
+                }
 
                 &.linkSelected {
-                    background: #0000;
-                    color: var(--my-primary);
-                    font-weight: bolder;
-                    font-size: 1.1rem;
-                    box-shadow: none;
-                    border: none;
+                    background: var(--vault-violet-soft);
+                    color: var(--vault-violet-2);
+                    font-weight: 600;
+                    box-shadow: inset 2px 0 0 var(--vault-violet);
 
                     &:hover {
-                        background: #0000;
-                        color: var(--my-primary);
+                        background: var(--vault-violet-soft);
+                        color: var(--vault-violet-2);
                         cursor: default;
                     }
                 }
@@ -74,27 +87,53 @@
         .link {
             border: none;
             width: 100%;
-            padding: 5px 20px;
+            padding: 10px 18px;
             text-align: start;
-            transition: all 0.3s ease-in-out;
-            box-shadow: 0px 0px 0px #212529, 0px 0px 0px #353a3f;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--vault-text-soft);
+            background: transparent;
+            border-radius: var(--vault-r-md);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+
+            &::before {
+                content: '';
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: var(--vault-text-dim);
+                transition: all 0.2s ease;
+                flex-shrink: 0;
+            }
 
             &:hover {
-                border: none;
-                background: linear-gradient(145deg, #434c55, #2b323a);
-                box-shadow: 1px 1px 3px #212529,
-                    -1px -1px 3px #353a3f;
+                background: var(--vault-btn-ghost-hover);
+                color: var(--vault-text);
 
-                color: white;
+                &::before {
+                    background: var(--vault-violet-2);
+                    box-shadow: 0 0 8px var(--vault-violet);
+                }
             }
 
             &.linkSelected {
-                color: var(--my-success);
-                border: none;
+                background: var(--vault-violet-soft);
+                color: var(--vault-violet-2);
+                font-weight: 600;
+                box-shadow: inset 2px 0 0 var(--vault-violet);
+
+                &::before {
+                    background: var(--vault-violet);
+                    box-shadow: 0 0 10px var(--vault-violet);
+                }
 
                 &:hover {
-                    background-color: var(--my-success);
-                    color: white;
+                    background: var(--vault-violet-soft-2);
+                    color: var(--vault-text);
                 }
             }
         }
@@ -108,6 +147,6 @@
 
     &.hiddeBar {
         width: 0;
-        // border-right: 1px solid transparent;
+        border-right: 1px solid transparent;
     }
 }

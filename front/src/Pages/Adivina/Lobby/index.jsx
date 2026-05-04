@@ -24,7 +24,7 @@ export const Lobby = () => {
         <div className={`${style.lobbyPage}`}>
             <div className={`${style.lobbyHeader}`}>
                 <div>
-                    <h1 className={`${style.lobbyTitle}`}>Adivina la Tarjeta</h1>
+                    <h1 className={`${style.lobbyTitle}`}>Adivina la <span className={style.accent}>Tarjeta</span></h1>
                     <p className={`${style.lobbySubtitle}`}>Juega con amigos en tiempo real — adivina quién es antes de que te adivinen a ti</p>
                     <div className={`${style.lobbyOptions}`}>
                         <button className={`${style.btnOption}`} onClick={() => window.location.hash = '#/adivina/tarjetas'}>

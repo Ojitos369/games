@@ -1,8 +1,9 @@
 @use '../../../static/css/response.scss' as *;
 
 .menuBarContent {
-    background: var(--my-major);
-    color: white;
+    background: linear-gradient(180deg, var(--vault-bg-1) 0%, var(--vault-bg-0) 100%);
+    border-left: 1px solid var(--vault-border);
+    color: var(--vault-text);
     height: calc(100vh - var(--header-h));
     width: 100%;
     display: flex;
@@ -10,9 +11,7 @@
     justify-content: end;
     align-content: start;
     flex-wrap: wrap;
-    // border-left: 1px solid #00ffff;
-    // border-left: 1px solid var(--my-minor);
-    transition: all 0.5s ease-in-out;
+    transition: all 0.4s ease;
     z-index: 50;
     position: fixed;
     right: 0;
@@ -23,11 +22,10 @@
         width: var(--menu-bar-w);
         position: relative;
         position: sticky;
-        // top: 60px;
     }
 
     &.hiddeBar {
         width: 0;
-        // border-left: 1px solid transparent;
+        border-left: 1px solid transparent;
     }
 }

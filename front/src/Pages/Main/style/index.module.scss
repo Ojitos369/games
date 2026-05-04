@@ -24,7 +24,7 @@
             height: calc(100vh - var(--header-h));
             transition: all 0.5s ease-in-out;
             overflow: auto;
-            background: var(--my-major);
+            background: transparent;
             @include md {
                 &.sidebarOpen {
                     width: calc(100vw - var(--side-bar-w));

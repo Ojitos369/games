@@ -26,7 +26,7 @@ export const Tarjetas = () => {
             <div className={`${style.pageHeader}`}>
                 <div className={style.headerTitle}>
                     <button className={style.btnBack} onClick={() => navigate('/adivina')}>← Volver</button>
-                    <h1 className={`${style.pageTitle}`}>Catálogo de Tarjetas</h1>
+                    <h1 className={`${style.pageTitle}`}>Catálogo de <span className={style.accent}>Tarjetas</span></h1>
                 </div>
                 <button className={`${style.btnPrimary}`} onClick={openCreate}>
                     + Nueva Tarjeta

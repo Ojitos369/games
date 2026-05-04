@@ -1,120 +1,130 @@
-    @use '../../../static/css/response.scss' as *;
+@use '../../../static/css/response.scss' as *;
 
-    .headerContent {
-        color: var(--my-minor);
-        height: var(--header-h);
-        width: 100%;
+.headerContent {
+    color: var(--vault-text);
+    height: var(--header-h);
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    border-bottom: 1px solid var(--vault-border);
+    background: linear-gradient(180deg, rgba(11,11,20,0.92) 0%, rgba(11,11,20,0.72) 100%);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    position: sticky;
+    top: 0;
+    padding: 5px 28px;
+    z-index: 100;
+
+    @include md {
+        padding: 5px 16px;
+    }
+
+    .pageTitle {
+        flex: 1;
+        text-align: center;
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        color: var(--vault-text-soft);
+        margin: 0 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        @include md { font-size: 0.9rem; }
+    }
+
+    .menuIndexPart {
+        display: flex;
+        width: auto;
+        height: 100%;
+        justify-content: start;
+        align-items: center;
+        padding: 3px 0;
+        flex-shrink: 0;
+    }
+
+    .userPart {
+        width: auto;
+        height: 100%;
         display: flex;
         flex-direction: row;
-        justify-content: space-between;
+        justify-content: flex-end;
         align-items: center;
-        flex-wrap: nowrap;
-        border-bottom: 1px solid var(--my-minor);
-        position: sticky;
-        top: 0;
-        padding: 5px 35px;
-        z-index: 100;
-        
-        @include md {
-            padding: 5px 15px;
-        }
+        flex-shrink: 0;
+        gap: 8px;
+    }
 
-        .pageTitle {
-            flex: 1;
+    .menuUserContainer {
+        padding: 0 12px;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: start;
+        align-content: start;
+        width: 100%;
+
+        .userTitle {
+            width: 100%;
+            border-bottom: 1px solid var(--vault-border-strong);
+            padding-bottom: 8px;
+            font-weight: 700;
+            font-size: 1.15rem;
             text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin: 0 10px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-
-            @include md {
-                font-size: 1rem;
-            }
+            color: var(--vault-text);
+            font-family: var(--vault-font-display);
+            letter-spacing: 0.02em;
         }
 
-        .menuIndexPart {
-            display: flex;
-            width: auto;
-            height: 100%;
-            justify-content: start;
-            align-items: center;
-            padding: 3px 0;
-            flex-shrink: 0;
-        }
-
-        .userPart {
-            width: auto;
-            height: 100%;
-            display: flex;
-            flex-direction: row;
-            justify-content: flex-end;
-            align-items: center;
-            flex-shrink: 0;
-            // padding: 0 15px;
-        }
-
-        .menuUserContainer {
-            padding: 0 10px;
+        .menuActions {
+            width: 100%;
             display: flex;
             flex-direction: row;
             flex-wrap: wrap;
-            justify-content: start;
+            justify-content: space-around;
             align-content: start;
-            width: 100%;
+            gap: 12px;
 
-            .userTitle {
-                width: 100%;
-                border-bottom: 1px solid var(--my-minor);
-                padding-bottom: 4px;
-                font-weight: bolder;
-                font-size: 1.2rem;
-                text-align: center;
-            }
+            .menuAction {
+                margin-top: 18px;
+                width: 90%;
+                padding: 10px 14px;
+                border-radius: var(--vault-r-md);
+                transition: all 0.25s ease;
+                font-weight: 600;
 
-            .menuActions {
-                width: 100%;
-                display: flex;
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: space-around;
-                align-content: start;
+                @include md { width: 30%; }
 
-                .menuAction {
-                    margin-top: 20px;
-                    width: 90%;
-                    padding: 10px;
-                    border-radius: 7px;
-                    transition: all 0.5s ease-in-out;
+                &:hover {
+                    transform: translateY(-1px);
+                }
 
-                    @include md {
-                        width: 30%;
-                    }
+                &.chageTheme {
+                    border: 1px solid var(--vault-border-violet);
+                    color: var(--vault-violet-2);
+                    background: var(--vault-violet-soft);
 
                     &:hover {
-                        font-weight: bolder;
-                        font-size: 1.1rem;
+                        background: var(--vault-violet);
+                        color: #fff;
+                        box-shadow: var(--vault-shadow-violet);
                     }
+                }
 
-                    &.chageTheme {
-                        border: 2px solid var(--my-minor);
+                &.closeSession {
+                    border: 1px solid rgba(255, 77, 109, 0.45);
+                    color: #FF8AA1;
+                    background: var(--vault-danger-soft);
 
-                        &:hover {
-                            background: var(--my-minor);
-                            color: var(--my-major);
-                        }
-                    }
-
-                    &.closeSession {
-                        border: 2px solid var(--my-danger);
-
-                        &:hover {
-                            background: var(--my-danger);
-                            color: white;
-                        }
+                    &:hover {
+                        background: var(--vault-danger);
+                        color: #fff;
                     }
                 }
             }
         }
     }
+}

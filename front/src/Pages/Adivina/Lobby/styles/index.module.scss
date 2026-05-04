@@ -16,13 +16,20 @@
 }
 
 .lobbyTitle {
-    font-size: clamp(1.4rem, 3vw, 2.2rem);
+    font-family: var(--vault-font-display);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
     font-weight: 800;
-    background: linear-gradient(135deg, var(--my-primary), #7c3aed);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
     margin: 0;
+    color: var(--vault-text);
+
+    .accent {
+        background: linear-gradient(180deg, #B7A6FF 0%, #7C5CFF 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
 }
 
 .lobbySubtitle {
@@ -78,8 +85,8 @@
     width: 36px;
     height: 36px;
     border-radius: 9px;
-    background: color-mix(in srgb, #ffc107 18%, transparent);
-    border: 1px solid color-mix(in srgb, #ffc107 40%, transparent);
+    background: color-mix(in srgb, #D4AF37 18%, transparent);
+    border: 1px solid color-mix(in srgb, #D4AF37 40%, transparent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -143,14 +150,15 @@
     align-items: center;
     gap: 1rem;
     padding: 0.9rem 1rem;
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--my-minor) 5%, transparent);
-    border: 1px solid color-mix(in srgb, var(--my-minor) 12%, transparent);
-    transition: border-color 0.2s, transform 0.15s;
+    border-radius: var(--vault-r-md);
+    background: var(--vault-bg-2);
+    border: 1px solid var(--vault-border);
+    transition: all 0.2s ease;
 
     &:hover {
-        border-color: var(--my-primary);
+        border-color: var(--vault-border-violet);
         transform: translateY(-1px);
+        box-shadow: 0 8px 22px rgba(0,0,0,0.45), 0 0 0 1px var(--vault-border-violet);
     }
 }
 
@@ -200,7 +208,7 @@
 
 .salaCodigo {
     font-family: monospace;
-    color: #ffc107;
+    color: #D4AF37;
     font-weight: 600;
 }
 
@@ -241,9 +249,9 @@
 }
 
 .estadoVotando {
-    background: color-mix(in srgb, #ffc107 18%, transparent);
-    color: #ffc107;
-    border: 1px solid color-mix(in srgb, #ffc107 35%, transparent);
+    background: color-mix(in srgb, #D4AF37 18%, transparent);
+    color: #D4AF37;
+    border: 1px solid color-mix(in srgb, #D4AF37 35%, transparent);
 }
 
 .estadoJugando {
@@ -297,18 +305,21 @@
 
 /* ─── Buttons ──────────────────────────────────────────────────────────────── */
 .btnPrimary {
-    background: var(--my-primary);
+    background: var(--vault-btn-primary-bg);
     color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 0.6rem 1.2rem;
-    font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--vault-r-md);
+    padding: 0.7rem 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: all 0.2s ease;
     white-space: nowrap;
+    box-shadow: var(--vault-shadow-violet);
 
     &:hover {
-        opacity: 0.85;
+        background: var(--vault-btn-primary-hover);
+        transform: translateY(-1px);
     }
 }
 
@@ -397,7 +408,9 @@
 .modalOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -406,16 +419,16 @@
 }
 
 .modal {
-    background: var(--my-major);
-    border: 1px solid color-mix(in srgb, var(--my-minor) 20%, transparent);
-    border-radius: 16px;
+    background: var(--vault-bg-2);
+    border: 1px solid var(--vault-border-strong);
+    border-radius: var(--vault-r-lg);
     width: 100%;
     max-width: 480px;
     max-height: 90dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--vault-shadow-lg), 0 0 0 1px rgba(124, 92, 255, 0.08);
 }
 
 .modalHeader {

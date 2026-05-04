@@ -1,20 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Antonio:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap');
 @import './animations.css';
 @import './vars.css';
 
+/* ============================================================
+   VAULT — global look & feel
+   Deep dark surface with subtle violet vignette + gold glow.
+   ============================================================ */
+
+html, body {
+    background: var(--vault-bg-0);
+}
+
 body {
-    background: var(--bg-color);
-    color: #ccc;
+    background:
+        radial-gradient(1200px 700px at 80% -10%, rgba(124, 92, 255, 0.10) 0%, transparent 60%),
+        radial-gradient(900px 600px at -10% 110%, rgba(212, 175, 55, 0.06) 0%, transparent 55%),
+        var(--vault-bg-0);
+    background-attachment: fixed;
+    color: var(--vault-text);
+    font-family: var(--vault-font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
     overflow-y: scroll;
+    letter-spacing: 0.01em;
 }
 
 a {
-    color: #fff;
+    color: var(--vault-violet-2);
     text-decoration: none;
+    transition: color 0.18s ease;
 }
 a:hover {
-    color: #fff;
+    color: #B5A8FF;
     text-decoration: none;
+}
+
+::selection {
+    background: var(--vault-violet-soft-2);
+    color: var(--vault-text);
 }
 
 .row, .container-fluent {
@@ -22,123 +46,103 @@ a:hover {
     margin-left: 0;
 }
 
-.reflejo:hover {
-    animation: reflejo 0.5s;
-}
+.reflejo:hover { animation: reflejo 0.5s; }
+.zoom:hover    { animation: zoom 1s; }
 
-.manita {
-    cursor: pointer !important;
-}
+.manita      { cursor: pointer !important; }
+.flechita    { cursor: default !important; }
+.mouse-block { cursor: not-allowed !important; }
 
-.flechita {
-    cursor: default !important;
-}
+.bg-primary-d { background-color: var(--vault-bg-2); }
 
-.mouse-block {
-    cursor: not-allowed !important;
-}
-
-.zoom:hover {
-    animation: zoom 1s;
-}
-
-.bg-primary-d {
-    background-color: var(--my-bg-primary-black);
-}
-
+/* ---------- Buttons ---------- */
 .btn {
-    border-radius: 35px;
+    border-radius: var(--vault-r-pill);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 18px;
+    height: 40px;
+    font-family: var(--vault-font-body);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--vault-text);
+    background: var(--vault-btn-ghost-bg);
+    border: 1px solid var(--vault-border-strong);
+    transition: background 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.btn:hover {
+    background: var(--vault-btn-ghost-hover);
+    color: var(--vault-text);
+}
+.btn:active { transform: translateY(1px); }
+.btn:focus-visible {
+    outline: 2px solid var(--vault-violet);
+    outline-offset: 2px;
 }
 
+/* ---------- Forms ---------- */
+input, textarea, select {
+    background: var(--vault-bg-2);
+    color: var(--vault-text);
+    border: 1px solid var(--vault-border-strong);
+    border-radius: var(--vault-r-md);
+    padding: 10px 14px;
+    font-family: var(--vault-font-body);
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+input::placeholder, textarea::placeholder {
+    color: var(--vault-text-muted);
+}
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--vault-violet);
+    box-shadow: 0 0 0 3px var(--vault-violet-soft);
+}
 
-/* width */
+.myinput {
+    border-radius: var(--vault-r-md);
+    height: 40px;
+}
+
+/* ---------- Scrollbars ---------- */
 ::-webkit-scrollbar {
-    width: 5px;
+    width: 8px;
+    height: 8px;
 }
-/* Track */
 ::-webkit-scrollbar-track {
-    background-color: #fff;
-    border-radius: 0 50px 50px 0;
+    background: transparent;
+    border-radius: var(--vault-r-pill);
 }
-/* Handle */
 ::-webkit-scrollbar-thumb {
-    border-radius: 50px;
-    background: #888;
+    background: rgba(124, 92, 255, 0.25);
+    border-radius: var(--vault-r-pill);
+    border: 2px solid transparent;
+    background-clip: padding-box;
 }
-/* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: rgba(124, 92, 255, 0.55);
+    background-clip: padding-box;
+    border: 2px solid transparent;
 }
-
-
-
 body::-webkit-scrollbar {
-    -webkit-appearance: none;
+    width: 0;
     display: none;
 }
 
-.custom-select {
-    background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
-    background-repeat: no-repeat;
-    background-position-x: 100%;
-    background-position-y: 2px;
-}
+/* ---------- Helpers ---------- */
+.bg-par   { background-color: var(--vault-bg-3); color: var(--vault-text); }
+.bg-impar { background-color: var(--vault-bg-2); color: var(--vault-text); }
 
-.bg-par {
-    background-color: #444;
-    color: #fff;
-}
+.text-icon svg { height: 25px; width: 25px; }
 
-.bg-impar {
-    background-color: #888;
-}
-
-
-
-/* width, height */
-::-webkit-scrollbar {
-    width: 3px !important;
-    height: 3px !important;
-}
-
-/* Track */
-::-webkit-scrollbar-track {
-    background: #0000;
-}
-
-/* Handle */
-::-webkit-scrollbar-thumb {
-    background: #000;
-    border-radius: 35px !important;
-}
-
-/* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-    background: #555;
-}
-
-/* Handle on active */
-::-webkit-scrollbar-thumb:active {
-    background: #aaa;
-}
-
-
-.text-icon svg {
-    height: 25px;
-    width: 25px;
-}
-
-.divisor-white {
-    border-top: 3px solid #000;
-}
-.divisor-black {
-    border-top: 4px solid #fff;
-}
+.divisor-white { border-top: 1px solid var(--vault-border); }
+.divisor-black { border-top: 1px solid var(--vault-border-strong); }
 
 .full-page-container {
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100vh;
     justify-content: center;
@@ -146,34 +150,101 @@ body::-webkit-scrollbar {
     z-index: -100;
 }
 
-.myinput {
-    border-radius: 15px;
-    height: 35px;
-}
-
-.btn {
-    border-radius: 35px;
-    display: flex;
-    align-items: center;
-    padding: 0 15px;
-    height: 40px;
-    justify-content: center;
-}
-
-
 .bg-my-black {
-    transition: all 0.5s;
-    background: var(--my-black);
-    color: var(--my-white);
+    transition: all 0.4s ease;
+    background: var(--vault-bg-1);
+    color: var(--vault-text);
 }
 .bg-my-white {
-    transition: all 0.5s;
-    background: var(--my-white);
-    color: var(--my-dark);
+    transition: all 0.4s ease;
+    background: var(--vault-bg-3);
+    color: var(--vault-text);
 }
 
-input, textarea, select {
-    background-color: white;
-    color: black;
+.custom-select {
+    background-image: url("data:image/svg+xml;utf8,<svg fill='%23B8B8CC' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
 }
 
+/* ---------- VAULT utility classes ---------- */
+.vault-card {
+    background: var(--vault-bg-2);
+    border: 1px solid var(--vault-border);
+    border-radius: var(--vault-r-lg);
+    box-shadow: var(--vault-shadow-md);
+}
+.vault-display {
+    font-family: var(--vault-font-display);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+    color: var(--vault-text);
+}
+.vault-title-violet {
+    background: linear-gradient(180deg, #B7A6FF 0%, #7C5CFF 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.vault-title-gold {
+    background: linear-gradient(180deg, #F2D86B 0%, #D4AF37 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.vault-eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 11px;
+    color: var(--vault-text-muted);
+    font-weight: 600;
+}
+.vault-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: var(--vault-r-pill);
+    background: var(--vault-bg-3);
+    border: 1px solid var(--vault-border-strong);
+    color: var(--vault-text-soft);
+    font-size: 12px;
+}
+.vault-pill--success { background: var(--vault-success-soft); border-color: rgba(43,209,122,0.4); color: #6CE3A6; }
+.vault-pill--danger  { background: var(--vault-danger-soft);  border-color: rgba(255,77,109,0.4); color: #FF8AA1; }
+.vault-pill--violet  { background: var(--vault-violet-soft);  border-color: var(--vault-border-violet); color: var(--vault-violet-2); }
+.vault-pill--gold    { background: var(--vault-gold-soft);    border-color: rgba(212,175,55,0.45); color: var(--vault-gold-2); }
+
+.btn-vault-primary {
+    background: var(--vault-btn-primary-bg);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #fff;
+    box-shadow: var(--vault-shadow-violet);
+}
+.btn-vault-primary:hover {
+    background: var(--vault-btn-primary-hover);
+    color: #fff;
+}
+.btn-vault-gold {
+    background: var(--vault-btn-gold-bg);
+    border: 1px solid rgba(0,0,0,0.10);
+    color: #1A1407;
+    box-shadow: var(--vault-shadow-gold);
+}
+.btn-vault-gold:hover {
+    background: var(--vault-btn-gold-hover);
+    color: #1A1407;
+}
+.btn-vault-ghost {
+    background: var(--vault-btn-ghost-bg);
+    border: 1px solid var(--vault-border-strong);
+    color: var(--vault-text);
+}
+.btn-vault-ghost:hover { background: var(--vault-btn-ghost-hover); color: var(--vault-text); }
+.btn-vault-danger {
+    background: var(--vault-btn-danger-bg);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #fff;
+}
+.btn-vault-danger:hover { color: #fff; filter: brightness(1.08); }

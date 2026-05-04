@@ -2,14 +2,14 @@
     padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
-    color: var(--my-minor);
+    color: var(--vault-text);
 
     .header {
         margin-bottom: 2rem;
         .backBtn {
             background: none;
             border: none;
-            color: var(--my-minor);
+            color: var(--vault-text);
             cursor: pointer;
             font-size: 1.1rem;
             opacity: 0.8;
@@ -43,13 +43,17 @@
             .placeholder {
                 width: 100%;
                 aspect-ratio: 3/4;
-                background: linear-gradient(135deg, #333, #111);
+                background: var(--vault-card-violet);
+                color: rgba(255,255,255,0.55);
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                font-family: var(--vault-font-display);
                 font-size: 5rem;
-                font-weight: 900;
-                border-radius: 12px;
+                font-weight: 800;
+                letter-spacing: -0.04em;
+                border-radius: var(--vault-r-lg);
+                box-shadow: 0 18px 40px rgba(0,0,0,0.6);
             }
         }
 
@@ -84,7 +88,7 @@
                 align-items: center;
                 gap: 1rem;
                 font-size: 1.1rem;
-                .stars { color: #f1c40f; }
+                .stars { color: #D4AF37; }
                 .ratingText { font-weight: bold; }
                 .players { opacity: 0.7; }
             }
@@ -94,10 +98,13 @@
                 flex-wrap: wrap;
                 gap: 0.5rem;
                 .categoryBadge {
-                    background: rgba(255,255,255,0.1);
-                    padding: 0.3rem 0.8rem;
-                    border-radius: 20px;
-                    font-size: 0.9rem;
+                    background: var(--vault-gold-soft);
+                    border: 1px solid rgba(212, 175, 55, 0.45);
+                    color: var(--vault-gold-2);
+                    padding: 0.3rem 0.9rem;
+                    border-radius: var(--vault-r-pill);
+                    font-size: 0.8rem;
+                    font-weight: 600;
                 }
             }
 
@@ -111,19 +118,25 @@
             .actions {
                 margin-top: 1rem;
                 .playBtn {
-                    display: inline-block;
-                    padding: 1rem 2.5rem;
-                    background: linear-gradient(135deg, #7c3aed, #06b6d4);
-                    color: white;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 0.95rem 2.5rem;
+                    background: var(--vault-btn-gold-bg);
+                    color: #1A1407;
                     text-decoration: none;
-                    border-radius: 30px;
-                    font-weight: 900;
-                    font-size: 1.2rem;
-                    transition: all 0.3s;
-                    box-shadow: 0 5px 15px rgba(124, 58, 237, 0.4);
+                    border-radius: var(--vault-r-md);
+                    font-weight: 800;
+                    font-size: 1.05rem;
+                    letter-spacing: 0.02em;
+                    transition: all 0.25s ease;
+                    box-shadow: var(--vault-shadow-gold);
+                    border: 1px solid rgba(0,0,0,0.10);
                     &:hover {
-                        transform: translateY(-3px);
-                        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.6);
+                        background: var(--vault-btn-gold-hover);
+                        transform: translateY(-2px);
+                        box-shadow: 0 12px 30px rgba(212, 175, 55, 0.45);
+                        color: #1A1407;
                     }
                 }
             }
@@ -142,7 +155,7 @@
         h3 {
             font-size: 1.5rem;
             margin-bottom: 1.5rem;
-            border-left: 4px solid #7c3aed;
+            border-left: 4px solid #7C5CFF;
             padding-left: 1rem;
         }
 
@@ -165,7 +178,7 @@
                     font-size: 1.8rem;
                     cursor: pointer;
                     transition: color 0.2s;
-                    &.active { color: #f1c40f; }
+                    &.active { color: #D4AF37; }
                     &:hover { transform: scale(1.1); }
                 }
                 .ratingVal {
@@ -183,12 +196,12 @@
                 color: white;
                 min-height: 120px;
                 resize: vertical;
-                &:focus { outline: 1px solid #7c3aed; }
+                &:focus { outline: 1px solid #7C5CFF; }
             }
 
             .submitBtn {
                 padding: 0.8rem;
-                background: #7c3aed;
+                background: #7C5CFF;
                 color: white;
                 border: none;
                 border-radius: 8px;
@@ -212,8 +225,8 @@
                     margin-bottom: 0.8rem;
                     flex-wrap: wrap;
                     gap: 0.5rem;
-                    .commentUser { font-weight: bold; color: #06b6d4; }
-                    .commentStars { color: #f1c40f; }
+                    .commentUser { font-weight: bold; color: #D4AF37; }
+                    .commentStars { color: #D4AF37; }
                     .commentDate { font-size: 0.85rem; opacity: 0.5; }
                 }
                 .commentText {

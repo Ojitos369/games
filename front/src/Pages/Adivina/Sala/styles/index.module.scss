@@ -372,12 +372,12 @@
 
 .playerDesconectado {
     opacity: 0.45;
-    border-left: 2px solid var(--my-warning, #f0ad4e) !important;
+    border-left: 2px solid var(--my-warning, #F0B431) !important;
 }
 
 .playerBadgeDisconnect {
     font-size: 0.65rem;
-    color: var(--my-warning, #f0ad4e);
+    color: var(--my-warning, #F0B431);
     font-weight: 500;
 }
 
@@ -385,11 +385,11 @@
     text-align: center;
     padding: 2rem 1.5rem;
     border-radius: 12px;
-    background: color-mix(in srgb, var(--my-info, #5bc0de) 8%, transparent);
-    border: 1px dashed color-mix(in srgb, var(--my-info, #5bc0de) 25%, transparent);
+    background: color-mix(in srgb, var(--my-info, #7C5CFF) 8%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--my-info, #7C5CFF) 25%, transparent);
 
     .phaseTitle {
-        color: var(--my-info, #5bc0de);
+        color: var(--my-info, #7C5CFF);
     }
 }
 
@@ -471,7 +471,7 @@
 
 .timerBar {
     height: 100%;
-    background: linear-gradient(90deg, #5bc0de, var(--my-primary));
+    background: linear-gradient(90deg, #7C5CFF, var(--my-primary));
     border-radius: 4px;
     transition: width 1s linear, background-color 0.3s;
     box-shadow: 0 0 10px color-mix(in srgb, var(--my-primary) 50%, transparent);
@@ -767,9 +767,9 @@
     flex-direction: column;
     gap: 0.75rem;
     padding: 1rem 1.1rem;
-    background: color-mix(in srgb, #ffc107 10%, transparent);
+    background: color-mix(in srgb, #D4AF37 10%, transparent);
     border-radius: 12px;
-    border: 1px solid color-mix(in srgb, #ffc107 28%, transparent);
+    border: 1px solid color-mix(in srgb, #D4AF37 28%, transparent);
 }
 
 .turnoTitle {
@@ -1539,10 +1539,10 @@
     padding: 2rem 2.5rem;
     background: linear-gradient(
         135deg,
-        color-mix(in srgb, #ffc107 12%, transparent) 0%,
+        color-mix(in srgb, #D4AF37 12%, transparent) 0%,
         color-mix(in srgb, var(--my-minor) 4%, transparent) 100%
     );
-    border: 1px solid color-mix(in srgb, #ffc107 30%, transparent);
+    border: 1px solid color-mix(in srgb, #D4AF37 30%, transparent);
     border-radius: 18px;
     min-width: 220px;
 }
@@ -1561,7 +1561,7 @@
 
 .winnerBigBox .winnerCrown {
     font-size: 4rem;
-    filter: drop-shadow(0 4px 12px color-mix(in srgb, #ffc107 40%, transparent));
+    filter: drop-shadow(0 4px 12px color-mix(in srgb, #D4AF37 40%, transparent));
 }
 
 .winnerBigBox .winnerName {
@@ -1574,7 +1574,7 @@
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.16em;
-    color: #ffc107;
+    color: #D4AF37;
     text-transform: uppercase;
 }
 

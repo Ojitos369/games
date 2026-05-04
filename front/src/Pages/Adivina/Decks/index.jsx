@@ -67,7 +67,7 @@ export const Decks = () => {
             <div className={`${style.pageHeader}`}>
                 <div className={style.headerTitle}>
                     <button className={style.btnBack} onClick={() => navigate('/adivina')}>← Volver</button>
-                    <h1 className={`${style.pageTitle}`}>Decks</h1>
+                    <h1 className={`${style.pageTitle}`}>Mis <span className={style.accent}>Decks</span></h1>
                 </div>
                 {activeTab === 'mis' && (
                     <button className={`${style.btnPrimary}`} onClick={openCreate}>+ Nuevo Deck</button>

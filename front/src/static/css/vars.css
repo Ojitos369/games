@@ -1,18 +1,110 @@
 :root {
-    --my-bg-dark: #000;
-    --my-success: #198754;
-    --my-primary: #0a548b;
-    --my-orange: #fd7e14;
-    --my-danger: #dc3545;
-    --my-yellow: #ffc107;
-    --my-purple: #800080;
-    --my-secondary: #6c757d;
-    --my-dark: #212529;
-    --my-light: #f8f9fa;
-    --my-black: #212529;
-    --my-white: #f8f9fa;
+    /* === VAULT theme tokens === */
 
-    --side-bar-w: max(250px, 15%);
-    --menu-bar-w: max(250px, 15%);
-    --header-h: 50px;
+    /* Surfaces (deep dark with subtle violet tint) */
+    --vault-bg-0: #07070C;
+    --vault-bg-1: #0B0B14;
+    --vault-bg-2: #11111C;
+    --vault-bg-3: #171726;
+    --vault-bg-4: #1F1F32;
+    --vault-bg-elev: rgba(20, 20, 34, 0.78);
+
+    /* Borders / dividers */
+    --vault-border: rgba(255, 255, 255, 0.06);
+    --vault-border-strong: rgba(255, 255, 255, 0.12);
+    --vault-border-violet: rgba(124, 92, 255, 0.45);
+
+    /* Text */
+    --vault-text: #ECECF6;
+    --vault-text-soft: #B8B8CC;
+    --vault-text-muted: #7A7A93;
+    --vault-text-dim: #4F4F66;
+
+    /* Brand: vibrant violet */
+    --vault-violet: #7C5CFF;
+    --vault-violet-2: #8B7CFF;
+    --vault-violet-3: #5E3AFF;
+    --vault-violet-soft: rgba(124, 92, 255, 0.18);
+    --vault-violet-soft-2: rgba(124, 92, 255, 0.32);
+    --vault-violet-glow: 0 0 24px rgba(124, 92, 255, 0.45);
+
+    /* Accent: gold/amber (featured, host, winner) */
+    --vault-gold: #D4AF37;
+    --vault-gold-2: #E6C557;
+    --vault-gold-3: #B8941E;
+    --vault-gold-soft: rgba(212, 175, 55, 0.18);
+    --vault-gold-glow: 0 0 24px rgba(212, 175, 55, 0.40);
+
+    /* Status */
+    --vault-success: #2BD17A;
+    --vault-success-soft: rgba(43, 209, 122, 0.16);
+    --vault-danger: #FF4D6D;
+    --vault-danger-soft: rgba(255, 77, 109, 0.16);
+    --vault-warning: #F0B431;
+    --vault-info: #29B6F6;
+
+    /* Card monogram gradients (used by GameCard / Tarjeta) */
+    --vault-card-violet:  linear-gradient(135deg, #6E3BE6 0%, #9C7CFF 100%);
+    --vault-card-teal:    linear-gradient(135deg, #1B7480 0%, #4FC8D8 100%);
+    --vault-card-orange:  linear-gradient(135deg, #B14A22 0%, #E89060 100%);
+    --vault-card-green:   linear-gradient(135deg, #2C7A3F 0%, #6CC586 100%);
+    --vault-card-pink:    linear-gradient(135deg, #A03070 0%, #E27AB8 100%);
+    --vault-card-yellow:  linear-gradient(135deg, #9E7A12 0%, #E4C155 100%);
+    --vault-card-blue:    linear-gradient(135deg, #2C4FA0 0%, #6E91E8 100%);
+    --vault-card-lime:    linear-gradient(135deg, #5C7E1F 0%, #B0D55B 100%);
+    --vault-card-red:     linear-gradient(135deg, #9B2A2A 0%, #E66A6A 100%);
+
+    /* Featured hero banner (gold-on-black with diagonal scanlines) */
+    --vault-hero-bg:
+        radial-gradient(ellipse at 75% 50%, rgba(212,175,55,0.30) 0%, rgba(212,175,55,0.08) 35%, transparent 70%),
+        linear-gradient(135deg, #1A140A 0%, #0C0A07 60%, #07070C 100%);
+
+    /* Buttons */
+    --vault-btn-primary-bg:     linear-gradient(180deg, #8B7CFF 0%, #7C5CFF 100%);
+    --vault-btn-primary-hover:  linear-gradient(180deg, #9D8DFF 0%, #8B6DFF 100%);
+    --vault-btn-gold-bg:        linear-gradient(180deg, #E6C557 0%, #D4AF37 100%);
+    --vault-btn-gold-hover:     linear-gradient(180deg, #F0D26E 0%, #E0BC4D 100%);
+    --vault-btn-ghost-bg:       rgba(255, 255, 255, 0.04);
+    --vault-btn-ghost-hover:    rgba(255, 255, 255, 0.08);
+    --vault-btn-danger-bg:      linear-gradient(180deg, #FF6B85 0%, #FF4D6D 100%);
+
+    /* Shadows */
+    --vault-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --vault-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.55);
+    --vault-shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.65);
+    --vault-shadow-violet: 0 8px 28px rgba(124, 92, 255, 0.35);
+    --vault-shadow-gold:   0 8px 28px rgba(212, 175, 55, 0.30);
+
+    /* Radius */
+    --vault-r-sm: 8px;
+    --vault-r-md: 12px;
+    --vault-r-lg: 16px;
+    --vault-r-xl: 22px;
+    --vault-r-pill: 999px;
+
+    /* Typography */
+    --vault-font-display: 'Druk Wide', 'Antonio', 'Bebas Neue', 'Inter', system-ui, sans-serif;
+    --vault-font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --vault-font-mono:    'JetBrains Mono', 'Fira Code', 'Menlo', monospace;
+
+    /* Layout */
+    --bg-color: var(--vault-bg-0);
+    --side-bar-w: max(240px, 14%);
+    --menu-bar-w: max(240px, 14%);
+    --header-h: 56px;
+
+    /* === Legacy aliases (keep to avoid breaking older modules) === */
+    --my-bg-dark:     var(--vault-bg-0);
+    --my-bg-primary-black: var(--vault-bg-1);
+    --my-success:     var(--vault-success);
+    --my-primary:     var(--vault-violet);
+    --my-orange:      #FF8A3C;
+    --my-danger:      var(--vault-danger);
+    --my-yellow:      var(--vault-gold);
+    --my-purple:      var(--vault-violet);
+    --my-secondary:   #6c757d;
+    --my-dark:        var(--vault-bg-2);
+    --my-light:       var(--vault-text);
+    --my-black:       var(--vault-bg-1);
+    --my-white:       var(--vault-text);
 }
