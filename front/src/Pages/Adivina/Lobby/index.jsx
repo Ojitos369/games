@@ -77,31 +77,36 @@ export const Lobby = () => {
                     <div className={`${style.salasGrid}`}>
                         {salas.map(sala => (
                             <div key={sala.id} className={`${style.salaCard}`}>
-                                <div className={`${style.salaCardHeader}`}>
-                                    <span className={`${style.salaName}`}>{sala.nombre || `Sala ${sala.codigo}`}</span>
-                                    <span className={`${style.salaEstado} ${estadoClass(sala.estado)}`}>
-                                        {estadoLabel(sala.estado)}
-                                    </span>
-                                </div>
-                                <div className={`${style.salaCardBody}`}>
-                                    <div className={`${style.salaInfo}`}>
-                                        <span className={`${style.salaCodigo}`}>🔑 {sala.codigo}</span>
-                                        <span className={`${style.salaJugadores}`}>
-                                            👥 {sala.jugadores_count}/{sala.max_jugadores}
+                                <div className={`${style.salaCardIcon}`}>🃏</div>
+                                <div className={`${style.salaCardInfo}`}>
+                                    <div className={`${style.salaCardMain}`}>
+                                        <span className={`${style.salaName}`}>
+                                            {sala.nombre || `Sala de ${sala.creador?.username || sala.codigo}`}
                                         </span>
+                                        <span className={`${style.salaEstado} ${estadoClass(sala.estado)}`}>
+                                            <span className={`${style.estadoDot}`}/>
+                                            {estadoLabel(sala.estado)}
+                                        </span>
+                                    </div>
+                                    <div className={`${style.salaCardMeta}`}>
+                                        <span className={`${style.salaCodigo}`}>🔑 {sala.codigo}</span>
+                                        <span className={`${style.metaSep}`}>·</span>
+                                        <span>👥 {sala.jugadores_count}/{sala.max_jugadores}</span>
                                         {sala.creador && (
-                                            <span className={`${style.salaCreador}`}>👤 {sala.creador.username}</span>
+                                            <><span className={`${style.metaSep}`}>·</span><span>{sala.creador.username}</span></>
                                         )}
                                     </div>
-                                    {sala.estado === 'esperando' && sala.jugadores_count < sala.max_jugadores && (
-                                        <button
-                                            className={`${style.btnJoin}`}
-                                            onClick={() => handleJoinSala(sala.codigo)}
-                                        >
-                                            Unirse
-                                        </button>
-                                    )}
                                 </div>
+                                {sala.estado === 'esperando' && sala.jugadores_count < sala.max_jugadores ? (
+                                    <button
+                                        className={`${style.btnJoin}`}
+                                        onClick={() => handleJoinSala(sala.codigo)}
+                                    >
+                                        Unirse
+                                    </button>
+                                ) : sala.estado === 'jugando' ? (
+                                    <button className={`${style.btnJoinDisabled}`} disabled>En juego</button>
+                                ) : null}
                             </div>
                         ))}
                     </div>
