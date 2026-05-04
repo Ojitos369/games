@@ -23,7 +23,7 @@ export const MenuBarAdivinaSala = () => {
             <h3 className={`${style.panelTitle}`}>Chat</h3>
             <div className={`${style.chatMessages}`}>
                 {chatMessages.map((msg, i) => (
-                    <div key={i} className={`${style.chatMsg} ${msg.system ? style.chatSystem : (msg.user_id === userId ? style.chatMe : style.chatOther)}`}>
+                    <div key={i} className={`${style.chatMsg} ${msg.system ? style.chatSystem : (msg.user_id === userId ? style.chatMe : style.chatOther)} ${msg.mode === 'success' ? style.historialSuccess : (msg.mode === 'danger' ? style.historialDanger : '')}`}>
                         {!msg.system && <span className={`${style.chatFrom}`}>{msg.username}:</span>}
                         <span className={`${style.chatText}`}>{msg.text}</span>
                     </div>

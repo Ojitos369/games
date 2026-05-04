@@ -329,15 +329,16 @@ export const localStates = () => {
                 setRespuestaValue('');
                 break;
             case 'guess_result':
-
                 if (msg.correct) {
                     setChatMessages(prev => [...prev, {
                         system: true,
+                        mode: 'success',
                         text: `¡${msg.from_name} adivinó a ${msg.target_name}! Era ${msg.revealed_tarjeta?.nombre || '???'}`
                     }]);
                 } else {
                     setChatMessages(prev => [...prev, {
                         system: true,
+                        mode: 'danger',
                         text: `${msg.from_name} intentó adivinar a ${msg.target_name} y falló.`
                     }]);
                 }

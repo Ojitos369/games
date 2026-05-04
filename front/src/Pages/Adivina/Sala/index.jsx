@@ -241,7 +241,7 @@ export const AdivinaSala = () => {
                                     <h4 className={`${style.historialTitle}`}>📜 Historial</h4>
                                     <div className={`${style.historialList}`}>
                                         {gameState.historial.slice(-10).map((h, i) => (
-                                            <div key={i} className={`${style.historialItem}`}>
+                                            <div key={i} className={`${style.historialItem} ${h.tipo === 'adivino' ? (h.correcto ? style.historialSuccess : style.historialDanger) : ''}`}>
                                                 {h.tipo === 'adivino' ? (
                                                     <span>
                                                         {h.correcto ? '✅' : '❌'} {h.de_nombre || h.de} intentó adivinar a {h.para_nombre || h.para}: <strong>{h.personaje}</strong>
@@ -686,7 +686,7 @@ function JugandoView({ style, gameState, myPlayer, isMyTurn, userId, jugadoresLi
                     <h4 className={`${style.historialTitle}`}>📜 Historial</h4>
                     <div className={`${style.historialList}`}>
                         {gameState.historial.slice(-5).map((h, i) => (
-                            <div key={i} className={`${style.historialItem}`}>
+                            <div key={i} className={`${style.historialItem} ${h.tipo === 'adivino' ? (h.correcto ? style.historialSuccess : style.historialDanger) : ''}`}>
                                 {h.tipo === 'adivino' ? (
                                     <span>
                                         {h.correcto ? '✅' : '❌'} {h.de_nombre || h.de} intentó adivinar a {h.para_nombre || h.para}: <strong>{h.personaje}</strong>

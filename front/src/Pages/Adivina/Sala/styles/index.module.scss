@@ -889,6 +889,19 @@
     padding: 0.25rem 0.4rem;
     border-radius: 4px;
     background: color-mix(in srgb, var(--my-minor) 6%, transparent);
+    margin-bottom: 2px;
+}
+
+.historialSuccess {
+    background: color-mix(in srgb, var(--my-success) 15%, transparent);
+    color: var(--my-success);
+    border: 1px solid color-mix(in srgb, var(--my-success) 20%, transparent);
+}
+
+.historialDanger {
+    background: color-mix(in srgb, var(--my-danger) 15%, transparent);
+    color: var(--my-danger);
+    border: 1px solid color-mix(in srgb, var(--my-danger) 20%, transparent);
 }
 
 .btnSkip {
