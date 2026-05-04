@@ -184,7 +184,7 @@ const TarjetaCard = ({ tarjeta, style, canEdit, getImageUrl, onEdit, onDelete, o
                     <img src={img} alt={tarjeta.nombre} />
                 ) : (
                     <div className={`${style.tarjetaImagePlaceholder}`}>
-                        <span>🎭</span>
+                        {tarjeta.nombre?.[0]?.toUpperCase() ?? '?'}
                     </div>
                 )}
                 <div className={style.zoomOverlay}>🔍</div>

@@ -44,16 +44,13 @@ export const Decks = () => {
                     ) : (
                         <div className={`${style.deckTarjetasGrid}`}>
                             {deckTarjetas[deck.id].map(t => (
-                                <div key={t.id} className={`${style.miniTarjeta}`}>
-                                    <div className={style.miniTarjetaContent}>
-                                        <span>{t.nombre}</span>
-                                        <div className={style.miniTarjetaTags}>
-                                            {t.tags?.map(tg => (
-                                                <span key={tg.id} className={`${style.miniTag}`}>{tg.nombre}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <button className={style.btnMiniPreview} onClick={() => openPreview(t)}>👁️</button>
+                                <div
+                                    key={t.id}
+                                    className={`${style.miniTarjeta}`}
+                                    title={t.nombre}
+                                    onClick={() => openPreview(t)}
+                                >
+                                    {t.nombre?.[0]?.toUpperCase() ?? '?'}
                                 </div>
                             ))}
                         </div>

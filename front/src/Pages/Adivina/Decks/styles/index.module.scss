@@ -42,29 +42,31 @@
 .tabs {
     display: flex;
     gap: 0.25rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--my-minor) 15%, transparent);
-    padding-bottom: 0;
+    background: color-mix(in srgb, var(--my-minor) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--my-minor) 15%, transparent);
+    border-radius: 50px;
+    padding: 0.25rem;
+    width: fit-content;
 }
 
 .tab {
-    background: none;
+    background: transparent;
     border: none;
     color: var(--my-minor);
     opacity: 0.6;
-    padding: 0.5rem 1.2rem;
-    font-size: 0.95rem;
+    padding: 0.4rem 1.4rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
+    border-radius: 50px;
     transition: all 0.2s;
     &:hover { opacity: 0.9; }
 }
 
 .tabActive {
     opacity: 1;
-    border-bottom-color: var(--my-primary);
-    color: var(--my-primary);
+    background: var(--my-primary);
+    color: #fff;
 }
 
 .decksList {
@@ -181,19 +183,29 @@
 }
 
 .deckTarjetasGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 0.6rem;
-    padding-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
 }
 
 .miniTarjeta {
-    background: color-mix(in srgb, var(--my-minor) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--my-minor) 15%, transparent);
+    width: 48px;
+    height: 48px;
     border-radius: 8px;
-    padding: 0.5rem 0.7rem;
+    background: color-mix(in srgb, var(--my-primary) 20%, transparent);
+    border: 1px solid color-mix(in srgb, var(--my-primary) 35%, transparent);
+    display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--my-primary);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    user-select: none;
+    flex-shrink: 0;
+    &:hover { background: color-mix(in srgb, var(--my-primary) 30%, transparent); transform: scale(1.08); }
 }
 
 .miniTarjetaContent {
@@ -346,7 +358,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-    label { font-size: 0.85rem; opacity: 0.8; font-weight: 600; }
+    label { font-size: 0.75rem; opacity: 0.8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 }
 
 .input, .select {
