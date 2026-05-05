@@ -46,6 +46,7 @@ def _new_state(sala_id: str, creador_id: str, visibilidad: str = 'publica') -> d
             'tarjetas_seleccionadas': [],
             'votos': {},
             'votacion_abierta': False,
+            'deck_id': None,
         },
         'pregunta_actual': None,
         'historial': [],
@@ -234,6 +235,7 @@ def _public_state(state: dict, for_user_id: str) -> dict:
             'tarjetas_disponibles': state['seleccion']['tarjetas_disponibles'],
             'tarjetas_seleccionadas': state['seleccion']['tarjetas_seleccionadas'],
             'votacion_abierta': state['seleccion']['votacion_abierta'],
+            'deck_id': state['seleccion'].get('deck_id'),
             'votos_count': {
                 tid: len(voters)
                 for tid, voters in _count_votos(state).items()
@@ -744,9 +746,17 @@ class AdivinaSocketApi:
         if state['estado'] != 'esperando':
             return
         tarjeta_ids = msg.get('tarjeta_ids', [])
+        deck_id = msg.get('deck_id') or None
         tarjetas = _get_tarjetas_data(tarjeta_ids)
+        if deck_id:
+            order_index = {tid: i for i, tid in enumerate(tarjeta_ids)}
+            tarjetas.sort(key=lambda t: order_index.get(t['id'], len(order_index)))
+        else:
+            tarjetas.sort(key=lambda t: (t.get('nombre') or '').lower())
+            tarjeta_ids = [t['id'] for t in tarjetas]
         state['seleccion']['tarjetas_seleccionadas'] = tarjeta_ids
         state['seleccion']['tarjetas_disponibles'] = tarjetas
+        state['seleccion']['deck_id'] = deck_id
         await self._broadcast_state_to_all(state)
 
     async def _handle_set_tiempo_turno(self, msg: dict, state: dict):

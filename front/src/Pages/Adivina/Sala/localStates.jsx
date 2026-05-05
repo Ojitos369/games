@@ -648,7 +648,7 @@ export const localStates = () => {
             const ids = deckTarjetas.map(t => t.id);
             setSelectedTarjetas(ids);
             if (isHost) {
-                sendWs({ type: 'set_tarjetas', tarjeta_ids: ids });
+                sendWs({ type: 'set_tarjetas', tarjeta_ids: ids, deck_id: deckId });
             }
         });
     }, [isHost]);
