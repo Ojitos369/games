@@ -5,6 +5,8 @@ import style from './styles/index.module.scss';
 import { MenuBarDefault } from "../../Pages/Index/MenuBarDefault";
 import { MenuBar1 as MenuBar1SLRC } from "../../Pages/Solo/RushCar/MenuBar1";
 import { MenuBarAdivinaSala } from "../../Pages/Adivina/Sala/MenuBarAdivina";
+import { MenuBarAdivinaTarjetas } from "../../Pages/Adivina/Tarjetas/MenuBarAdivinaTarjetas";
+import { MenuBarAdivinaDecks } from "../../Pages/Adivina/Decks/MenuBarAdivinaDecks";
 
 export const localStates = () => {
     const { s } = useStates();
@@ -17,6 +19,10 @@ export const localStates = () => {
         switch (menuMode) {
             case 'adivina_sala':
                 return MenuBarAdivinaSala;
+            case 'adivina_tarjetas':
+                return MenuBarAdivinaTarjetas;
+            case 'adivina_decks':
+                return MenuBarAdivinaDecks;
             case 'menuBarDefault':
                 return MenuBarDefault;
             case 'menuBar1SLRC':

@@ -17,6 +17,13 @@ function getCookie(name) {
     return '';
 }
 
+export const subStates = () => {
+    const { s } = useStates();
+    const props = s.adivina?.salaProps || {};
+    const actions = window.adivinaActions || {};
+    return { style, ...props, ...actions };
+};
+
 export const localStates = () => {
     const { s, f } = useStates();
     const { codigo } = useParams();
@@ -659,6 +666,7 @@ export const localStates = () => {
 
     useEffect(() => {
         setSalaProps({
+            connected,
             gameState, chatMessages, chatInput, voiceEnabled, voiceStates,
             hearingEnabled, talkingStates, selectMode, selectedTarjetas,
             voteSelections, preguntaTexto, preguntaTarget, respuestaValue,
@@ -666,6 +674,7 @@ export const localStates = () => {
             gameOverData, waitingForHost, showImageModal, previewTarget, isHost, myPlayer,
             activePlayers, isMyTurn, isEspectador, espectadores, userId,
             tarjetas, decks, tags, isAdmin, tiempoTurno, countdown, codigo,
+            roomNotFound,
             jugadoresList: Object.values(gameState?.jugadores || {}),
         });
         window.adivinaActions = {
@@ -676,16 +685,18 @@ export const localStates = () => {
             sendChat, setSeleccionModo, handleSetTarjetas, handleOpenVote, handleVoteCast,
             handleCloseVote, handleStartGame, handleRestartGame, handlePregunta,
             handleRespuesta, handleAdivinar, handleAdvanceTurn, handleKick,
-            handleToggleDiscard, navigate, loadTarjetas, getImageUrl, applyDeck,
+            handleToggleDiscard, handleReaperturar, navigate, loadTarjetas, getImageUrl, applyDeck,
         };
     }, [
+        connected,
         gameState, chatMessages, chatInput, voiceEnabled, voiceStates,
         hearingEnabled, talkingStates, selectMode, selectedTarjetas,
         voteSelections, preguntaTexto, preguntaTarget, respuestaValue,
         showAdivinar, adivinarTarget, adivinarNombre, guessResult,
         gameOverData, waitingForHost, showImageModal, previewTarget, isHost, myPlayer,
         activePlayers, isMyTurn, isEspectador, espectadores, userId,
-        tarjetas, decks, tags, isAdmin, tiempoTurno, countdown, codigo
+        tarjetas, decks, tags, isAdmin, tiempoTurno, countdown, codigo,
+        roomNotFound,
     ]);
 
     return {

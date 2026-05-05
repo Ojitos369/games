@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStates, createState } from '../../../Hooks/useStates';
 import style from './styles/index.module.scss';
@@ -10,12 +10,15 @@ export const localStates = () => {
     const [, setTitulo] = createState(['page', 'title'], '');
     const [, setActualPage] = createState(['page', 'actual'], '');
 
-    const salas = useMemo(() => s.adivina?.salas || [], [s.adivina?.salas]);
-    const loadingSalas = useMemo(() => s.loadings?.adivina?.salas || false, [s.loadings?.adivina?.salas]);
+    const salas = s.adivina?.salas || [];
+    const loadingSalas = s.loadings?.adivina?.salas || false;
 
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [joinCode, setJoinCode] = useState('');
-    const [createForm, setCreateForm] = useState({ nombre: '', max_jugadores: 8, visibilidad: 'publica' });
+    const [showCreateModal, setShowCreateModal] = createState(['adivina', 'lobbyUI', 'showCreate'], false);
+    const [joinCode, setJoinCode] = createState(['adivina', 'lobbyUI', 'joinCode'], '');
+    const [createForm, setCreateForm] = createState(
+        ['adivina', 'lobbyUI', 'createForm'],
+        { nombre: '', max_jugadores: 8, visibilidad: 'publica' }
+    );
 
     const init = useCallback(() => {
         const title = 'Adivina la Tarjeta';
@@ -26,7 +29,7 @@ export const localStates = () => {
     }, []);
 
     const handleJoin = useCallback(() => {
-        const code = joinCode.trim().toUpperCase();
+        const code = (joinCode || '').trim().toUpperCase();
         if (!code) return;
         navigate(`/adivina/sala/${code}`);
     }, [joinCode, navigate]);
