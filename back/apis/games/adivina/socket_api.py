@@ -32,7 +32,7 @@ def _new_state(sala_id: str, creador_id: str, visibilidad: str = 'publica') -> d
         'visibilidad': visibilidad,
         'jugadores': {},
         'espectadores': {},          # {user_id: {username, victorias}}
-        'desconectados': set(),      # user_ids de jugadores desconectados temporalmente
+        'desconectados': {},         # {user_id: turnos_perdidos} desconectados temporalmente
         'turno_actual': None,  # This will be the "Guesser" (jugador_pregunta)
         'jugador_objetivo': None,
         'turno_numero': 0,
@@ -114,84 +114,66 @@ def _disqualify_player(state: dict, uid: str) -> None:
         'username': player['username'],
         'victorias': player.get('victorias', 0),
     }
-    state['desconectados'].discard(uid)
+    state['desconectados'].pop(uid, None)
 
 
 def _advance_turn(state: dict) -> None:
-    # Get all active players sorted by their initial order
+    # Tick disconnected counters and disqualify any player desconectado >2 turnos
+    for uid in list(state.get('desconectados', {}).keys()):
+        player = state['jugadores'].get(uid)
+        if not player or player.get('eliminado'):
+            state['desconectados'].pop(uid, None)
+            continue
+        state['desconectados'][uid] = state['desconectados'].get(uid, 0) + 1
+        if state['desconectados'][uid] > 2:
+            _disqualify_player(state, uid)
+
+    # Active players (not eliminated)
     active = sorted(
         [uid for uid, p in state['jugadores'].items() if not p.get('eliminado')],
         key=lambda uid: state['jugadores'][uid].get('orden', 0)
     )
-    if len(active) < 2:
+    desconectados = state.get('desconectados', {})
+    # Pick turns only from connected actives (skip desconectados without disqualifying)
+    active_connected = [uid for uid in active if uid not in desconectados]
+
+    if len(active_connected) < 2:
+        # Not enough connected players to assign a valid turn pair; caller checks win
+        state['pregunta_actual'] = None
         return
 
-    # Find the current target (Player 1)
+    # Find the current target (Player 1) within connected actives
     current_target = state.get('jugador_objetivo')
-    
-    if current_target not in active:
-        # If target left or was eliminated, reset to first active player
-        state['jugador_objetivo'] = active[0]
+
+    if current_target not in active_connected:
+        state['jugador_objetivo'] = active_connected[0]
         idx_target = 0
     else:
-        # Move to next target
-        idx_target = (active.index(current_target) + 1) % len(active)
-        state['jugador_objetivo'] = active[idx_target]
-        
-        # If we cycled back to the start (or whatever player started the round)
-        # For simplicity, we increment N whenever we complete a full cycle of targets
-        if idx_target == 0:
-            state['n_offset'] = (state.get('n_offset', 1) % (len(active) - 1)) + 1
+        idx_target = (active_connected.index(current_target) + 1) % len(active_connected)
+        state['jugador_objetivo'] = active_connected[idx_target]
 
-    # Ensure n_offset is strictly less than len(active) and at least 1
-    # This prevents a player from asking themselves if the number of active players decreased
+        if idx_target == 0:
+            state['n_offset'] = (state.get('n_offset', 1) % (len(active_connected) - 1)) + 1
+
     current_n_offset = state.get('n_offset', 1)
-    if current_n_offset >= len(active):
+    if current_n_offset >= len(active_connected):
         current_n_offset = 1
         state['n_offset'] = current_n_offset
 
-    # Find the guesser (Player 2) based on N offset
-    idx_guesser = (idx_target + current_n_offset) % len(active)
-    state['turno_actual'] = active[idx_guesser]
-    
+    idx_guesser = (idx_target + current_n_offset) % len(active_connected)
+    state['turno_actual'] = active_connected[idx_guesser]
+
     state['turno_numero'] += 1
     state['pregunta_actual'] = None
 
-    # --- Auto-disqualify disconnected players when it's their turn ---
-    desconectados = state.get('desconectados', set())
-    target_uid = state['jugador_objetivo']
-    guesser_uid = state['turno_actual']
-    disqualified_any = False
-
-    if target_uid in desconectados:
-        _disqualify_player(state, target_uid)
-        disqualified_any = True
-    if guesser_uid in desconectados:
-        _disqualify_player(state, guesser_uid)
-        disqualified_any = True
-
-    if disqualified_any:
-        # Re-check active players after disqualification
-        active_after = [uid for uid, p in state['jugadores'].items() if not p.get('eliminado')]
-        if len(active_after) >= 2:
-            # Recurse to find a valid turn
-            _advance_turn(state)
-        # If < 2, _check_win will be called by the caller
-
 
 def _check_win(state: dict) -> str | None:
-    """Check win condition: only 1 player active AND connected."""
-    desconectados = state.get('desconectados', set())
+    """Check win: only 1 active (not eliminado) jugador. Desconectados no descalifican
+    hasta superar 2 turnos perdidos (manejado en _advance_turn)."""
     active = [uid for uid, p in state['jugadores'].items() if not p.get('eliminado')]
-    # Filter out disconnected from active
-    active_connected = [uid for uid in active if uid not in desconectados]
-    
-    if len(active_connected) == 1:
-        return active_connected[0]
-    if len(active_connected) == 0:
-        # Fallback: if everyone disconnected, last active wins
-        if active:
-            return active[-1]
+    if len(active) == 1:
+        return active[0]
+    if len(active) == 0:
         ids = list(state['jugadores'].keys())
         return ids[-1] if ids else None
     return None
@@ -200,7 +182,7 @@ def _check_win(state: dict) -> str | None:
 def _public_state(state: dict, for_user_id: str) -> dict:
     jugadores_public = {}
     current_target_id = state.get('jugador_objetivo')
-    desconectados = state.get('desconectados', set())
+    desconectados = state.get('desconectados', {})
 
     for uid, p in state['jugadores'].items():
         entry = {
@@ -377,7 +359,7 @@ class AdivinaSocketApi:
 
         # --- Reconnection: player already in jugadores ---
         if self.usuario_id in state['jugadores']:
-            state['desconectados'].discard(self.usuario_id)
+            state['desconectados'].pop(self.usuario_id, None)
             await self._broadcast_to_all(state, {
                 "type": "player_joined",
                 "user_id": self.usuario_id,
@@ -484,15 +466,19 @@ class AdivinaSocketApi:
 
         if is_player:
             if game_active:
-                # During active game: DON'T remove from jugadores, just mark as disconnected
-                state['desconectados'].add(self.usuario_id)
+                # During active game: don't remove from jugadores, mark as desconectado.
+                # Only set counter to 0 on first disconnect to preserve missed turns
+                # if the user reconnects then disconnects again quickly.
+                if self.usuario_id not in state['desconectados']:
+                    state['desconectados'][self.usuario_id] = 0
                 await self._broadcast_to_all(state, {
                     "type": "player_disconnected",
                     "user_id": self.usuario_id,
                     "username": self.username,
                 })
-                
-                # Si es el turno de alguien y se desconecta, se toma como turno finalizado
+
+                # If it was their turn (target or guesser), advance the turn so the
+                # game keeps moving. _advance_turn skips desconectados and ticks counters.
                 if state.get('turno_actual') == self.usuario_id or state.get('jugador_objetivo') == self.usuario_id:
                     _advance_turn(state)
                     self._start_turn_timer(state)
@@ -571,6 +557,7 @@ class AdivinaSocketApi:
             'kick_player': self._handle_kick_player,
             'restart_game': self._handle_restart_game,
             'toggle_discard': self._handle_toggle_discard,
+            'ping': self._handle_ping,
         }
 
         handler = handlers.get(msg_type)
@@ -720,6 +707,9 @@ class AdivinaSocketApi:
                 pass
 
     # ── Message handlers ───────────────────────────────────────────────────
+
+    async def _handle_ping(self, msg: dict, state: dict):
+        await self._send_to_user(self.usuario_id, state, {"type": "pong"})
 
     async def _handle_chat(self, msg: dict, state: dict):
         await self._broadcast_to_all(state, {
@@ -1044,9 +1034,9 @@ class AdivinaSocketApi:
         state['ganador'] = None
 
         # Remove disconnected players that never came back
-        for uid in list(state.get('desconectados', set())):
+        for uid in list(state.get('desconectados', {}).keys()):
             state['jugadores'].pop(uid, None)
-        state['desconectados'] = set()
+        state['desconectados'] = {}
 
         # Reset remaining players
         for uid, p in list(state['jugadores'].items()):

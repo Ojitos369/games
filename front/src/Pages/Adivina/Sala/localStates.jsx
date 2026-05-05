@@ -406,7 +406,7 @@ export const localStates = () => {
             if (!isCleaningUp.current) {
                 reconnectTimeout.current = setTimeout(() => {
                     connectSocket.current();
-                }, 3000);
+                }, 1500);
             }
         };
 
@@ -449,6 +449,48 @@ export const localStates = () => {
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [codigo]);
+
+    // Keepalive: periodic ping mantiene socket vivo en background
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (socket.current?.readyState === WebSocket.OPEN) {
+                try {
+                    socket.current.send(JSON.stringify({ type: 'ping' }));
+                } catch (e) { /* noop */ }
+            }
+        }, 20000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Reconectar inmediato al volver a la app (cambio de pestaña/app móvil)
+    useEffect(() => {
+        const tryReconnect = () => {
+            if (isCleaningUp.current) return;
+            const ws = socket.current;
+            if (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+                if (reconnectTimeout.current) {
+                    clearTimeout(reconnectTimeout.current);
+                    reconnectTimeout.current = null;
+                }
+                connectSocket();
+            } else if (ws.readyState === WebSocket.OPEN) {
+                try { ws.send(JSON.stringify({ type: 'ping' })); } catch (e) { /* noop */ }
+            }
+        };
+        const onVisible = () => {
+            if (document.visibilityState === 'visible') tryReconnect();
+        };
+        document.addEventListener('visibilitychange', onVisible);
+        window.addEventListener('focus', tryReconnect);
+        window.addEventListener('pageshow', tryReconnect);
+        window.addEventListener('online', tryReconnect);
+        return () => {
+            document.removeEventListener('visibilitychange', onVisible);
+            window.removeEventListener('focus', tryReconnect);
+            window.removeEventListener('pageshow', tryReconnect);
+            window.removeEventListener('online', tryReconnect);
+        };
+    }, []);
 
     // Toggle voice handler
     const toggleVoice = useRef(async () => {
