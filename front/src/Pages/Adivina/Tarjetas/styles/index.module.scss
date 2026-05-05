@@ -220,6 +220,79 @@
     text-align: center;
 }
 
+/* ── Top tag strip ─────────────────────────────────────────────────── */
+.topTagStrip {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.4rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding: 0.1rem 0.1rem 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+}
+
+.topTagChip {
+    background: color-mix(in srgb, var(--my-minor) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--my-minor) 18%, transparent);
+    color: var(--my-minor);
+    border-radius: 999px;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+    transition: all 0.15s;
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+    &:hover { border-color: var(--my-primary); }
+    &:focus-visible { outline: 2px solid var(--my-primary); outline-offset: 2px; }
+}
+
+.topTagChipActive {
+    background: linear-gradient(180deg, var(--my-primary) 0%, color-mix(in srgb, var(--my-primary) 70%, #000 30%) 100%);
+    border-color: var(--my-primary);
+    color: #fff;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--my-primary) 40%, transparent);
+}
+
+.topTagCount {
+    background: color-mix(in srgb, currentColor 20%, transparent);
+    border-radius: 999px;
+    padding: 0 0.45rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    min-width: 1.2rem;
+    text-align: center;
+}
+
+.topTagMore {
+    background: transparent;
+    border: 1px dashed color-mix(in srgb, var(--my-primary) 40%, transparent);
+    color: var(--my-primary);
+    border-radius: 999px;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    flex: 0 0 auto;
+    &:hover { background: color-mix(in srgb, var(--my-primary) 10%, transparent); }
+}
+
+.tagSearchInput {
+    width: 100%;
+    background: color-mix(in srgb, var(--my-minor) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--my-minor) 18%, transparent);
+    border-radius: 8px;
+    padding: 0.4rem 0.6rem;
+    color: var(--my-minor);
+    font-size: 0.85rem;
+    &:focus { outline: none; border-color: var(--my-primary); }
+}
+
 /* ── Body layout: sidebar + content ───────────────────────────────── */
 .bodyLayout {
     display: grid;

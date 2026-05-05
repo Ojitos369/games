@@ -84,3 +84,37 @@ CREATE TABLE IF NOT EXISTS adivina_decks_importados (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(deck_id, usuario_id)
 );
+
+-- ------ cambios de catalogo paginacion -----
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+CREATE INDEX IF NOT EXISTS idx_adivina_tarjetas_nombre_trgm
+    ON adivina_tarjetas USING gin (nombre gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_adivina_tarjetas_descripcion_trgm
+    ON adivina_tarjetas USING gin (descripcion gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_adivina_tarjetas_creador
+    ON adivina_tarjetas (creador_id);
+CREATE INDEX IF NOT EXISTS idx_adivina_tarjetas_created_at
+    ON adivina_tarjetas (created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_adivina_decks_nombre_trgm
+    ON adivina_decks USING gin (nombre gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_adivina_decks_descripcion_trgm
+    ON adivina_decks USING gin (descripcion gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_adivina_decks_creador
+    ON adivina_decks (creador_id);
+CREATE INDEX IF NOT EXISTS idx_adivina_decks_publico
+    ON adivina_decks (publico) WHERE publico = TRUE;
+CREATE INDEX IF NOT EXISTS idx_adivina_decks_created_at
+    ON adivina_decks (created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_adivina_tarjetas_tags_tarjeta
+    ON adivina_tarjetas_tags (tarjeta_id);
+CREATE INDEX IF NOT EXISTS idx_adivina_tarjetas_tags_tag
+    ON adivina_tarjetas_tags (tag_id);
+CREATE INDEX IF NOT EXISTS idx_adivina_decks_tarjetas_deck
+    ON adivina_decks_tarjetas (deck_id);
+CREATE INDEX IF NOT EXISTS idx_adivina_decks_tarjetas_tarjeta
+    ON adivina_decks_tarjetas (tarjeta_id);
+CREATE INDEX IF NOT EXISTS idx_adivina_decks_importados_usuario
+    ON adivina_decks_importados (usuario_id);

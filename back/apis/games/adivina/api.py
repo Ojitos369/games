@@ -98,36 +98,130 @@ class DeleteTag(SessionApi):
 
 # ─────────────────────────── TARJETAS ────────────────────────────
 
+def _clamp_int(value, default, min_v, max_v):
+    try:
+        v = int(value)
+    except (TypeError, ValueError):
+        return default
+    return max(min_v, min(max_v, v))
+
+
+def _resolve_user_from_request(conexion, d2d, request):
+    if request is None:
+        return None
+    try:
+        token = request.cookies.get('gamestka', '') or request.headers.get('authorization', '')
+    except Exception:
+        token = ''
+    if not token:
+        return None
+    query = """
+        SELECT u.id, u.username FROM sessiones s
+        JOIN usuarios u ON u.id = s.usuario_id
+        WHERE s.token = :token
+        ORDER BY s.created_at DESC LIMIT 1
+    """
+    rows = d2d(conexion.consulta_asociativa(query, {'token': token}))
+    return rows[0] if rows else None
+
+
+TARJETA_SORT_MAP = {
+    'name_asc': 't.nombre ASC',
+    'name_desc': 't.nombre DESC',
+    'recent': 't.created_at DESC NULLS LAST, t.nombre ASC',
+    'oldest': 't.created_at ASC NULLS LAST, t.nombre ASC',
+}
+
+
 class ListTarjetas(ConexionApi):
     def validate_session(self):
         pass
 
     def main(self):
-        tags_filter = self.data.get('tags', '')
-        q_filter = self.data.get('q', '').strip()
+        user = _resolve_user_from_request(self.conexion, self.d2d, self.request)
+        current_user_id = user['id'] if user else None
+
+        q_filter = (self.data.get('q', '') or '').strip()
+        tags_raw = self.data.get('tags', '') or ''
+        tag_mode = (self.data.get('tag_mode', 'any') or 'any').lower()
+        if tag_mode not in ('any', 'all'):
+            tag_mode = 'any'
+        scope = (self.data.get('scope', 'all') or 'all').lower()
+        if scope not in ('all', 'mine', 'no_image', 'no_tags'):
+            scope = 'all'
+        sort_by = (self.data.get('sort_by', 'name_asc') or 'name_asc').lower()
+        order_sql = TARJETA_SORT_MAP.get(sort_by, TARJETA_SORT_MAP['name_asc'])
+
+        page = _clamp_int(self.data.get('page', 1), 1, 1, 10_000)
+        page_size = _clamp_int(self.data.get('page_size', 48), 48, 1, 200)
+        offset = (page - 1) * page_size
 
         params = {}
-        where_clauses = []
+        where = []
 
         if q_filter:
-            where_clauses.append("(t.nombre ILIKE :q OR t.descripcion ILIKE :q)")
+            where.append("(t.nombre ILIKE :q OR COALESCE(t.descripcion,'') ILIKE :q)")
             params['q'] = f'%{q_filter}%'
 
-        if tags_filter:
-            tag_names = [x.strip().upper() for x in tags_filter.split(',') if x.strip()]
-            if tag_names:
-                where_clauses.append("""
-                    t.id IN (
-                        SELECT tt2.tarjeta_id FROM adivina_tarjetas_tags tt2
-                        JOIN adivina_tags tg2 ON tg2.id = tt2.tag_id
-                        WHERE UPPER(tg2.nombre) = ANY(:tag_names)
+        tag_names = [x.strip().upper() for x in tags_raw.split(',') if x.strip()]
+        if tag_names:
+            params['tag_names'] = tag_names
+            if tag_mode == 'all':
+                where.append("""
+                    NOT EXISTS (
+                        SELECT 1 FROM unnest(:tag_names) AS need(name)
+                        WHERE NOT EXISTS (
+                            SELECT 1 FROM adivina_tarjetas_tags tt2
+                            JOIN adivina_tags tg2 ON tg2.id = tt2.tag_id
+                            WHERE tt2.tarjeta_id = t.id AND UPPER(tg2.nombre) = need.name
+                        )
                     )
                 """)
-                params['tag_names'] = tag_names
+            else:
+                where.append("""
+                    EXISTS (
+                        SELECT 1 FROM adivina_tarjetas_tags tt2
+                        JOIN adivina_tags tg2 ON tg2.id = tt2.tag_id
+                        WHERE tt2.tarjeta_id = t.id AND UPPER(tg2.nombre) = ANY(:tag_names)
+                    )
+                """)
 
-        where_sql = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+        if scope == 'mine':
+            if not current_user_id:
+                self.response = {
+                    "tarjetas": [], "total": 0, "page": page,
+                    "page_size": page_size, "pages": 0,
+                    "scope_counts": {"all": 0, "mine": 0, "no_image": 0, "no_tags": 0},
+                }
+                return
+            where.append("t.creador_id = :scope_uid")
+            params['scope_uid'] = current_user_id
+        elif scope == 'no_image':
+            where.append("(t.imagen IS NULL OR t.imagen = '')")
+        elif scope == 'no_tags':
+            where.append("NOT EXISTS (SELECT 1 FROM adivina_tarjetas_tags tt3 WHERE tt3.tarjeta_id = t.id)")
 
-        query = f"""
+        where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+
+        count_query = f"""
+            SELECT COUNT(*) AS total
+            FROM adivina_tarjetas t
+            {where_sql}
+        """
+        total_rows = self.d2d(self.conexion.consulta_asociativa(count_query, params))
+        total = int(total_rows[0]['total']) if total_rows else 0
+
+        params['_limit'] = page_size
+        params['_offset'] = offset
+
+        list_query = f"""
+            WITH paged AS (
+                SELECT t.id
+                FROM adivina_tarjetas t
+                {where_sql}
+                ORDER BY {order_sql}
+                LIMIT :_limit OFFSET :_offset
+            )
             SELECT t.id, t.nombre, t.descripcion, t.imagen, t.creador_id,
                    u.username as creador_username,
                    t.created_at,
@@ -135,24 +229,53 @@ class ListTarjetas(ConexionApi):
                        json_agg(DISTINCT jsonb_build_object('id', tg.id, 'nombre', tg.nombre))
                        FILTER (WHERE tg.id IS NOT NULL), '[]'
                    ) as tags
-            FROM adivina_tarjetas t
+            FROM paged p
+            JOIN adivina_tarjetas t ON t.id = p.id
             LEFT JOIN usuarios u ON u.id = t.creador_id
             LEFT JOIN adivina_tarjetas_tags tt ON tt.tarjeta_id = t.id
             LEFT JOIN adivina_tags tg ON tg.id = tt.tag_id
-            {where_sql}
             GROUP BY t.id, u.username
-            ORDER BY t.nombre
+            ORDER BY {order_sql}
         """
-        result = self.conexion.consulta_asociativa(query, params)
-        data = self.d2d(result)
-
+        data = self.d2d(self.conexion.consulta_asociativa(list_query, params))
         for tarjeta in data:
             if tarjeta.get('imagen'):
                 tarjeta['imagen_url'] = f"/media/images/adivina/{tarjeta['id']}/{tarjeta['imagen']}"
             else:
                 tarjeta['imagen_url'] = None
 
-        self.response = {"tarjetas": data}
+        counts_params = {}
+        mine_sql = "0"
+        if current_user_id:
+            mine_sql = "(SELECT COUNT(*) FROM adivina_tarjetas WHERE creador_id = :uid)"
+            counts_params['uid'] = current_user_id
+        counts_query = f"""
+            SELECT
+                (SELECT COUNT(*) FROM adivina_tarjetas) as total_all,
+                {mine_sql} as total_mine,
+                (SELECT COUNT(*) FROM adivina_tarjetas WHERE imagen IS NULL OR imagen = '') as total_no_image,
+                (SELECT COUNT(*) FROM adivina_tarjetas t
+                 WHERE NOT EXISTS (SELECT 1 FROM adivina_tarjetas_tags tt WHERE tt.tarjeta_id = t.id)
+                ) as total_no_tags
+        """
+        counts_rows = self.d2d(self.conexion.consulta_asociativa(counts_query, counts_params))
+        counts = counts_rows[0] if counts_rows else {}
+
+        pages = (total + page_size - 1) // page_size if page_size else 1
+
+        self.response = {
+            "tarjetas": data,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "pages": pages,
+            "scope_counts": {
+                "all": int(counts.get('total_all') or 0),
+                "mine": int(counts.get('total_mine') or 0),
+                "no_image": int(counts.get('total_no_image') or 0),
+                "no_tags": int(counts.get('total_no_tags') or 0),
+            },
+        }
 
 
 class CreateTarjeta(SessionApi):
@@ -326,6 +449,16 @@ class UploadTarjetaImagen(SessionApi):
 
 # ─────────────────────────── DECKS ────────────────────────────
 
+DECK_SORT_MAP = {
+    'name_asc': 'nombre ASC',
+    'name_desc': 'nombre DESC',
+    'recent': 'created_at DESC NULLS LAST, nombre ASC',
+    'oldest': 'created_at ASC NULLS LAST, nombre ASC',
+    'biggest': 'tarjetas_count DESC, nombre ASC',
+    'smallest': 'tarjetas_count ASC, nombre ASC',
+}
+
+
 class ListDecks(SessionApi):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -334,38 +467,100 @@ class ListDecks(SessionApi):
     def main(self):
         user = get_usuario_from_token(self.conexion, self.d2d, self.token, self.MYE)
 
-        query = """
+        q_filter = (self.data.get('q', '') or '').strip()
+        scope = (self.data.get('scope', 'all') or 'all').lower()
+        if scope not in ('all', 'owned', 'imported'):
+            scope = 'all'
+        sort_by = (self.data.get('sort_by', 'name_asc') or 'name_asc').lower()
+        order_sql = DECK_SORT_MAP.get(sort_by, DECK_SORT_MAP['name_asc'])
+
+        page = _clamp_int(self.data.get('page', 1), 1, 1, 10_000)
+        page_size = _clamp_int(self.data.get('page_size', 24), 24, 1, 200)
+        offset = (page - 1) * page_size
+
+        params = {'uid': user['id']}
+        union_parts = []
+
+        owned_part = """
             SELECT d.id, d.nombre, d.descripcion, d.created_at, d.publico,
-                   COUNT(dt.id) as tarjetas_count,
+                   (SELECT COUNT(*) FROM adivina_decks_tarjetas dt WHERE dt.deck_id = d.id) as tarjetas_count,
                    TRUE::boolean as is_owner,
                    FALSE::boolean as linked,
                    NULL::VARCHAR as import_id,
                    u.username as creador_username
             FROM adivina_decks d
-            LEFT JOIN adivina_decks_tarjetas dt ON dt.deck_id = d.id
             LEFT JOIN usuarios u ON u.id = d.creador_id
             WHERE d.creador_id = :uid
-            GROUP BY d.id, u.username
-
-            UNION ALL
-
+        """
+        imported_part = """
             SELECT d.id, d.nombre, d.descripcion, d.created_at, d.publico,
-                   COUNT(dt.id) as tarjetas_count,
+                   (SELECT COUNT(*) FROM adivina_decks_tarjetas dt WHERE dt.deck_id = d.id) as tarjetas_count,
                    FALSE::boolean as is_owner,
                    TRUE::boolean as linked,
                    di.id::VARCHAR as import_id,
                    u.username as creador_username
             FROM adivina_decks_importados di
             JOIN adivina_decks d ON d.id = di.deck_id
-            LEFT JOIN adivina_decks_tarjetas dt ON dt.deck_id = d.id
             LEFT JOIN usuarios u ON u.id = d.creador_id
             WHERE di.usuario_id = :uid
-            GROUP BY d.id, di.id, u.username
-
-            ORDER BY nombre
         """
-        result = self.conexion.consulta_asociativa(query, {'uid': user['id']})
-        self.response = {"decks": self.d2d(result)}
+
+        if scope in ('all', 'owned'):
+            union_parts.append(owned_part)
+        if scope in ('all', 'imported'):
+            union_parts.append(imported_part)
+
+        union_sql = "\nUNION ALL\n".join(union_parts) if union_parts else "SELECT NULL WHERE FALSE"
+
+        wrapper_where = []
+        if q_filter:
+            wrapper_where.append("(nombre ILIKE :q OR COALESCE(descripcion,'') ILIKE :q OR COALESCE(creador_username,'') ILIKE :q)")
+            params['q'] = f'%{q_filter}%'
+        wrapper_where_sql = ("WHERE " + " AND ".join(wrapper_where)) if wrapper_where else ""
+
+        count_query = f"""
+            SELECT COUNT(*) as total FROM ( {union_sql} ) AS combined
+            {wrapper_where_sql}
+        """
+        total_rows = self.d2d(self.conexion.consulta_asociativa(count_query, params))
+        total = int(total_rows[0]['total']) if total_rows else 0
+
+        params['_limit'] = page_size
+        params['_offset'] = offset
+
+        list_query = f"""
+            SELECT * FROM ( {union_sql} ) AS combined
+            {wrapper_where_sql}
+            ORDER BY {order_sql}
+            LIMIT :_limit OFFSET :_offset
+        """
+        data = self.d2d(self.conexion.consulta_asociativa(list_query, params))
+
+        owned_count_rows = self.d2d(self.conexion.consulta_asociativa(
+            "SELECT COUNT(*) AS c FROM adivina_decks WHERE creador_id = :uid",
+            {'uid': user['id']}
+        ))
+        imported_count_rows = self.d2d(self.conexion.consulta_asociativa(
+            "SELECT COUNT(*) AS c FROM adivina_decks_importados WHERE usuario_id = :uid",
+            {'uid': user['id']}
+        ))
+        owned_count = int(owned_count_rows[0]['c']) if owned_count_rows else 0
+        imported_count = int(imported_count_rows[0]['c']) if imported_count_rows else 0
+
+        pages = (total + page_size - 1) // page_size if page_size else 1
+
+        self.response = {
+            "decks": data,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "pages": pages,
+            "scope_counts": {
+                "all": owned_count + imported_count,
+                "owned": owned_count,
+                "imported": imported_count,
+            },
+        }
 
 
 class CreateDeck(SessionApi):
@@ -529,6 +724,16 @@ class PublicarDeck(SessionApi):
         self.response = {"message": "Deck actualizado", "publico": publico}
 
 
+PUBLIC_DECK_SORT_MAP = {
+    'name_asc': 'd.nombre ASC',
+    'name_desc': 'd.nombre DESC',
+    'recent': 'd.created_at DESC NULLS LAST, d.nombre ASC',
+    'oldest': 'd.created_at ASC NULLS LAST, d.nombre ASC',
+    'biggest': 'tarjetas_count DESC, d.nombre ASC',
+    'popular': 'imports_count DESC, d.nombre ASC',
+}
+
+
 class DecksPublicos(SessionApi):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -537,23 +742,68 @@ class DecksPublicos(SessionApi):
     def main(self):
         user = get_usuario_from_token(self.conexion, self.d2d, self.token, self.MYE)
 
-        query = """
+        q_filter = (self.data.get('q', '') or '').strip()
+        sort_by = (self.data.get('sort_by', 'recent') or 'recent').lower()
+        order_sql = PUBLIC_DECK_SORT_MAP.get(sort_by, PUBLIC_DECK_SORT_MAP['recent'])
+        only_new = (self.data.get('only_new', '') or '').lower() in ('1', 'true', 'yes')
+
+        page = _clamp_int(self.data.get('page', 1), 1, 1, 10_000)
+        page_size = _clamp_int(self.data.get('page_size', 24), 24, 1, 200)
+        offset = (page - 1) * page_size
+
+        params = {'uid': user['id']}
+        where = ["d.publico = TRUE", "d.creador_id != :uid"]
+
+        if q_filter:
+            where.append("(d.nombre ILIKE :q OR COALESCE(d.descripcion,'') ILIKE :q OR COALESCE(u.username,'') ILIKE :q)")
+            params['q'] = f'%{q_filter}%'
+
+        if only_new:
+            where.append("""NOT EXISTS (
+                SELECT 1 FROM adivina_decks_importados di_n
+                WHERE di_n.deck_id = d.id AND di_n.usuario_id = :uid
+            )""")
+
+        where_sql = "WHERE " + " AND ".join(where)
+
+        count_query = f"""
+            SELECT COUNT(*) AS total
+            FROM adivina_decks d
+            LEFT JOIN usuarios u ON u.id = d.creador_id
+            {where_sql}
+        """
+        total_rows = self.d2d(self.conexion.consulta_asociativa(count_query, params))
+        total = int(total_rows[0]['total']) if total_rows else 0
+
+        params['_limit'] = page_size
+        params['_offset'] = offset
+
+        list_query = f"""
             SELECT d.id, d.nombre, d.descripcion, d.created_at,
-                   COUNT(dt.id) as tarjetas_count,
+                   (SELECT COUNT(*) FROM adivina_decks_tarjetas dt WHERE dt.deck_id = d.id) AS tarjetas_count,
+                   (SELECT COUNT(*) FROM adivina_decks_importados di_c WHERE di_c.deck_id = d.id) AS imports_count,
                    u.username as creador_username,
                    EXISTS(
                        SELECT 1 FROM adivina_decks_importados di2
                        WHERE di2.deck_id = d.id AND di2.usuario_id = :uid
                    ) as ya_importado
             FROM adivina_decks d
-            LEFT JOIN adivina_decks_tarjetas dt ON dt.deck_id = d.id
             LEFT JOIN usuarios u ON u.id = d.creador_id
-            WHERE d.publico = TRUE AND d.creador_id != :uid
-            GROUP BY d.id, u.username
-            ORDER BY d.nombre
+            {where_sql}
+            ORDER BY {order_sql}
+            LIMIT :_limit OFFSET :_offset
         """
-        result = self.conexion.consulta_asociativa(query, {'uid': user['id']})
-        self.response = {"decks": self.d2d(result)}
+        data = self.d2d(self.conexion.consulta_asociativa(list_query, params))
+
+        pages = (total + page_size - 1) // page_size if page_size else 1
+
+        self.response = {
+            "decks": data,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "pages": pages,
+        }
 
 
 class ImportarDeck(SessionApi):

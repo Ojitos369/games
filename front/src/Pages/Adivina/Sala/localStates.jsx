@@ -439,9 +439,9 @@ export const localStates = () => {
         const title = `Sala ${codigo}`;
         setTitulo(title);
         document.title = title;
-        fRef.current.adivina.getTarjetas();
+        fRef.current.adivina.getTarjetas({ page: 1, page_size: 200, sort_by: 'name_asc' });
         fRef.current.adivina.getTags();
-        fRef.current.adivina.getDecks();
+        fRef.current.adivina.getDecks({ page: 1, page_size: 200, sort_by: 'name_asc', scope: 'all' });
         connectSocket();
 
         return () => {
@@ -612,9 +612,9 @@ export const localStates = () => {
     }).current;
 
     const loadTarjetas = useRef(() => {
-        fRef.current.adivina.getTarjetas();
+        fRef.current.adivina.getTarjetas({ page: 1, page_size: 200, sort_by: 'name_asc' });
         fRef.current.adivina.getTags();
-        fRef.current.adivina.getDecks();
+        fRef.current.adivina.getDecks({ page: 1, page_size: 200, sort_by: 'name_asc', scope: 'all' });
     }).current;
 
     const getImageUrl = useCallback((tarjetaOrUrl) => {

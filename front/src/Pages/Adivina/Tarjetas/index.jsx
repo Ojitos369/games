@@ -6,8 +6,8 @@ export const Tarjetas = () => {
     localEffects();
     const {
         style, navigate,
-        tagsWithCounts, scopeCounts,
-        loadingTarjetas, tarjetasAll,
+        tagsWithCounts, filteredSidebarTags, topTags, scopeCounts,
+        loadingTarjetas,
         paginated, totalCount, totalPages, page, setPage,
         searchQ, setSearchQ,
         selectedTags, toggleTag,
@@ -18,6 +18,7 @@ export const Tarjetas = () => {
         pageSize, setPageSize, pageSizeOptions,
         clearFilters, activeFiltersCount,
         filtersOpen, setFiltersOpen,
+        tagSearch, setTagSearch,
         showModal, setShowModal,
         showImageModal, setShowImageModal,
         editTarget, previewTarget,
@@ -94,6 +95,35 @@ export const Tarjetas = () => {
                 ))}
             </div>
 
+            {topTags.length > 0 && (
+                <div className={`${style.topTagStrip}`} role="group" aria-label="Categorías populares">
+                    <button
+                        className={`${style.topTagChip} ${selectedTags.length === 0 ? style.topTagChipActive : ''}`}
+                        onClick={() => selectedTags.slice().forEach(toggleTag)}
+                    >
+                        <span>Todas</span>
+                        <span className={style.topTagCount}>{scopeCounts.all}</span>
+                    </button>
+                    {topTags.map(tag => (
+                        <button
+                            key={tag.id}
+                            className={`${style.topTagChip} ${selectedTags.includes(tag.id) ? style.topTagChipActive : ''}`}
+                            onClick={() => toggleTag(tag.id)}
+                            aria-pressed={selectedTags.includes(tag.id)}
+                            title={`${tag.nombre} (${tag.count})`}
+                        >
+                            <span>🏷️ {tag.nombre}</span>
+                            <span className={style.topTagCount}>{tag.count}</span>
+                        </button>
+                    ))}
+                    {tagsWithCounts.length > topTags.length && (
+                        <button className={`${style.topTagMore}`} onClick={() => setFiltersOpen(true)}>
+                            +{tagsWithCounts.length - topTags.length} más
+                        </button>
+                    )}
+                </div>
+            )}
+
             <div className={`${style.bodyLayout}`}>
                 <aside className={`${style.sideFilters} ${filtersOpen ? style.sideFiltersOpen : ''}`} aria-label="Filtros">
                     <div className={`${style.sideFiltersHeader}`}>
@@ -138,11 +168,19 @@ export const Tarjetas = () => {
                                 Limpiar tags
                             </button>
                         )}
+                        <input
+                            type="search"
+                            placeholder="Buscar tag..."
+                            value={tagSearch}
+                            onChange={e => setTagSearch(e.target.value)}
+                            className={`${style.tagSearchInput}`}
+                            aria-label="Buscar tag"
+                        />
                         <div className={`${style.tagList}`}>
-                            {tagsWithCounts.length === 0 && (
-                                <div className={style.muted}>Sin tags</div>
+                            {filteredSidebarTags.length === 0 && (
+                                <div className={style.muted}>Sin coincidencias</div>
                             )}
-                            {tagsWithCounts.map(tag => (
+                            {filteredSidebarTags.map(tag => (
                                 <button
                                     key={tag.id}
                                     className={`${style.tagChip} ${selectedTags.includes(tag.id) ? style.tagChipActive : ''}`}
@@ -213,14 +251,12 @@ export const Tarjetas = () => {
                     <div className={`${style.resultInfo}`}>
                         <span>
                             <strong>{totalCount}</strong> {totalCount === 1 ? 'tarjeta' : 'tarjetas'}
-                            {totalCount !== tarjetasAll.length && (
-                                <span className={style.muted}> de {tarjetasAll.length}</span>
-                            )}
+                            {loadingTarjetas && <span className={style.muted}> · cargando…</span>}
                         </span>
                         <span className={style.muted}>Página {page} / {totalPages}</span>
                     </div>
 
-                    {loadingTarjetas && tarjetasAll.length === 0 ? (
+                    {loadingTarjetas && paginated.length === 0 ? (
                         <div className={`${style.skeletonGrid}`}>
                             {Array.from({ length: 12 }).map((_, i) => (
                                 <div key={i} className={`${style.skeletonCard}`} />
@@ -229,7 +265,7 @@ export const Tarjetas = () => {
                     ) : totalCount === 0 ? (
                         <div className={`${style.emptyState}`}>
                             <div className={`${style.emptyIcon}`}>🃏</div>
-                            <p>{tarjetasAll.length === 0 ? 'No hay tarjetas. ¡Crea la primera!' : 'No hay resultados con esos filtros.'}</p>
+                            <p>{activeFiltersCount > 0 ? 'No hay resultados con esos filtros.' : 'No hay tarjetas. ¡Crea la primera!'}</p>
                             {activeFiltersCount > 0 && (
                                 <button className={`${style.btnSecondary}`} onClick={clearFilters}>Limpiar filtros</button>
                             )}

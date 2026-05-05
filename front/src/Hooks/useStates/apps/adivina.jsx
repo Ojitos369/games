@@ -42,17 +42,48 @@ export const adivina = props => {
             .finally(() => u2('loadings', 'adivina', 'deleteTag', false));
     };
 
-    const getTarjetas = (params = {}) => {
+    const getTarjetas = (params, cb) => {
         if (s.loadings?.adivina?.tarjetas) return;
+        const finalParams = params ?? (s.adivina?.tarjetasLastParams || {});
         u2('loadings', 'adivina', 'tarjetas', true);
+        u1('adivina', 'tarjetasLastParams', finalParams);
+        const query = new URLSearchParams();
+        if (finalParams.q) query.set('q', finalParams.q);
+        if (finalParams.tags && finalParams.tags.length) query.set('tags', finalParams.tags.join(','));
+        if (finalParams.tag_mode) query.set('tag_mode', finalParams.tag_mode);
+        if (finalParams.scope) query.set('scope', finalParams.scope);
+        if (finalParams.sort_by) query.set('sort_by', finalParams.sort_by);
+        if (finalParams.page) query.set('page', String(finalParams.page));
+        if (finalParams.page_size) query.set('page_size', String(finalParams.page_size));
+        const qs = query.toString() ? `?${query.toString()}` : '';
+        miAxios.get(`games/adivina/tarjetas${qs}`)
+            .then(res => {
+                u1('adivina', 'tarjetas', res.data.tarjetas);
+                u1('adivina', 'tarjetasMeta', {
+                    total: res.data.total ?? (res.data.tarjetas?.length || 0),
+                    page: res.data.page ?? 1,
+                    page_size: res.data.page_size ?? (res.data.tarjetas?.length || 0),
+                    pages: res.data.pages ?? 1,
+                    scope_counts: res.data.scope_counts || { all: 0, mine: 0, no_image: 0, no_tags: 0 },
+                });
+                if (cb) cb(res.data);
+            })
+            .catch(err => console.log(err))
+            .finally(() => u2('loadings', 'adivina', 'tarjetas', false));
+    };
+
+    const getTarjetasLite = (params = {}, cb) => {
         const query = new URLSearchParams();
         if (params.q) query.set('q', params.q);
         if (params.tags && params.tags.length) query.set('tags', params.tags.join(','));
+        if (params.tag_mode) query.set('tag_mode', params.tag_mode);
+        if (params.page) query.set('page', String(params.page));
+        if (params.page_size) query.set('page_size', String(params.page_size));
+        if (params.sort_by) query.set('sort_by', params.sort_by);
         const qs = query.toString() ? `?${query.toString()}` : '';
         miAxios.get(`games/adivina/tarjetas${qs}`)
-            .then(res => u1('adivina', 'tarjetas', res.data.tarjetas))
-            .catch(err => console.log(err))
-            .finally(() => u2('loadings', 'adivina', 'tarjetas', false));
+            .then(res => { if (cb) cb(res.data); })
+            .catch(err => { console.log(err); if (cb) cb({ tarjetas: [], total: 0, page: 1, pages: 1 }); });
     };
 
     const createTarjeta = (data, cb) => {
@@ -123,11 +154,30 @@ export const adivina = props => {
             .finally(() => u2('loadings', 'adivina', 'uploadImage', false));
     };
 
-    const getDecks = () => {
+    const getDecks = (params, cb) => {
         if (s.loadings?.adivina?.decks) return;
+        const finalParams = params ?? (s.adivina?.decksLastParams || {});
         u2('loadings', 'adivina', 'decks', true);
-        miAxios.get('games/adivina/decks')
-            .then(res => u1('adivina', 'decks', res.data.decks))
+        u1('adivina', 'decksLastParams', finalParams);
+        const query = new URLSearchParams();
+        if (finalParams.q) query.set('q', finalParams.q);
+        if (finalParams.scope) query.set('scope', finalParams.scope);
+        if (finalParams.sort_by) query.set('sort_by', finalParams.sort_by);
+        if (finalParams.page) query.set('page', String(finalParams.page));
+        if (finalParams.page_size) query.set('page_size', String(finalParams.page_size));
+        const qs = query.toString() ? `?${query.toString()}` : '';
+        miAxios.get(`games/adivina/decks${qs}`)
+            .then(res => {
+                u1('adivina', 'decks', res.data.decks);
+                u1('adivina', 'decksMeta', {
+                    total: res.data.total ?? (res.data.decks?.length || 0),
+                    page: res.data.page ?? 1,
+                    page_size: res.data.page_size ?? (res.data.decks?.length || 0),
+                    pages: res.data.pages ?? 1,
+                    scope_counts: res.data.scope_counts || { all: 0, owned: 0, imported: 0 },
+                });
+                if (cb) cb(res.data);
+            })
             .catch(err => console.log(err))
             .finally(() => u2('loadings', 'adivina', 'decks', false));
     };
@@ -203,13 +253,28 @@ export const adivina = props => {
             .finally(() => u2('loadings', 'adivina', 'publicarDeck', false));
     };
 
-    const getDecksPublicos = (cb) => {
+    const getDecksPublicos = (params, cb) => {
         if (s.loadings?.adivina?.decksPublicos) return;
+        const finalParams = params ?? (s.adivina?.decksPublicosLastParams || {});
         u2('loadings', 'adivina', 'decksPublicos', true);
-        miAxios.get('games/adivina/decks/publicos')
+        u1('adivina', 'decksPublicosLastParams', finalParams);
+        const query = new URLSearchParams();
+        if (finalParams.q) query.set('q', finalParams.q);
+        if (finalParams.sort_by) query.set('sort_by', finalParams.sort_by);
+        if (finalParams.only_new) query.set('only_new', '1');
+        if (finalParams.page) query.set('page', String(finalParams.page));
+        if (finalParams.page_size) query.set('page_size', String(finalParams.page_size));
+        const qs = query.toString() ? `?${query.toString()}` : '';
+        miAxios.get(`games/adivina/decks/publicos${qs}`)
             .then(res => {
                 u1('adivina', 'decksPublicos', res.data.decks);
-                if (cb) cb(res.data.decks);
+                u1('adivina', 'decksPublicosMeta', {
+                    total: res.data.total ?? (res.data.decks?.length || 0),
+                    page: res.data.page ?? 1,
+                    page_size: res.data.page_size ?? (res.data.decks?.length || 0),
+                    pages: res.data.pages ?? 1,
+                });
+                if (cb) cb(res.data);
             })
             .catch(err => console.log(err))
             .finally(() => u2('loadings', 'adivina', 'decksPublicos', false));
@@ -312,7 +377,7 @@ export const adivina = props => {
 
     return {
         getTags, createTag, deleteTag,
-        getTarjetas, createTarjeta, updateTarjeta, deleteTarjeta, uploadTarjetaImage,
+        getTarjetas, getTarjetasLite, createTarjeta, updateTarjeta, deleteTarjeta, uploadTarjetaImage,
         getDecks, createDeck, updateDeck, deleteDeck, getDeckTarjetas,
         publicarDeck, getDecksPublicos, importarDeck, desvincularDeck, copiarDeck,
         getSalas, createSala, getSala, reaperturarSala,

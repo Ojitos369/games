@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState, useCallback } from 'react';
+import { useMemo, useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStates, createState } from '../../../Hooks/useStates';
 import style from './styles/index.module.scss';
@@ -29,17 +29,20 @@ export const localStates = () => {
     const [, setActualPage] = createState(['page', 'actual'], '');
 
     const tarjetasAll = useMemo(() => s.adivina?.tarjetas || [], [s.adivina?.tarjetas]);
+    const meta = useMemo(() => s.adivina?.tarjetasMeta || {
+        total: 0, page: 1, page_size: DEFAULT_PAGE_SIZE, pages: 1,
+        scope_counts: { all: 0, mine: 0, no_image: 0, no_tags: 0 }
+    }, [s.adivina?.tarjetasMeta]);
     const tags = useMemo(() => s.adivina?.tags || [], [s.adivina?.tags]);
     const isAdmin = useMemo(() => s.usuario?.data?.is_admin, [s.usuario?.data?.is_admin]);
     const currentUserId = useMemo(() => s.usuario?.data?.id, [s.usuario?.data?.id]);
     const loadingTarjetas = useMemo(() => s.loadings?.adivina?.tarjetas || false, [s.loadings?.adivina?.tarjetas]);
 
-    // Search & filter state
     const [searchQ, setSearchQ] = useState('');
     const [debouncedQ, setDebouncedQ] = useState('');
     const [selectedTags, setSelectedTags] = useState([]);
-    const [tagMode, setTagMode] = useState('any'); // 'any' | 'all'
-    const [scope, setScope] = useState('all'); // 'all' | 'mine' | 'no_image' | 'no_tags'
+    const [tagMode, setTagMode] = useState('any');
+    const [scope, setScope] = useState('all');
     const [sortBy, setSortBy] = useState('name_asc');
     const [viewMode, setViewMode] = useState(() => {
         try { return localStorage.getItem('adivina_tarjetas_view') || 'grid'; } catch { return 'grid'; }
@@ -51,9 +54,9 @@ export const localStates = () => {
         } catch { return DEFAULT_PAGE_SIZE; }
     });
     const [page, setPage] = useState(1);
-    const [filtersOpen, setFiltersOpen] = useState(false); // mobile drawer
+    const [filtersOpen, setFiltersOpen] = useState(false);
+    const [tagSearch, setTagSearch] = useState('');
 
-    // Modal state
     const [showModal, setShowModal] = useState(false);
     const [showImageModal, setShowImageModal] = useState(false);
     const [editTarget, setEditTarget] = useState(null);
@@ -70,14 +73,42 @@ export const localStates = () => {
         try { localStorage.setItem('adivina_tarjetas_pagesize', String(pageSize)); } catch { /* noop */ }
     }, [pageSize]);
 
-    // Debounce search
     useEffect(() => {
-        const id = setTimeout(() => setDebouncedQ(searchQ.trim()), 200);
+        const id = setTimeout(() => setDebouncedQ(searchQ.trim()), 250);
         return () => clearTimeout(id);
     }, [searchQ]);
 
-    // Reset page on filter change
     useEffect(() => { setPage(1); }, [debouncedQ, selectedTags, tagMode, scope, sortBy, pageSize]);
+
+    const tagIdToName = useMemo(() => {
+        const m = new Map();
+        for (const t of tags) m.set(t.id, t.nombre);
+        return m;
+    }, [tags]);
+
+    const fetchTarjetas = useCallback(() => {
+        const tagNames = selectedTags
+            .map(id => tagIdToName.get(id))
+            .filter(Boolean);
+        f.adivina.getTarjetas({
+            q: debouncedQ || undefined,
+            tags: tagNames.length ? tagNames : undefined,
+            tag_mode: tagMode,
+            scope,
+            sort_by: sortBy,
+            page,
+            page_size: pageSize,
+        });
+    }, [f.adivina, debouncedQ, selectedTags, tagIdToName, tagMode, scope, sortBy, page, pageSize]);
+
+    const initialFetchedRef = useRef(false);
+    useEffect(() => {
+        if (!initialFetchedRef.current) {
+            initialFetchedRef.current = true;
+            return;
+        }
+        fetchTarjetas();
+    }, [fetchTarjetas]);
 
     const openPreview = useCallback((tarjeta) => {
         setPreviewTarget(tarjeta);
@@ -85,9 +116,13 @@ export const localStates = () => {
     }, []);
 
     const getImageUrl = useCallback((tarjeta) => {
-        if (!tarjeta?.imagen_url) return null;
-        if (tarjeta.imagen_url.startsWith('http')) return tarjeta.imagen_url;
-        return `${API_BASE}${tarjeta.imagen_url}`;
+        if (!tarjeta) return null;
+        if (tarjeta.imagen_url) {
+            if (tarjeta.imagen_url.startsWith('http')) return tarjeta.imagen_url;
+            return `${API_BASE}${tarjeta.imagen_url}`;
+        }
+        if (tarjeta.imagen) return `${API_BASE}/media/images/adivina/${tarjeta.id}/${tarjeta.imagen}`;
+        return null;
     }, []);
 
     const canEdit = useCallback((tarjeta) => {
@@ -118,78 +153,24 @@ export const localStates = () => {
         }));
     }, []);
 
-    // ── Filter pipeline ────────────────────────────────────────────────
-    const filteredByScope = useMemo(() => {
-        if (scope === 'all') return tarjetasAll;
-        if (scope === 'mine') return tarjetasAll.filter(t => (t.creador?.id || t.creador_id) === currentUserId);
-        if (scope === 'no_image') return tarjetasAll.filter(t => !t.imagen_url && !t.imagen);
-        if (scope === 'no_tags') return tarjetasAll.filter(t => !t.tags || t.tags.length === 0);
-        return tarjetasAll;
-    }, [tarjetasAll, scope, currentUserId]);
-
-    const filteredByTags = useMemo(() => {
-        if (!selectedTags.length) return filteredByScope;
-        return filteredByScope.filter(t => {
-            const tagIds = (t.tags || []).map(x => x.id);
-            if (tagMode === 'all') return selectedTags.every(id => tagIds.includes(id));
-            return selectedTags.some(id => tagIds.includes(id));
-        });
-    }, [filteredByScope, selectedTags, tagMode]);
-
-    const filteredBySearch = useMemo(() => {
-        if (!debouncedQ) return filteredByTags;
-        const needle = stripDiacritics(debouncedQ);
-        return filteredByTags.filter(t => {
-            const hay = stripDiacritics(`${t.nombre || ''} ${t.descripcion || ''}`);
-            return hay.includes(needle);
-        });
-    }, [filteredByTags, debouncedQ]);
-
-    const sorted = useMemo(() => {
-        const arr = [...filteredBySearch];
-        switch (sortBy) {
-            case 'name_desc':
-                arr.sort((a, b) => stripDiacritics(b.nombre || '').localeCompare(stripDiacritics(a.nombre || '')));
-                break;
-            case 'recent':
-                arr.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
-                break;
-            case 'oldest':
-                arr.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
-                break;
-            case 'name_asc':
-            default:
-                arr.sort((a, b) => stripDiacritics(a.nombre || '').localeCompare(stripDiacritics(b.nombre || '')));
-                break;
-        }
-        return arr;
-    }, [filteredBySearch, sortBy]);
-
-    const totalCount = sorted.length;
-    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-    const safePage = Math.min(page, totalPages);
-    const pageStart = (safePage - 1) * pageSize;
-    const pageEnd = pageStart + pageSize;
-    const paginated = useMemo(() => sorted.slice(pageStart, pageEnd), [sorted, pageStart, pageEnd]);
-
     const tagsWithCounts = useMemo(() => {
-        const counts = {};
-        for (const t of tarjetasAll) {
-            for (const tg of (t.tags || [])) {
-                counts[tg.id] = (counts[tg.id] || 0) + 1;
-            }
-        }
-        return tags
-            .map(tg => ({ ...tg, count: counts[tg.id] || 0 }))
+        return [...tags]
+            .map(tg => ({ ...tg, count: tg.tarjetas_count ?? tg.count ?? 0 }))
             .sort((a, b) => (b.count - a.count) || stripDiacritics(a.nombre || '').localeCompare(stripDiacritics(b.nombre || '')));
-    }, [tags, tarjetasAll]);
+    }, [tags]);
 
-    const scopeCounts = useMemo(() => ({
-        all: tarjetasAll.length,
-        mine: tarjetasAll.filter(t => (t.creador?.id || t.creador_id) === currentUserId).length,
-        no_image: tarjetasAll.filter(t => !t.imagen_url && !t.imagen).length,
-        no_tags: tarjetasAll.filter(t => !t.tags || t.tags.length === 0).length,
-    }), [tarjetasAll, currentUserId]);
+    const filteredSidebarTags = useMemo(() => {
+        if (!tagSearch.trim()) return tagsWithCounts;
+        const needle = stripDiacritics(tagSearch);
+        return tagsWithCounts.filter(t => stripDiacritics(t.nombre || '').includes(needle));
+    }, [tagsWithCounts, tagSearch]);
+
+    const topTags = useMemo(() => tagsWithCounts.slice(0, 12), [tagsWithCounts]);
+
+    const scopeCounts = meta.scope_counts || { all: 0, mine: 0, no_image: 0, no_tags: 0 };
+    const totalCount = meta.total || 0;
+    const totalPages = Math.max(1, meta.pages || 1);
+    const safePage = Math.min(meta.page || page, totalPages);
 
     const activeFiltersCount = useMemo(() => {
         let n = 0;
@@ -200,7 +181,6 @@ export const localStates = () => {
         return n;
     }, [debouncedQ, selectedTags, scope, sortBy]);
 
-    // ── Modal handlers ─────────────────────────────────────────────────
     const openCreate = useCallback(() => {
         setEditTarget(null);
         setForm({ nombre: '', descripcion: '', tags: [] });
@@ -261,15 +241,21 @@ export const localStates = () => {
         setTitulo(title);
         setActualPage('adivina_tarjetas');
         document.title = title;
-        f.adivina.getTarjetas();
         f.adivina.getTags();
+        f.adivina.getTarjetas({
+            scope: 'all',
+            sort_by: 'name_asc',
+            page: 1,
+            page_size: pageSize,
+        });
     }, []);
 
     return {
         style, navigate,
-        tarjetasAll, tags, tagsWithCounts, scopeCounts,
+        tarjetasAll, tags, tagsWithCounts, filteredSidebarTags, topTags, scopeCounts,
         loadingTarjetas, isAdmin, currentUserId,
-        paginated, totalCount, totalPages, page: safePage, setPage,
+        paginated: tarjetasAll,
+        totalCount, totalPages, page: safePage, setPage,
         searchQ, setSearchQ,
         selectedTags, toggleTag,
         tagMode, setTagMode,
@@ -279,6 +265,7 @@ export const localStates = () => {
         pageSize, setPageSize, pageSizeOptions: PAGE_SIZE_OPTIONS,
         clearFilters, activeFiltersCount,
         filtersOpen, setFiltersOpen,
+        tagSearch, setTagSearch,
         showModal, setShowModal,
         showImageModal, setShowImageModal,
         editTarget, previewTarget,
