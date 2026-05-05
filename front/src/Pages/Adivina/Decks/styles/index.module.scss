@@ -305,7 +305,9 @@
 .modalOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
+    background: #0008;
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -314,7 +316,9 @@
 }
 
 .modal {
-    background: var(--my-major);
+    background: #0008;
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
     border: 1px solid color-mix(in srgb, var(--my-minor) 20%, transparent);
     border-radius: 16px;
     width: 100%;
@@ -752,7 +756,9 @@
 }
 
 .sideFilters {
-    background: color-mix(in srgb, var(--my-minor) 4%, transparent);
+    background: #0008;
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
     border: 1px solid color-mix(in srgb, var(--my-minor) 12%, transparent);
     border-radius: 14px;
     padding: 1rem;
@@ -834,7 +840,9 @@
         display: block;
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.5);
+        background: #0008;
+        backdrop-filter: blur(14px) saturate(140%);
+        -webkit-backdrop-filter: blur(14px) saturate(140%);
         z-index: 999;
     }
 }

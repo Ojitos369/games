@@ -24,6 +24,8 @@ const stripDiacritics = (str = '') =>
 export const localStates = () => {
     const { s, f } = useStates();
     const navigate = useNavigate();
+    const fRef = useRef(f);
+    useEffect(() => { fRef.current = f; }, [f]);
 
     const [, setTitulo] = createState(['page', 'title'], '');
     const [, setActualPage] = createState(['page', 'actual'], '');
@@ -90,7 +92,7 @@ export const localStates = () => {
         const tagNames = selectedTags
             .map(id => tagIdToName.get(id))
             .filter(Boolean);
-        f.adivina.getTarjetas({
+        fRef.current.adivina.getTarjetas({
             q: debouncedQ || undefined,
             tags: tagNames.length ? tagNames : undefined,
             tag_mode: tagMode,
@@ -99,7 +101,7 @@ export const localStates = () => {
             page,
             page_size: pageSize,
         });
-    }, [f.adivina, debouncedQ, selectedTags, tagIdToName, tagMode, scope, sortBy, page, pageSize]);
+    }, [debouncedQ, selectedTags, tagIdToName, tagMode, scope, sortBy, page, pageSize]);
 
     const initialFetchedRef = useRef(false);
     useEffect(() => {

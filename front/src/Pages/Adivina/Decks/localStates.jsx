@@ -29,6 +29,8 @@ const PICKER_PAGE_SIZE = 30;
 export const localStates = () => {
     const { s, f } = useStates();
     const navigate = useNavigate();
+    const fRef = useRef(f);
+    useEffect(() => { fRef.current = f; }, [f]);
 
     const [, setTitulo] = createState(['page', 'title'], '');
     const [, setActualPage] = createState(['page', 'actual'], '');
@@ -107,24 +109,24 @@ export const localStates = () => {
     useEffect(() => { setPubPage(1); }, [pubDebouncedQ, pubSort, pubOnlyNew, pageSize]);
 
     const fetchMis = useCallback(() => {
-        f.adivina.getDecks({
+        fRef.current.adivina.getDecks({
             q: misDebouncedQ || undefined,
             scope: misScope,
             sort_by: misSort,
             page: misPage,
             page_size: pageSize,
         });
-    }, [f.adivina, misDebouncedQ, misScope, misSort, misPage, pageSize]);
+    }, [misDebouncedQ, misScope, misSort, misPage, pageSize]);
 
     const fetchPub = useCallback(() => {
-        f.adivina.getDecksPublicos({
+        fRef.current.adivina.getDecksPublicos({
             q: pubDebouncedQ || undefined,
             sort_by: pubSort,
             only_new: pubOnlyNew ? 1 : undefined,
             page: pubPage,
             page_size: pageSize,
         });
-    }, [f.adivina, pubDebouncedQ, pubSort, pubOnlyNew, pubPage, pageSize]);
+    }, [pubDebouncedQ, pubSort, pubOnlyNew, pubPage, pageSize]);
 
     const initialFetchedRef = useRef(false);
     useEffect(() => {
@@ -145,7 +147,7 @@ export const localStates = () => {
         const tagName = pickerTagFilter
             ? [tags.find(t => t.id === pickerTagFilter)?.nombre].filter(Boolean)
             : undefined;
-        f.adivina.getTarjetasLite({
+        fRef.current.adivina.getTarjetasLite({
             q: pickerDebouncedSearch || undefined,
             tags: tagName,
             page: pickerPage,
@@ -159,7 +161,7 @@ export const localStates = () => {
             });
             setPickerLoading(false);
         });
-    }, [showModal, pickerDebouncedSearch, pickerTagFilter, pickerPage, tags, f.adivina]);
+    }, [showModal, pickerDebouncedSearch, pickerTagFilter, pickerPage, tags]);
 
     const switchTab = useCallback((tab) => {
         setActiveTab(tab);

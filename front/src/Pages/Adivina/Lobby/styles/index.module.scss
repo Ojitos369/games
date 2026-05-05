@@ -408,9 +408,9 @@
 .modalOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.72);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    background: #0008;
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -419,7 +419,9 @@
 }
 
 .modal {
-    background: var(--vault-bg-2);
+    background: #0008;
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
     border: 1px solid var(--vault-border-strong);
     border-radius: var(--vault-r-lg);
     width: 100%;

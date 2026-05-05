@@ -2,6 +2,8 @@
 
 .modal_info {
     background-color: #0008;
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
     position: fixed;
     top: 0;
     left: 0;
@@ -26,7 +28,9 @@
         overflow: hidden;
         overflow-y: scroll;
         position: relative;
-        background: var(--my-major);
+        background: #0008;
+        backdrop-filter: blur(14px) saturate(140%);
+        -webkit-backdrop-filter: blur(14px) saturate(140%);
         color: var(--my-minor);
 
     }

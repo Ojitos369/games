@@ -1,7 +1,9 @@
 @use '../../../static/css/response.scss' as *;
 
 .SideBarContent {
-    background: linear-gradient(180deg, var(--vault-bg-1) 0%, var(--vault-bg-0) 100%);
+    background: #0008;
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
     border-right: 1px solid var(--vault-border);
     color: var(--vault-text-soft);
     height: calc(100vh - var(--header-h));
