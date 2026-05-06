@@ -82,14 +82,14 @@ export const localStates = () => {
         activeCategory, 
         destacado, filteredJuegos,
         getPortada, getStars, getRatingClass, getPlaceholderColor, getInitials,
-        f, toggleFavorito: f.catalog.toggleFavorito
+        f, toggleFavorito: f.catalog.juegos.toggleFavorito
     };
 };
 
 export const localEffects = () => {
     const { f } = useStates();
     useEffect(() => {
-        f.catalog.getJuegos();
-        f.catalog.getCategorias();
+        f.catalog.juegos.listar();
+        f.catalog.categorias.listar();
     }, []);
 };

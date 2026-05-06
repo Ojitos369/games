@@ -145,14 +145,14 @@ export const localStates = () => {
     }, [resetTick, setMoveCount, setGameFinished, setResetTick]);
 
     const fetchLevel = useCallback((params = {}) => {
-        f.sl_rushcar.getLevel(params);
+        f.sl_rushcar.levels.obtener(params);
     }, [f.sl_rushcar]);
 
     // --- SAVE WIN ---
     const saveWin = useCallback((moves, seconds) => {
         const activeUser = sessionUsername || currentUsername;
         if (!activeUser || !level) return;
-        f.sl_rushcar.saveRecord({
+        f.sl_rushcar.records.guardar({
             username: activeUser,
             level_id: level.id,
             moves,
@@ -169,7 +169,7 @@ export const localStates = () => {
         localStorage.setItem('rh_user', trimmed);
         setShowUserOverlay(false);
         if (!level) fetchLevel();
-        f.sl_rushcar.getTopPlayers();
+        f.sl_rushcar.records.topPlayers();
     }, [level, fetchLevel, f.sl_rushcar]);
 
     // --- SHARE ---
@@ -213,7 +213,7 @@ export const localStates = () => {
     }, [f]);
 
     const openUserRecordsModal = useCallback((username) => {
-        f.sl_rushcar.getUserRecords({ username });
+        f.sl_rushcar.records.listarUsuario({ username });
         f.u2('modals', 'solo_rushcar', 'userRecords', true);
     }, [f]);
 
@@ -253,8 +253,8 @@ export const localStates = () => {
         } else {
             fetchLevel();
         }
-        f.sl_rushcar.getTopPlayers();
-        f.sl_rushcar.getTrending();
+        f.sl_rushcar.records.topPlayers();
+        f.sl_rushcar.records.trending();
 
         if (!sessionUsername && !localStorage.getItem('rh_user')) {
             setShowUserOverlay(true);

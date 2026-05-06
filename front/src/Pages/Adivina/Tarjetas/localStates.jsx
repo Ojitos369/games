@@ -142,7 +142,7 @@ export const localStates = () => {
 
     const handleDelete = useCallback((tarjeta_id) => {
         if (!confirm('¿Eliminar esta tarjeta?')) return;
-        f.adivina.deleteTarjeta(tarjeta_id);
+        f.adivina.tarjetas.eliminar(tarjeta_id);
     }, [f.adivina]);
 
     const openFiltersMenu = useCallback(() => {
@@ -209,7 +209,7 @@ export const localEffects = () => {
         const tagNames = selectedTags
             .map(id => tagIdToName.get(id))
             .filter(Boolean);
-        fRef.current.adivina.getTarjetas({
+        fRef.current.adivina.tarjetas.listar({
             q: debouncedQ || undefined,
             tags: tagNames.length ? tagNames : undefined,
             tag_mode: tagMode,
@@ -234,8 +234,8 @@ export const localEffects = () => {
         setTitulo(title);
         setActualPage('adivina_tarjetas');
         document.title = title;
-        f.adivina.getTags();
-        f.adivina.getTarjetas({
+        f.adivina.tags.listar();
+        f.adivina.tarjetas.listar({
             scope: 'all',
             sort_by: 'name_asc',
             page: 1,

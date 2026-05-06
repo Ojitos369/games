@@ -7,12 +7,16 @@ import withReactContent from 'sweetalert2-react-content';
 const MySwal = withReactContent(Swal);
 const host = window.location.hostname;
 const protocol = window.location.protocol;
-const port = window.location.port === '5173' ? ':8372' : (window.location.port ? `:${window.location.port}` : '');
+// Puertos donde el back sirve directo (local + docker). Cualquier otro puerto
+// se asume Vite dev server -> redirige al back local 8372.
+const BACK_PORTS = ['8372', '8368'];
+const currentPort = window.location.port;
+const port = currentPort
+    ? (BACK_PORTS.includes(currentPort) ? `:${currentPort}` : ':8372')
+    : '';
 const link = `${protocol}//${host}${port}/api/`;
 axios.defaults.withCredentials = true;
-const miAxios = axios.create({
-    baseURL: link,
-});
+const miAxios = axios.create({ baseURL: link });
 
 const pjid = "gamestka";
 
@@ -24,64 +28,38 @@ import { sl_rushcar as sl_rushcarMod } from "./sl_rushcar";
 import { adivina as adivinaMod } from "./adivina";
 
 const updates = () => {
-    const ls = useSelector(state => state.fs.ls);
     const d = useDispatch();
-
-    const urs = () => {
-        d(ff.rs());
-    }
-    const u0 = (f0, value) => {
-        d(ff.u0({ f0, value }));
-    }
-    const u1 = (f0, f1, value) => {
-        d(ff.u1({ f0, f1, value }));
-    }
-    const u2 = (f0, f1, f2, value) => {
-        d(ff.u2({ f0, f1, f2, value }));
-    }
-    const u3 = (f0, f1, f2, f3, value) => {
-        d(ff.u3({ f0, f1, f2, f3, value }));
-    }
-    const u4 = (f0, f1, f2, f3, f4, value) => {
-        d(ff.u4({ f0, f1, f2, f3, f4, value }));
-    }
-    const u5 = (f0, f1, f2, f3, f4, f5, value) => {
-        d(ff.u5({ f0, f1, f2, f3, f4, f5, value }));
-    }
-    const u6 = (f0, f1, f2, f3, f4, f5, f6, value) => {
-        d(ff.u6({ f0, f1, f2, f3, f4, f5, f6, value }));
-    }
-    const u7 = (f0, f1, f2, f3, f4, f5, f6, f7, value) => {
-        d(ff.u7({ f0, f1, f2, f3, f4, f5, f6, f7, value }));
-    }
-    const u8 = (f0, f1, f2, f3, f4, f5, f6, f7, f8, value) => {
-        d(ff.u8({ f0, f1, f2, f3, f4, f5, f6, f7, f8, value }));
-    }
-    const u9 = (f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, value) => {
-        d(ff.u9({ f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, value }));
-    }
-    return { urs, u0, u1, u2, u3, u4, u5, u6, u7, u8, u9 }
-}
+    const urs = () => d(ff.rs());
+    const u0 = (f0, value) => d(ff.u0({ f0, value }));
+    const u1 = (f0, f1, value) => d(ff.u1({ f0, f1, value }));
+    const u2 = (f0, f1, f2, value) => d(ff.u2({ f0, f1, f2, value }));
+    const u3 = (f0, f1, f2, f3, value) => d(ff.u3({ f0, f1, f2, f3, value }));
+    const u4 = (f0, f1, f2, f3, f4, value) => d(ff.u4({ f0, f1, f2, f3, f4, value }));
+    const u5 = (f0, f1, f2, f3, f4, f5, value) => d(ff.u5({ f0, f1, f2, f3, f4, f5, value }));
+    const u6 = (f0, f1, f2, f3, f4, f5, f6, value) => d(ff.u6({ f0, f1, f2, f3, f4, f5, f6, value }));
+    const u7 = (f0, f1, f2, f3, f4, f5, f6, f7, value) => d(ff.u7({ f0, f1, f2, f3, f4, f5, f6, f7, value }));
+    const u8 = (f0, f1, f2, f3, f4, f5, f6, f7, f8, value) => d(ff.u8({ f0, f1, f2, f3, f4, f5, f6, f7, f8, value }));
+    const u9 = (f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, value) => d(ff.u9({ f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, value }));
+    return { urs, u0, u1, u2, u3, u4, u5, u6, u7, u8, u9 };
+};
 
 
-export const useBase = props => {
+export const useBase = () => {
     const s = useSelector(state => state.fs.s);
     const updatesVars = updates();
-    const { u0, u1, u2, u3, u4, u5, u6, u7, u8, u9 } = updatesVars;
+    const { u0, u1, u2, u3, u4, u5, u6, u7, u8, u9, urs } = updatesVars;
     const bases = { miAxios, MySwal, s, pjid };
 
     const general = generalMod({ ...bases, ...updatesVars });
     const app = appMod({ ...bases, ...updatesVars });
     const auth = authMod({ ...bases, ...updatesVars, general });
     const catalog = catalogMod({ ...bases, ...updatesVars, general });
-
-    const sl_rushcar = sl_rushcarMod({ ...bases, ...updatesVars });
+    const sl_rushcar = sl_rushcarMod({ ...bases, ...updatesVars, general });
     const adivina = adivinaMod({ ...bases, ...updatesVars, general });
 
     return {
         MySwal, miAxios,
-        u0, u1, u2, u3, u4, u5, u6, u7, u8, u9,
-        app, general, auth, catalog,
-        sl_rushcar, adivina,
+        u0, u1, u2, u3, u4, u5, u6, u7, u8, u9, urs,
+        app, general, auth, catalog, sl_rushcar, adivina,
     };
-}
+};

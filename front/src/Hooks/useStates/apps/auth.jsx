@@ -1,130 +1,83 @@
 export const auth = props => {
-    const { miAxios, pjid, s, u1, u2, urs, general } = props
+    const { miAxios, pjid, s, u1, u2, urs, general } = props;
+
+    const setCookie = (token, hours = 12) => {
+        const date = new Date();
+        date.setTime(date.getTime() + 1000 * 60 * 60 * hours);
+        document.cookie = `${pjid}=${token};expires=${date.toUTCString()};path=/;SameSite=Lax`;
+    };
+    const clearCookie = () => {
+        document.cookie = `${pjid}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
+    };
 
     const login = (usuario, passwd) => {
         if (s.loadings?.auth?.login) return;
         u2("loadings", "auth", "login", true);
-        const url = "auth/login"
-        const data = {
-            usuario, passwd
-        }
-        miAxios.post(url, data)
-        .then(response => {
-            const { user, token } = response.data;
-            u2("auth", "form", "usuario", "");
-            u2("auth", "form", "passwd", "");
-            u1("auth", "logged", true);
-            u1("usuario", "data", user);
-
-            // set cookie for 12 hr
-            const date = new Date();
-                                // ms  *  s  *  m  *  h
-            const miliseconds = 1000 * 60 * 60 * 12;
-            date.setTime(date.getTime() + (miliseconds));
-            const dateExpired = date.toUTCString();
-            const expires = 'expires=' + dateExpired
-            const miCookie = pjid + "=" + token + ";" + expires + ";path=/";
-            document.cookie = miCookie;
-
-        }).catch(error => {
-            console.log(error);
-            const message = error?.response?.data?.detail || "error";
-            general.notificacion({
-                message,
-                title: "Error",
-                mode: "danger"
-            })
-            u1("auth", "logged", false);
-
-        }).finally(() => {
-            u2("loadings", "auth", "login", false);
-        })
-    }
-
-    const validateLogin = () => {
-        if (s.loadings?.auth?.validateLogin) return;
-        u2("loadings", "auth", "validateLogin", true);
-        const end = 'auth/validate_login';
-        miAxios.get(end)
-        .then(res => {
-            const { user, token } = res.data;
-            // set cookie for 5 hr
-            const date = new Date();
-                                // ms  *  s  *  m  *  h
-            const miliseconds = 1000 * 60 * 60 * 5;
-            date.setTime(date.getTime() + (miliseconds));
-            const dateExpired = date.toUTCString();
-            const expires = 'expires=' + dateExpired
-            const miCookie = pjid + "=" + token + ";" + expires + ";path=/";
-            document.cookie = miCookie;
-            u1("auth", "logged", true);
-            u1("usuario", "data", user);
-        })
-        .catch(err => {
-            // 400 de sesión inválida es comportamiento normal (sin cookie o expirada)
-            // no mostramos error al usuario, solo limpiamos estado
-            urs();
-            document.cookie = pjid + "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/";
-        }).finally(() => {
-            u2("loadings", "auth", "validateLogin", false);
-        });
-    }
-
-    const closeSession = () => {
-        if (s.auth?.logged) {
-            const end = 'auth/close_session';
-            miAxios.get(end)
+        miAxios.post('auth/login', { usuario, passwd })
             .then(res => {
-                console.log(res.data);
-            });
-        }
-        urs();
-        document.cookie = pjid + "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/";
-    }
+                const { user, token } = res.data;
+                u2("auth", "form", "usuario", "");
+                u2("auth", "form", "passwd", "");
+                u1("auth", "logged", true);
+                u1("usuario", "data", user);
+                setCookie(token);
+            })
+            .catch(err => {
+                const message = err?.response?.data?.detail || "Error al iniciar sesion";
+                general.notificacion({ message, title: "Error", mode: "danger" });
+                u1("auth", "logged", false);
+            })
+            .finally(() => u2("loadings", "auth", "login", false));
+    };
 
     const register = (usuario, passwd) => {
         if (s.loadings?.auth?.register) return;
         u2("loadings", "auth", "register", true);
-        const url = "auth/register"
-        const data = {
-            usuario, passwd
+        miAxios.post('auth/register', { usuario, passwd })
+            .then(res => {
+                const { user, token } = res.data;
+                u2("auth", "form", "usuario", "");
+                u2("auth", "form", "passwd", "");
+                u1("auth", "logged", true);
+                u1("usuario", "data", user);
+                setCookie(token);
+                general.notificacion({
+                    message: "¡Bienvenido! Tu cuenta ha sido creada.",
+                    title: "Registro exitoso",
+                    mode: "success",
+                });
+            })
+            .catch(err => {
+                const message = err?.response?.data?.detail || "Error";
+                general.notificacion({ message, title: "Error", mode: "danger" });
+            })
+            .finally(() => u2("loadings", "auth", "register", false));
+    };
+
+    const validateLogin = () => {
+        if (s.loadings?.auth?.validateLogin) return;
+        u2("loadings", "auth", "validateLogin", true);
+        miAxios.get('auth/validate_login')
+            .then(res => {
+                const { user, token } = res.data;
+                setCookie(token, 5);
+                u1("auth", "logged", true);
+                u1("usuario", "data", user);
+            })
+            .catch(() => {
+                urs();
+                clearCookie();
+            })
+            .finally(() => u2("loadings", "auth", "validateLogin", false));
+    };
+
+    const closeSession = () => {
+        if (s.auth?.logged) {
+            miAxios.get('auth/close_session').catch(() => {});
         }
-        miAxios.post(url, data)
-        .then(response => {
-            const { user, token } = response.data;
-            u2("auth", "form", "usuario", "");
-            u2("auth", "form", "passwd", "");
-            u1("auth", "logged", true);
-            u1("usuario", "data", user);
+        urs();
+        clearCookie();
+    };
 
-            // set cookie for 12 hr
-            const date = new Date();
-            const miliseconds = 1000 * 60 * 60 * 12;
-            date.setTime(date.getTime() + (miliseconds));
-            const dateExpired = date.toUTCString();
-            const expires = 'expires=' + dateExpired
-            const miCookie = pjid + "=" + token + ";" + expires + ";path=/";
-            document.cookie = miCookie;
-
-            general.notificacion({
-                message: "¡Bienvenido! Tu cuenta ha sido creada.",
-                title: "Registro exitoso",
-                mode: "success"
-            })
-        }).catch(error => {
-            console.log(error);
-            const message = error?.response?.data?.detail || "error";
-            general.notificacion({
-                message,
-                title: "Error",
-                mode: "danger"
-            })
-        }).finally(() => {
-            u2("loadings", "auth", "register", false);
-        })
-    }
-
-    return {
-        login, register, validateLogin, closeSession
-    }
-}
+    return { login, register, validateLogin, closeSession };
+};

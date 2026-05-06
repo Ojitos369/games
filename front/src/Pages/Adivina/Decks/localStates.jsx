@@ -106,7 +106,7 @@ export const localStates = () => {
     const switchTab = useCallback((tab) => {
         setActiveTab(tab);
         if (tab === 'explorar' && decksPublicos.length === 0) {
-            f.adivina.getDecksPublicos({
+            f.adivina.decks.listarPublicos({
                 q: pubDebouncedQ || undefined,
                 sort_by: pubSort,
                 only_new: pubOnlyNew ? 1 : undefined,
@@ -177,7 +177,7 @@ export const localStates = () => {
 
     const openEdit = useCallback((deck) => {
         setEditTarget(deck);
-        f.adivina.getDeckTarjetas(deck.id, (tarjetas) => {
+        f.adivina.decks.tarjetas(deck.id, (tarjetas) => {
             const map = {};
             for (const t of tarjetas) map[t.id] = t;
             setSelectedTarjetasMap(map);
@@ -196,33 +196,33 @@ export const localStates = () => {
     const handleSave = useCallback(() => {
         if (!form.nombre?.trim()) return;
         if (editTarget) {
-            f.adivina.updateDeck({ deck_id: editTarget.id, ...form }, () => setShowModal(false));
+            f.adivina.decks.actualizar({ deck_id: editTarget.id, ...form }, () => setShowModal(false));
         } else {
-            f.adivina.createDeck(form, () => setShowModal(false));
+            f.adivina.decks.crear(form, () => setShowModal(false));
         }
     }, [form, editTarget, f.adivina]);
 
     const handleDelete = useCallback((deck_id) => {
         if (!confirm('¿Eliminar este deck?')) return;
-        f.adivina.deleteDeck(deck_id);
+        f.adivina.decks.eliminar(deck_id);
     }, [f.adivina]);
 
     const handleTogglePublico = useCallback((deck) => {
-        f.adivina.publicarDeck(deck.id, !deck.publico);
+        f.adivina.decks.publicar(deck.id, !deck.publico);
     }, [f.adivina]);
 
     const handleDesvincular = useCallback((deck_id) => {
         if (!confirm('¿Desvincular este deck? Perderás acceso a sus actualizaciones.')) return;
-        f.adivina.desvincularDeck(deck_id);
+        f.adivina.decks.desvincular(deck_id);
     }, [f.adivina]);
 
     const handleCopiar = useCallback((deck_id) => {
         if (!confirm('¿Copiar este deck como propio? Tendrás una copia independiente que no se actualiza cuando el original cambia.')) return;
-        f.adivina.copiarDeck(deck_id);
+        f.adivina.decks.copiar(deck_id);
     }, [f.adivina]);
 
     const handleImportar = useCallback((deck_id) => {
-        f.adivina.importarDeck(deck_id);
+        f.adivina.decks.importar(deck_id);
     }, [f.adivina]);
 
     const toggleExpand = useCallback((deck) => {
@@ -232,7 +232,7 @@ export const localStates = () => {
         }
         setExpandedDeck(deck.id);
         if (!deckTarjetas[deck.id]) {
-            f.adivina.getDeckTarjetas(deck.id, (tarjetas) => {
+            f.adivina.decks.tarjetas(deck.id, (tarjetas) => {
                 setDeckTarjetas({ ...deckTarjetas, [deck.id]: tarjetas });
             });
         }
@@ -317,7 +317,7 @@ export const localEffects = () => {
     useEffect(() => { setPubPage(1); }, [pubDebouncedQ, pubSort, pubOnlyNew, pageSize]);
 
     const fetchMis = useCallback(() => {
-        fRef.current.adivina.getDecks({
+        fRef.current.adivina.decks.listar({
             q: misDebouncedQ || undefined,
             scope: misScope,
             sort_by: misSort,
@@ -327,7 +327,7 @@ export const localEffects = () => {
     }, [misDebouncedQ, misScope, misSort, misPage, pageSize]);
 
     const fetchPub = useCallback(() => {
-        fRef.current.adivina.getDecksPublicos({
+        fRef.current.adivina.decks.listarPublicos({
             q: pubDebouncedQ || undefined,
             sort_by: pubSort,
             only_new: pubOnlyNew ? 1 : undefined,
@@ -356,7 +356,7 @@ export const localEffects = () => {
         const tagName = pickerTagFilter
             ? [tags.find(t => t.id === pickerTagFilter)?.nombre].filter(Boolean)
             : undefined;
-        fRef.current.adivina.getTarjetasLite({
+        fRef.current.adivina.tarjetas.listarLite({
             q: pickerDebouncedSearch || undefined,
             tags: tagName,
             page: pickerPage,
@@ -377,15 +377,15 @@ export const localEffects = () => {
         setTitulo(title);
         setActualPage('adivina_decks');
         document.title = title;
-        f.adivina.getTags();
-        f.adivina.getDecks({
+        f.adivina.tags.listar();
+        f.adivina.decks.listar({
             scope: 'all',
             sort_by: 'name_asc',
             page: 1,
             page_size: pageSize,
         }, () => { initialFetchedRef.current = true; });
         if (activeTab === 'explorar') {
-            f.adivina.getDecksPublicos({
+            f.adivina.decks.listarPublicos({
                 sort_by: 'recent',
                 page: 1,
                 page_size: pageSize,

@@ -606,7 +606,7 @@ export const localStates = () => {
     }).current;
     
     const handleReaperturar = useCallback(() => {
-        fRef.current.adivina.reaperturarSala(codigoRef.current, () => {
+        fRef.current.adivina.salas.reaperturar(codigoRef.current, () => {
             setRoomNotFound(false);
             connectSocket();
         });

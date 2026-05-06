@@ -25,7 +25,7 @@ export const localStates = () => {
         setTitulo(title);
         setActualPage('adivina');
         document.title = title;
-        f.adivina.getSalas();
+        f.adivina.salas.listar();
     }, []);
 
     const handleJoin = useCallback(() => {
@@ -39,14 +39,14 @@ export const localStates = () => {
     }, [navigate]);
 
     const handleCreateSala = useCallback(() => {
-        f.adivina.createSala(createForm, (data) => {
+        f.adivina.salas.crear(createForm, (data) => {
             setShowCreateModal(false);
             navigate(`/adivina/sala/${data.codigo}`);
         });
     }, [createForm, f.adivina, navigate]);
 
     const refreshSalas = useCallback(() => {
-        f.adivina.getSalas();
+        f.adivina.salas.listar();
     }, [f.adivina]);
 
     return {

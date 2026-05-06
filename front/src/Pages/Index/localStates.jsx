@@ -22,7 +22,7 @@ export const localStates = props => {
         setActualPage("index");
         document.title = title;
         setMenuBarMode(null);
-        f.catalog.getJuegos();
+        f.catalog.juegos.listar();
     }, []);
 
     const toggleNot = () => {

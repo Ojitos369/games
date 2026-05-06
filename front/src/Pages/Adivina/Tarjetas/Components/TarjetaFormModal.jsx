@@ -46,13 +46,13 @@ export const TarjetaFormModal = () => {
     const handleSave = useCallback(() => {
         if (!form.nombre.trim()) return;
         if (editTarget) {
-            f.adivina.updateTarjeta({ tarjeta_id: editTarget.id, ...form }, () => {
-                if (imageFile) f.adivina.uploadTarjetaImage(editTarget.id, imageFile);
+            f.adivina.tarjetas.actualizar({ tarjeta_id: editTarget.id, ...form }, () => {
+                if (imageFile) f.adivina.tarjetas.subirImagen(editTarget.id, imageFile);
                 setShowModal(false);
             });
         } else {
-            f.adivina.createTarjeta(form, (res) => {
-                if (imageFile) f.adivina.uploadTarjetaImage(res.id, imageFile);
+            f.adivina.tarjetas.crear(form, (res) => {
+                if (imageFile) f.adivina.tarjetas.subirImagen(res.id, imageFile);
                 setShowModal(false);
             });
         }
@@ -60,7 +60,7 @@ export const TarjetaFormModal = () => {
 
     const handleCreateTag = useCallback(() => {
         if (!newTagName.trim()) return;
-        f.adivina.createTag(newTagName.trim(), (res) => {
+        f.adivina.tags.crear(newTagName.trim(), (res) => {
             setForm(prev => ({ ...prev, tags: [...prev.tags, res.id] }));
             setNewTagName('');
         }, true);

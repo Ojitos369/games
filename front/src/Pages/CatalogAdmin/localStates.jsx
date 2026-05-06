@@ -98,9 +98,9 @@ export const localStates = () => {
 
         if (editingItem) {
             data.juego_id = editingItem.id;
-            f.catalog.updateJuego(data, () => closeModal());
+            f.catalog.juegos.actualizar(data, () => closeModal());
         } else {
-            f.catalog.createJuego(data, () => closeModal());
+            f.catalog.juegos.crear(data, () => closeModal());
         }
     };
 
@@ -108,33 +108,33 @@ export const localStates = () => {
         const data = { nombre: catNombre };
         if (editingItem) {
             data.categoria_id = editingItem.id;
-            f.catalog.updateCategoria(data, () => closeModal());
+            f.catalog.categorias.actualizar(data, () => closeModal());
         } else {
-            f.catalog.createCategoria(data, () => closeModal());
+            f.catalog.categorias.crear(data, () => closeModal());
         }
     };
 
     const deleteJuego = (id) => {
         if (confirm('¿Eliminar este juego?')) {
-            f.catalog.deleteJuego(id);
+            f.catalog.juegos.eliminar(id);
         }
     };
 
     const deleteCategoria = (id) => {
         if (confirm('¿Eliminar esta categoría?')) {
-            f.catalog.deleteCategoria(id);
+            f.catalog.categorias.eliminar(id);
         }
     };
 
     const handleImageUpload = (juego, e) => {
         const file = e.target.files[0];
         if (!file) return;
-        f.catalog.uploadImage(juego.id, file, { tipo: 'screenshot', es_portada: juego.imagenes?.length === 0 });
+        f.catalog.imagenes.subir(juego.id, file, { tipo: 'screenshot', es_portada: juego.imagenes?.length === 0 });
     };
 
     const deleteImagen = (imgId) => {
         if (confirm('¿Eliminar esta imagen?')) {
-            f.catalog.deleteImagen(imgId);
+            f.catalog.imagenes.eliminar(imgId);
         }
     };
 
@@ -171,7 +171,7 @@ export const localStates = () => {
 export const localEffects = () => {
     const { f } = useStates();
     useEffect(() => {
-        f.catalog.getJuegos();
-        f.catalog.getCategorias();
+        f.catalog.juegos.listar();
+        f.catalog.categorias.listar();
     }, []);
 };

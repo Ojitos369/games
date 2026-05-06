@@ -24,7 +24,7 @@ export const localStates = () => {
     const getJuego = async () => {
         setLoading(true);
         try {
-            const res = await f.catalog.getJuego({ juego_id: id });
+            const res = await f.catalog.juegos.obtener({ juego_id: id });
             if (res?.juego) {
                 setJuego(res.juego);
                 if (res.juego.mi_calificacion) {
@@ -47,7 +47,7 @@ export const localStates = () => {
         if (rating < 1 || rating > 10) return;
         setSendingRating(true);
         try {
-            await f.catalog.postCalificacion({
+            await f.catalog.juegos.calificar({
                 juego_id: id,
                 calificacion: rating,
                 comentario
@@ -90,7 +90,7 @@ export const localStates = () => {
         style, juego, loading, rating, setRating, comentario, setComentario,
         handleRating, sendingRating, getStars, getPortada, navigate, showDate,
         setActualPage,
-        toggleFavorito: () => f.catalog.toggleFavorito(id).then(getJuego)
+        toggleFavorito: () => f.catalog.juegos.toggleFavorito(id).then(getJuego)
     }
 }
 
