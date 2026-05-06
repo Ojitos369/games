@@ -4,7 +4,7 @@ from core.utils.security import check_password, make_password
 class Register(ConexionApi):
     def main(self):
         self.show_me()
-        usuario = self.data.get('usuario', '').strip()
+        usuario = self.data.get('usuario', '').strip().lower()
         passwd = self.data.get('passwd', '')
 
         if not usuario or not passwd:
@@ -65,7 +65,7 @@ class Register(ConexionApi):
 class Login(ConexionApi):
     def main(self):
         self.show_me()
-        usuario = self.data.get('usuario', '')
+        usuario = self.data.get('usuario', '').strip().lower()
         passwd = self.data.get('passwd', '')
 
         if not usuario or not passwd:

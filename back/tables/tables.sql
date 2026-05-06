@@ -175,3 +175,15 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_update_juego_calificacion
 AFTER INSERT OR UPDATE OR DELETE ON juegos_calificaciones
 FOR EACH ROW EXECUTE FUNCTION update_juego_calificacion();
+
+-- ------ cambios de usernames a minuscula -----
+-- Detectar duplicados antes de migrar (no debe regresar filas para continuar)
+SELECT LOWER(username) AS username_lower, COUNT(*) AS total
+FROM usuarios
+GROUP BY LOWER(username)
+HAVING COUNT(*) > 1;
+
+-- Normalizar usernames existentes a minusculas
+UPDATE usuarios
+SET username = LOWER(username)
+WHERE username <> LOWER(username);
