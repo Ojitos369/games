@@ -6,7 +6,6 @@
 *.env*
 logs/*
 *.pnpm-store*
-.claude
 
 /back/media/*
 !/back/media/stay
