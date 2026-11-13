@@ -1,1 +1,1 @@
-/home/ojitos369/Documents/Obsidian/OjosApps/Projects/games/SPEC.md
+../../../Obsidian/Projects/OjosApps/games/SPEC.md
