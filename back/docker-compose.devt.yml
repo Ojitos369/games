@@ -1,0 +1,4 @@
+# Dev: arranque manual. Uso: docker compose -f docker-compose.yml -f docker-compose.devt.yml up -d
+services:
+    games-web:
+        restart: "no"
